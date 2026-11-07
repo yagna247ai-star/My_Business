@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home · AI Accelerator Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<script>
+  // Theme before first paint (G-01). Stored choice wins, else OS preference.
+  (function(){
+    var t = null;
+    try { t = JSON.parse(localStorage.getItem('ah2_theme')); } catch (e) {}
+    if (t !== 'light' && t !== 'dark') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+<style>
+/* =========================================================
+   1. TOKENS  (G-01, G-06)  — semantic, theme-switchable
+   ========================================================= */
+:root{
+  --font:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --script:'Caveat','Segoe Script',cursive;
+  --r-lg:20px; --r:16px; --r-sm:12px; --r-xs:10px;
+  --side-w:264px; --side-rail:76px; --header-h:64px;
+  --content-max:980px;
+
+  /* Sidebar is dark in both themes (reference) */
+  --side-bg:linear-gradient(180deg,#0C1F3F 0%,#081830 42%,#061229 100%);
+  --side-text:#C3CCE0; --side-muted:#8E9BB8; --side-line:rgba(255,255,255,.08);
+  --side-hover:rgba(255,255,255,.06);
+  --side-child-active:#2C303D;
+  --side-top-active:linear-gradient(135deg,#3D5AFE 0%,#4B3FD1 100%);
+
+  /* Gold — used as a FILL with dark text, or dark-brown INK on cream. Never gold text on white. */
+  --gold-fill:linear-gradient(135deg,#EDD49A 0%,#D4AC5E 55%,#B78B3F 100%);
+  --gold-on:#2A1E06;
+  --gold-dot:#E8B94F;
+}
+:root[data-theme="light"]{
+  --bg:#F4F7FD; --bg-glow:radial-gradient(900px 500px at 85% -10%,rgba(232,185,79,.08),transparent 60%),radial-gradient(800px 500px at 10% 110%,rgba(61,90,254,.06),transparent 60%);
+  --surface:#FFFFFF; --surface-2:#F8FAFD; --surface-3:#EEF3FA;
+  --border:#E3E9F3; --border-strong:#CFD8E8;
+  --text:#0F172A; --text-2:#3F4C63; --text-3:#56647C;
+  --primary:#2F55E0; --primary-hover:#2446C4; --on-primary:#FFFFFF;
+  --link:#2446C4;
+  --ink:#0E1737; --on-ink:#FFFFFF;           /* dark buttons, user chat bubble */
+  --gold-tint:#FBF4E4; --gold-ink:#6B4E16; --gold-line:#E8D3A4;
+  --success:#137A5D; --success-tint:#E3F5EE; --on-success:#FFFFFF;
+  --danger:#B42318; --danger-tint:#FDECEA;
+  --info-tint:#EAF1FE; --info-ink:#1E3A8A;
+  --hero-cream:linear-gradient(100deg,#FFFFFF 0%,#FDFBF5 55%,#F8EFD9 100%);
+  --hero-navy:linear-gradient(120deg,#0E1646 0%,#122159 55%,#123C5E 100%);
+  --mint:#5EE0B5;
+  --bubble-ai:#EEF3FA;
+  --shadow-sm:0 1px 2px rgba(15,23,42,.05);
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 10px 30px rgba(15,23,42,.06);
+  --shadow-lg:0 20px 50px rgba(15,23,42,.18);
+  --focus:#2F55E0;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#080C1A; --bg-glow:radial-gradient(1000px 500px at 85% -10%,rgba(92,95,255,.12),transparent 60%),radial-gradient(800px 500px at 10% 110%,rgba(58,123,255,.08),transparent 60%);
+  --surface:#12182E; --surface-2:#161D36; --surface-3:#1C2442;
+  --border:#232D4D; --border-strong:#2F3B63;
+  --text:#F1F4FB; --text-2:#C2CAE0; --text-3:#A1ACC9;
+  --primary:#3D63F0; --primary-hover:#5476F5; --on-primary:#FFFFFF;
+  --link:#9DB8FF;
+  --ink:#E8EDF8; --on-ink:#0E1737;
+  --gold-tint:#2A2414; --gold-ink:#F0D28A; --gold-line:#5A4A22;
+  --success:#1FA37C; --success-tint:#10302A; --on-success:#04140F;
+  --danger:#FF8A80; --danger-tint:#3A1716;
+  --info-tint:#18244A; --info-ink:#BFD0FF;
+  --hero-cream:linear-gradient(100deg,#141B33 0%,#171E36 55%,#2A2414 100%);
+  --hero-navy:linear-gradient(120deg,#0B1236 0%,#101C4E 55%,#0F3352 100%);
+  --mint:#5EE0B5;
+  --bubble-ai:#1C2442;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  --shadow-lg:0 20px 50px rgba(0,0,0,.55);
+  --focus:#9DB8FF;
+  color-scheme:dark;
+}
+
+/* =========================================================
+   2. BASE
+   ========================================================= */
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:var(--font);font-size:15px;line-height:1.55;color:var(--text);background:var(--bg);background-image:var(--bg-glow);background-attachment:fixed;min-height:100vh}
+h1,h2,h3,h4,p{margin:0}
+a{color:inherit;text-decoration:none}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+button:disabled{cursor:not-allowed}
+img{max-width:100%;display:block}
+.ic{width:18px;height:18px;flex-shrink:0}
+.ic-sm{width:15px;height:15px}
+.ic-lg{width:22px;height:22px}
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:8px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip{position:absolute;left:12px;top:-60px;z-index:100;background:var(--surface);color:var(--text);padding:10px 14px;border-radius:10px;box-shadow:var(--shadow);font-weight:700}
+.skip:focus{top:12px}
+@media (prefers-reduced-motion:no-preference){
+  .anim{transition:all .2s ease}
+}
+
+/* =========================================================
+   3. APP SHELL
+   ========================================================= */
+.app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);min-height:100vh}
+.app.is-rail{grid-template-columns:var(--side-rail) minmax(0,1fr)}
+@media (prefers-reduced-motion:no-preference){.app{transition:grid-template-columns .25s ease}}
+
+/* ---------- Sidebar (G-02) ---------- */
+.sidebar{position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;background:var(--side-bg);color:var(--side-text);padding:16px 14px 20px;display:flex;flex-direction:column;gap:6px;scrollbar-width:thin;scrollbar-color:#22304f transparent}
+.brand-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 4px 14px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand .logo{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.06);display:grid;place-items:center;flex-shrink:0}
+.brand-txt{display:flex;flex-direction:column;line-height:1.1;min-width:0}
+.brand-txt b{font-size:14px;font-weight:800;color:#fff;letter-spacing:-.01em;white-space:nowrap}
+.brand-txt small{font-size:10.5px;font-weight:700;letter-spacing:.18em;color:var(--side-muted)}
+.rail-btn{width:32px;height:32px;border-radius:9px;border:1px solid var(--side-line);display:grid;place-items:center;color:var(--side-muted);flex-shrink:0}
+.rail-btn:hover{color:#fff;background:var(--side-hover)}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav-item{position:relative;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;color:var(--side-text);font-size:14.5px;font-weight:500;white-space:nowrap}
+.nav-item:hover{background:var(--side-hover);color:#fff}
+.nav-item.active{color:#fff;font-weight:700}
+.nav-item.top.active{background:var(--side-top-active);box-shadow:0 8px 24px rgba(61,90,254,.35)}
+.nav-item.child.active{background:var(--side-child-active);box-shadow:0 10px 24px rgba(40,80,200,.25),inset 0 1px 0 rgba(255,255,255,.06)}
+.nav-item .dot{position:absolute;right:12px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--gold-dot)}
+.nav-item .lock{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--side-muted)}
+.tier{margin:6px 0 2px}
+.tier-btn{width:100%;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;color:#fff;font-size:12px;font-weight:800;letter-spacing:.14em;border:1px solid transparent}
+.tier.has-active .tier-btn{background:#2F323C;border-color:rgba(232,185,79,.55)}
+.tier-btn .medal{color:var(--gold-dot)}
+.tier-btn .chev{margin-left:auto;color:var(--side-muted)}
+@media (prefers-reduced-motion:no-preference){.tier-btn .chev{transition:transform .2s ease}}
+.tier-btn[aria-expanded="false"] .chev{transform:rotate(-90deg)}
+.tier-panel{position:relative;margin:6px 0 0 22px;padding-left:12px;display:flex;flex-direction:column;gap:3px}
+.tier-panel::before{content:"";position:absolute;left:0;top:4px;bottom:4px;width:1px;background:var(--side-line)}
+.side-div{height:1px;background:var(--side-line);margin:12px 8px}
+.side-foot{margin-top:auto;padding:12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--side-line);font-size:12.5px;color:var(--side-muted)}
+.side-foot b{display:block;color:#fff;font-size:13px;margin-bottom:2px}
+.side-foot .bar{height:6px;border-radius:99px;background:rgba(255,255,255,.08);margin-top:8px;overflow:hidden}
+.side-foot .bar i{display:block;height:100%;background:var(--gold-fill);border-radius:99px}
+
+/* Rail mode */
+.app.is-rail .sidebar{padding-left:10px;padding-right:10px}
+.app.is-rail .brand-txt,.app.is-rail .nav-item .lbl,.app.is-rail .tier-btn .lbl,.app.is-rail .tier-btn .chev,.app.is-rail .side-foot,.app.is-rail .nav-item .lock{display:none}
+.app.is-rail .brand-row{flex-direction:column;gap:10px}
+.app.is-rail .nav-item,.app.is-rail .tier-btn{justify-content:center;padding:11px}
+.app.is-rail .tier-panel{display:flex!important;margin-left:0;padding-left:0}
+.app.is-rail .tier-panel::before{display:none}
+.app.is-rail .nav-item .dot{right:6px;top:8px;margin:0}
+
+/* ---------- Main column ---------- */
+.main-col{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:30;height:var(--header-h);display:flex;align-items:center;gap:12px;padding:0 28px;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(12px) saturate(1.3);-webkit-backdrop-filter:blur(12px) saturate(1.3);border-bottom:1px solid var(--border)}
+.crumb{display:flex;align-items:center;gap:6px;min-width:0;font-size:14px}
+.crumb-pre{color:var(--text-3);white-space:nowrap}
+.crumb-cur{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crumb .ic{color:var(--text-3)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;font-size:13.5px;font-weight:600;white-space:nowrap}
+.pill-streak{background:var(--info-tint);color:var(--info-ink)}
+.pill-streak .ic{color:#E07A2E}
+.pill-rank{background:var(--gold-tint);color:var(--gold-ink);border:1px solid var(--gold-line);font-weight:800;letter-spacing:.12em;font-size:12.5px}
+.icon-btn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border);color:var(--text-2);box-shadow:var(--shadow-sm)}
+.icon-btn:hover{color:var(--text);border-color:var(--border-strong)}
+.icon-btn[aria-pressed="true"].sound{color:var(--primary)}
+.user-wrap{position:relative}
+.user-chip{display:flex;align-items:center;gap:9px;height:42px;padding:0 14px 0 4px;border-radius:999px;background:var(--surface);border:1px solid var(--border);font-weight:700;font-size:14px;box-shadow:var(--shadow-sm)}
+.menu{position:absolute;right:0;top:calc(100% + 8px);min-width:200px;padding:6px;border-radius:14px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-lg);z-index:40}
+.menu[hidden]{display:none}
+.menu a,.menu button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:9px;font-size:14px;color:var(--text-2);text-align:left}
+.menu a:hover,.menu button:hover,.menu a:focus-visible,.menu button:focus-visible{background:var(--surface-3);color:var(--text)}
+.menu hr{border:0;border-top:1px solid var(--border);margin:6px 4px}
+.only-mobile{display:none}
+main{flex:1;width:100%;max-width:calc(var(--content-max) + 56px);margin:0 auto;padding:28px 28px 120px}
+main:focus{outline:none}
+
+/* Mobile shell */
+@media (max-width:1023px){
+  .app,.app.is-rail{grid-template-columns:minmax(0,1fr)}
+  .sidebar{position:fixed;inset:0 auto 0 0;width:286px;z-index:60;transform:translateX(-102%);visibility:hidden;box-shadow:var(--shadow-lg)}
+  .sidebar.is-open{transform:none;visibility:visible}
+  @media (prefers-reduced-motion:no-preference){.sidebar{transition:transform .25s ease,visibility .25s}}
+  .app.is-rail .brand-txt,.app.is-rail .nav-item .lbl,.app.is-rail .tier-btn .lbl,.app.is-rail .tier-btn .chev,.app.is-rail .side-foot{display:revert}
+  .app.is-rail .nav-item,.app.is-rail .tier-btn{justify-content:flex-start;padding:10px 12px}
+  .app.is-rail .brand-row{flex-direction:row}
+  .rail-btn.desk{display:none}
+  .only-mobile{display:grid}
+  .overlay{position:fixed;inset:0;background:rgba(5,10,25,.5);z-index:55}
+  .overlay[hidden]{display:none}
+  .topbar{padding:0 16px}
+  main{padding:20px 16px 120px}
+}
+@media (max-width:720px){
+  .crumb-pre,.pill-rank,.user-chip .uname,.pill-streak .days-word{display:none}
+  .user-chip{padding:0 4px}
+  .pill{padding:0 11px}
+  .icon-btn{width:38px;height:38px}
+  .top-right{gap:6px}
+}
+
+/* =========================================================
+   4. COMPONENTS
+   ========================================================= */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.card-pad{padding:24px}
+@media (max-width:640px){.card-pad{padding:18px}}
+.stack{display:flex;flex-direction:column}
+.gap-8{gap:8px}.gap-12{gap:12px}.gap-16{gap:16px}.gap-20{gap:20px}.gap-24{gap:24px}
+.row{display:flex;align-items:center}
+.wrap{flex-wrap:wrap}
+.between{justify-content:space-between}
+.muted{color:var(--text-3)}
+.text-2{color:var(--text-2)}
+.small{font-size:13px}
+.xs{font-size:12px}
+.bold{font-weight:700}
+.h2{font-size:19px;font-weight:800;letter-spacing:-.01em}
+.h3{font-size:16px;font-weight:700}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-ink)}
+.section-label{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
+.link{color:var(--link);font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.link:hover{text-decoration:underline}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 18px;border-radius:999px;font-weight:700;font-size:14.5px;white-space:nowrap;border:1px solid transparent}
+.btn-sm{height:34px;padding:0 14px;font-size:13.5px}
+.btn-block{width:100%}
+.btn-gold{background:var(--gold-fill);color:var(--gold-on);box-shadow:0 8px 20px rgba(183,139,63,.28)}
+.btn-gold:hover{filter:brightness(1.04)}
+.btn-gold:disabled{filter:grayscale(.5);opacity:.55;box-shadow:none}
+.btn-ink{background:var(--ink);color:var(--on-ink)}
+.btn-ink:hover{filter:brightness(1.15)}
+.btn-primary{background:var(--primary);color:var(--on-primary)}
+.btn-primary:hover{background:var(--primary-hover)}
+.btn-soft{background:var(--surface-3);color:var(--text)}
+.btn-soft:hover{background:var(--border)}
+.btn-outline{background:var(--surface);border-color:var(--border-strong);color:var(--text)}
+.btn-outline:hover{border-color:var(--text-3)}
+.btn-cream{background:var(--gold-tint);color:var(--gold-ink);border-color:var(--gold-line)}
+.btn-danger{background:var(--danger);color:#fff}
+:root[data-theme="dark"] .btn-danger{color:#2A0907}
+.btn-text{height:auto;padding:6px 8px;border-radius:8px;color:var(--text-3);font-weight:600;font-size:13.5px}
+.btn-text:hover{color:var(--text);background:var(--surface-3)}
+
+/* Chips */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin;-webkit-mask-image:linear-gradient(90deg,#000 92%,transparent);mask-image:linear-gradient(90deg,#000 92%,transparent)}
+.chip{flex-shrink:0;height:36px;padding:0 16px;border-radius:999px;background:var(--surface);border:1px solid var(--border);color:var(--text-2);font-weight:600;font-size:14px}
+.chip:hover{border-color:var(--border-strong);color:var(--text)}
+.chip[aria-pressed="true"],.chip[aria-checked="true"]{background:var(--gold-fill);color:var(--gold-on);border-color:transparent;box-shadow:0 6px 14px rgba(183,139,63,.25)}
+.chip-soft{background:var(--surface-3);border-color:transparent}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 11px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.badge-neutral{background:var(--surface-3);color:var(--text-2)}
+.badge-gold{background:var(--gold-tint);color:var(--gold-ink);border:1px solid var(--gold-line)}
+.badge-success{background:var(--success-tint);color:var(--success)}
+:root[data-theme="dark"] .badge-success{color:#7FE0BE}
+.badge-info{background:var(--info-tint);color:var(--info-ink)}
+.badge-warn{background:#FFF4E0;color:#7A4A00}
+:root[data-theme="dark"] .badge-warn{background:#3A2A0E;color:#FFD38A}
+
+/* Avatars */
+.avatar{flex-shrink:0;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;background:var(--gold-tint);color:var(--gold-ink);border:1.5px solid var(--gold-line);letter-spacing:.02em}
+.avatar-sm{width:32px;height:32px;font-size:11.5px}
+.avatar-xs{width:34px;height:34px;font-size:12px}
+.avatar.me{background:linear-gradient(135deg,#3D5AFE,#4B3FD1);color:#fff;border-color:transparent}
+
+/* Progress */
+.bar{height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:99px;background:var(--gold-fill)}
+.bar.blue>i{background:linear-gradient(90deg,#3D5AFE,#6B7BFF)}
+
+/* Page header (G-05) */
+.ph{position:relative;overflow:hidden;border-radius:var(--r-lg);margin-bottom:24px}
+.ph-cream{background:var(--hero-cream);border:1px solid var(--gold-line);box-shadow:var(--shadow);padding:30px 32px}
+.ph-navy{background:var(--hero-navy);color:#fff;padding:36px 36px;box-shadow:var(--shadow-lg)}
+.ph-plain{padding:4px 0 2px}
+.ph h1{font-size:34px;line-height:1.12;font-weight:800;letter-spacing:-.025em;max-width:22ch}
+.ph-plain h1{max-width:none}
+.ph-navy h1{font-size:44px;max-width:20ch}
+.ph p.desc{margin-top:10px;max-width:62ch;color:var(--text-2);font-size:15.5px}
+.ph-navy p.desc{color:#D5DCF2}
+.ph-navy .eyebrow{color:#C9D3F2}
+.ph .eyebrow{display:block;margin-bottom:10px}
+.ph .hl{color:var(--mint)}
+.ph .deco{position:absolute;right:0;top:0;height:100%;width:46%;pointer-events:none;opacity:.9}
+.ph .note{margin-top:12px}
+@media (max-width:640px){.ph-cream,.ph-navy{padding:22px 20px}.ph h1{font-size:27px}.ph-navy h1{font-size:31px}.ph .deco{width:70%;opacity:.5}}
+
+/* Tabs / segmented */
+.tabs{display:inline-flex;gap:4px;padding:5px;border-radius:999px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.tab{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 20px;border-radius:999px;font-weight:700;color:var(--text-2)}
+.tab[aria-selected="true"]{background:var(--gold-fill);color:var(--gold-on);box-shadow:0 6px 14px rgba(183,139,63,.25)}
+
+/* Form fields */
+.field-label{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+.input,.textarea,.select{width:100%;border:1px solid var(--border-strong);background:var(--surface);border-radius:14px;padding:11px 14px;font-size:15px;color:var(--text)}
+.textarea{resize:vertical;min-height:96px;line-height:1.5}
+.input::placeholder,.textarea::placeholder{color:var(--text-3)}
+.input:focus-visible,.textarea:focus-visible,.select:focus-visible{outline:2px solid var(--focus);outline-offset:1px;border-color:transparent}
+[aria-invalid="true"]{border-color:var(--danger)!important}
+.field-err{color:var(--danger);font-size:13px;font-weight:600;margin-top:6px}
+.field-hint{color:var(--text-3);font-size:13px;margin-top:6px}
+
+/* Empty / skeleton */
+.empty{text-align:center;padding:40px 20px;color:var(--text-2)}
+.empty .ic-wrap{width:52px;height:52px;border-radius:16px;margin:0 auto 12px;display:grid;place-items:center;background:var(--surface-3);color:var(--text-2)}
+.pending-note{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:var(--surface-3);color:var(--text-2);font-size:13.5px}
+
+/* Toasts */
+.toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:90;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:min(92vw,520px)}
+.toast{pointer-events:auto;background:var(--ink);color:var(--on-ink);padding:11px 16px;border-radius:14px;font-size:14px;font-weight:600;box-shadow:var(--shadow-lg);text-align:center}
+
+/* FAB (G-04) */
+.fab{position:fixed;right:24px;bottom:24px;z-index:45;display:inline-flex;align-items:center;gap:10px;height:54px;padding:0 22px 0 18px;border-radius:999px;background:#0E1737;color:#fff;font-weight:800;font-size:15.5px;box-shadow:0 14px 34px rgba(14,23,55,.4)}
+:root[data-theme="dark"] .fab{background:#E8EDF8;color:#0E1737}
+.fab:hover{filter:brightness(1.12)}
+.fab[hidden]{display:none}
+@media (max-width:640px){.fab{right:16px;bottom:calc(16px + env(safe-area-inset-bottom));height:50px}}
+
+/* Modal + drawer */
+.backdrop{position:fixed;inset:0;background:rgba(5,10,25,.55);z-index:80;display:grid;place-items:center;padding:16px}
+.dialog{width:min(100%,460px);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);padding:22px}
+.dialog h2{font-size:18px;font-weight:800}
+.dialog .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.drawer-back{position:fixed;inset:0;background:rgba(5,10,25,.45);z-index:70}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(100%,460px);z-index:75;background:var(--bg);border-left:1px solid var(--border);box-shadow:var(--shadow-lg);display:flex;flex-direction:column}
+.drawer-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface)}
+.drawer-body{flex:1;overflow:auto;padding:16px}
+
+/* =========================================================
+   5. MODULE STYLES
+   ========================================================= */
+/* Feed */
+.composer{position:relative;border-top:3px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(90deg,#D4AC5E,#EDD49A 50%,transparent) border-box}
+.composer-inner{background:linear-gradient(180deg,var(--gold-tint),var(--surface) 60%);border-radius:var(--r-lg);padding:24px}
+:root[data-theme="dark"] .composer-inner{background:linear-gradient(180deg,#1A1C2A,var(--surface) 60%)}
+.composer .ta-wrap{position:relative}
+.composer .ta-wrap .textarea{padding-right:48px;min-height:110px}
+.emoji-btn{position:absolute;right:10px;bottom:12px;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:var(--text-3)}
+.emoji-btn:hover{background:var(--surface-3);color:var(--text)}
+.emoji-pop{position:absolute;right:0;bottom:50px;z-index:5;display:grid;grid-template-columns:repeat(6,36px);gap:2px;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg)}
+.emoji-pop button{height:36px;border-radius:8px;font-size:19px}
+.emoji-pop button:hover{background:var(--surface-3)}
+.post{padding:20px 22px}
+.post-head{display:flex;gap:14px;align-items:flex-start}
+.post-name{font-weight:700;font-size:15.5px}
+.post-meta{color:var(--text-3);font-size:13.5px}
+.post-body{margin:12px 0 0 58px;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:15.5px;color:var(--text)}
+.post-body a{color:var(--link);text-decoration:underline}
+.post-actions{display:flex;align-items:center;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.act-btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:999px;background:var(--surface-3);font-weight:700;font-size:14px;color:var(--text)}
+.act-btn:hover{background:var(--border)}
+.act-btn[aria-pressed="true"]{color:#C2185B}
+:root[data-theme="dark"] .act-btn[aria-pressed="true"]{color:#FF8FB8}
+.act-btn[aria-pressed="true"] svg{fill:currentColor}
+.act-right{margin-left:auto}
+.thread{margin:14px 0 0 22px;padding-left:20px;border-left:2px solid var(--border);display:flex;flex-direction:column;gap:14px}
+.reply-body{margin:6px 0 0 44px;white-space:pre-wrap;overflow-wrap:anywhere}
+.reply-actions{display:flex;align-items:center;gap:8px;margin:8px 0 0 44px}
+.reply-box{margin:14px 0 0 22px;display:flex;flex-direction:column;gap:8px}
+@media (max-width:640px){.post{padding:16px}.post-body{margin-left:0}.thread{margin-left:4px;padding-left:12px}.reply-body,.reply-actions{margin-left:0}.reply-box{margin-left:0}}
+
+/* Resources accordion */
+.acc{display:flex;flex-direction:column;gap:12px}
+.acc-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-sm);overflow:hidden}
+.acc-head{width:100%;display:flex;align-items:center;gap:12px;padding:18px 22px;text-align:left}
+.acc-head:hover{background:var(--surface-2)}
+.acc-title{font-weight:700;font-size:15.5px;flex:1;min-width:0}
+.acc-meta{display:flex;align-items:center;gap:12px;color:var(--text-3);font-size:14px;white-space:nowrap}
+.acc-meta .lv{font-weight:700;color:var(--text-2);font-size:13px}
+.acc-head .chev{color:var(--text-2)}
+@media (prefers-reduced-motion:no-preference){.acc-head .chev{transition:transform .2s ease}}
+.acc-head[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.acc-panel{border-top:1px solid var(--border);padding:8px 12px 12px}
+.acc-panel[hidden]{display:none}
+.res-row{display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px}
+.res-row:hover{background:var(--surface-2)}
+.res-ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--surface-3);color:var(--text-2);flex-shrink:0}
+.res-ic.prompt{background:var(--gold-tint);color:var(--gold-ink)}
+.res-ic.mine{background:var(--success-tint);color:var(--success)}
+@media (max-width:640px){.acc-head{padding:16px}.acc-meta .lv{display:none}}
+
+/* Showcase */
+.cta-green{display:flex;align-items:center;gap:16px;padding:20px 24px;border-radius:var(--r-lg);background:linear-gradient(120deg,#137A5D,#0F6B52);color:#fff;box-shadow:0 14px 30px rgba(19,122,93,.25);margin-bottom:24px}
+.cta-green .big{font-size:18px;font-weight:800}
+.cta-green .sub{color:#E1F5EE;font-size:14.5px}
+.cta-green .ic-lg{width:30px;height:30px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+@media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.proj{overflow:hidden;display:flex;flex-direction:column}
+.proj-cover{height:150px;display:grid;place-items:center}
+.proj-ring{width:76px;height:76px;border-radius:50%;border:2px solid currentColor;display:grid;place-items:center;font-size:24px;font-weight:800;letter-spacing:.02em}
+.proj-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:10px;flex:1}
+.proj-author{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;letter-spacing:-.01em}
+.proj-meta{display:flex;align-items:center;gap:14px;color:var(--text-3);font-size:14px}
+.proj-meta span{display:inline-flex;align-items:center;gap:5px}
+.proj-title{font-weight:700;font-size:15.5px}
+.proj-desc{color:var(--text-2);font-size:14.5px}
+.proj-actions{display:flex;gap:10px;margin-top:auto;padding-top:6px}
+.proj-actions .btn-gold{flex:1}
+
+/* Unstuck */
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px;border-radius:18px;background:var(--surface-3)}
+.seg-opt{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;text-align:left;color:var(--text)}
+.seg-opt[aria-checked="true"]{background:var(--surface);box-shadow:var(--shadow)}
+.seg-opt .tile{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;background:var(--info-tint);color:var(--info-ink)}
+.seg-opt .tile.gold{background:var(--gold-tint);color:var(--gold-ink)}
+.seg-opt b{display:block;font-size:15.5px}
+.seg-opt small{display:block;color:var(--text-3);font-size:13.5px;line-height:1.4;margin-top:2px}
+.compact .seg-opt{padding:10px 12px}
+.compact .seg-opt small{display:none}
+.compact .seg-opt .tile{width:32px;height:32px}
+.chat-intro{color:var(--text-2);margin:18px 4px 12px}
+.msgs{height:min(52vh,460px);overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:6px 4px 12px;scroll-behavior:smooth}
+.drawer .msgs{height:auto;min-height:220px;flex:1}
+.msgs.is-empty{height:auto;min-height:0;padding-bottom:16px}
+.msgs.is-empty .sugg{margin-top:0}
+.ph-plain{overflow:visible}
+.msg{max-width:84%;padding:12px 16px;border-radius:18px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px}
+.msg.me{align-self:flex-end;background:var(--ink);color:var(--on-ink);border-bottom-right-radius:6px}
+.msg.ai{align-self:flex-start;background:var(--bubble-ai);border:1px solid var(--border);border-bottom-left-radius:6px}
+.msg.ai.err{border-color:var(--danger)}
+.msg img{max-height:160px;border-radius:10px;margin-bottom:8px}
+.typing::after{content:"▍";animation:blink 1s steps(1) infinite;margin-left:1px}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.typing::after{animation:none}}
+.sugg{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}
+.sugg button{padding:9px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--border);font-size:14px;font-weight:600;color:var(--text-2);text-align:left}
+.sugg button:hover{border-color:var(--border-strong);color:var(--text)}
+.ctx{display:inline-flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;border-radius:999px;background:var(--info-tint);color:var(--info-ink);font-size:13px;font-weight:700;margin:0 0 8px}
+.ctx button{width:22px;height:22px;border-radius:50%;display:grid;place-items:center}
+.ctx button:hover{background:rgba(0,0,0,.08)}
+.att{display:inline-flex;align-items:center;gap:8px;padding:6px;border-radius:12px;border:1px solid var(--border);background:var(--surface);margin:0 0 8px 8px}
+.att img{width:44px;height:44px;object-fit:cover;border-radius:8px}
+.chat-comp{display:flex;align-items:flex-end;gap:8px;padding:10px;border-radius:18px;background:var(--surface-2);border:1px solid var(--border)}
+.chat-comp .textarea{min-height:46px;max-height:156px;resize:none;border-radius:12px;padding:11px 14px}
+.sq{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;background:var(--surface);border:1px solid var(--border);color:var(--text-2)}
+.sq:hover{color:var(--text);border-color:var(--border-strong)}
+.sq.send{background:var(--ink);color:var(--on-ink);border-color:transparent}
+.sq.send:disabled{opacity:.4}
+.sq.listening{color:#fff;background:var(--danger);border-color:transparent}
+.demo-note{margin:10px 4px 0;color:var(--text-3);font-size:12.5px}
+.help-card{display:flex;flex-direction:column;gap:10px;padding:22px}
+.help-card .top{display:flex;gap:14px}
+.help-card .tile{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;background:var(--surface-3);color:var(--text-2)}
+.help-card .tile.gold{background:var(--gold-tint);color:var(--gold-ink)}
+.help-card .link{margin-top:auto}
+.note-card{position:relative;padding:24px 26px;border-top:0;overflow:hidden}
+.note-card::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,#B78B3F,#EDD49A,#B78B3F)}
+.script{font-family:var(--script);font-size:27px;line-height:1.1;color:var(--text)}
+@media (max-width:640px){.seg{grid-template-columns:1fr}.msg{max-width:92%}}
+
+/* Home / Levels */
+.grid-12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+.span-12{grid-column:1 / -1}.span-8{grid-column:span 8}.span-4{grid-column:span 4}.span-6{grid-column:span 6}.span-3{grid-column:span 3}
+@media (max-width:960px){.span-8,.span-4,.span-6{grid-column:span 12}.span-3{grid-column:span 6}}
+@media (max-width:520px){.span-3{grid-column:span 12}}
+.next-card{padding:24px;display:flex;flex-direction:column;gap:16px}
+.lv-num{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--gold-fill);color:var(--gold-on);font-weight:800;font-size:18px;flex-shrink:0}
+.mini{padding:18px}
+.mini .k{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3)}
+.mini .v{font-weight:700;margin-top:6px}
+.mini .s{color:var(--text-3);font-size:13.5px;margin-top:2px}
+.rail-scroll{overflow-x:auto;padding:8px 4px 4px;scrollbar-width:thin}
+.jrail{position:relative;display:flex;justify-content:space-between;min-width:900px;padding:0 8px}
+.jrail::before{content:"";position:absolute;left:28px;right:28px;top:20px;height:2px;background:linear-gradient(90deg,#D4AC5E 0%,#3D5AFE 12%,var(--border) 22%)}
+.jnode{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;width:56px;text-align:center}
+.jdot{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--surface);border:1.5px solid var(--border-strong);color:var(--text-3)}
+.jnode.current .jdot{background:var(--gold-fill);color:var(--gold-on);border-color:transparent;box-shadow:0 0 0 6px rgba(232,185,79,.22)}
+.jnode.done .jdot{background:var(--success);color:var(--on-success);border-color:transparent}
+.jnode .jl{font-size:12px;font-weight:700;line-height:1.25;color:var(--text-2)}
+.jnode .jx{font-size:11.5px;color:var(--text-3)}
+.stages{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.lv-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+@media (max-width:860px){.lv-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:520px){.lv-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.lv-tile{display:flex;flex-direction:column;gap:4px;padding:14px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);text-align:left;min-height:118px}
+.lv-tile .code{font-size:12px;font-weight:800;color:var(--text-3);letter-spacing:.06em}
+.lv-tile .nm{font-weight:700;font-size:14.5px;line-height:1.3}
+.lv-tile .st{margin-top:auto;display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--text-3)}
+.lv-tile.current{border-color:var(--gold-line);background:linear-gradient(180deg,var(--gold-tint),var(--surface));box-shadow:0 8px 22px rgba(183,139,63,.15)}
+.lv-tile.current .st{color:var(--gold-ink)}
+.lv-tile.locked{background:var(--surface-2)}
+.lv-tile.locked .nm{color:var(--text-2)}
+button.lv-tile:hover{border-color:var(--border-strong)}
+.tl{position:relative;display:flex;flex-direction:column;gap:12px}
+.tl::before{content:"";position:absolute;left:21px;top:20px;bottom:20px;width:2px;background:var(--border)}
+.act{position:relative;display:flex;gap:14px;padding:16px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border)}
+.act-n{position:relative;z-index:1;width:28px;height:28px;margin-left:-2px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:800;flex-shrink:0;background:var(--surface-3);color:var(--text-2);border:2px solid var(--surface)}
+.act.done .act-n{background:var(--success);color:var(--on-success)}
+.act.current{border-color:var(--gold-line);box-shadow:0 8px 22px rgba(183,139,63,.12)}
+.act.current .act-n{background:var(--gold-fill);color:var(--gold-on)}
+.act.review .act-n{background:var(--primary);color:#fff}
+.act-main{flex:1;min-width:0}
+.act-title{font-weight:700}
+.act-xp{font-weight:800;color:var(--gold-ink);white-space:nowrap;font-size:14px}
+.act-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+.tbl caption{text-align:left;padding:0 0 10px;color:var(--text-3);font-size:13.5px}
+.tbl th{text-align:left;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);font-weight:800;padding:12px 16px;background:var(--surface-2);border-bottom:1px solid var(--border)}
+.tbl td{padding:13px 16px;border-bottom:1px solid var(--border)}
+.tbl tr.me td{background:var(--gold-tint)}
+.tbl tr:last-child td{border-bottom:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* =========================================================
+   6. ANTI-GRAVITY  (ported from standalone.html hero:
+   planet + orbit rings + orbiting level dots + floating glass
+   cards + star field + pulse). Motion only when allowed.
+   ========================================================= */
+.stars{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.star{position:absolute;border-radius:50%;background:#fff;opacity:var(--o)}
+.sidebar>*:not(.stars){position:relative;z-index:1}
+.ph-navy>div:not(.stars){z-index:1}
+
+.ag-hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);overflow:hidden}
+.ag-left{padding:28px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.ag-space{position:relative;min-height:420px;overflow:hidden;color:#fff;
+  background:radial-gradient(520px 300px at 15% -5%,rgba(92,95,255,.30),transparent 60%),radial-gradient(420px 260px at 105% 105%,rgba(58,123,255,.22),transparent 60%),radial-gradient(380px 220px at 50% 110%,rgba(124,92,255,.16),transparent 60%),linear-gradient(160deg,#0D1540 0%,#080C1A 100%)}
+.ag-glow{position:absolute;left:50%;top:50%;width:360px;height:360px;margin:-180px 0 0 -180px;border-radius:50%;background:radial-gradient(circle,rgba(92,95,255,.34) 0%,rgba(58,123,255,.16) 32%,transparent 70%);filter:blur(18px);z-index:1}
+.ag-ring{position:absolute;left:50%;top:50%;border-radius:50%;z-index:1}
+.ag-ring.r1{width:300px;height:300px;margin:-150px 0 0 -150px;border:1px dashed rgba(255,255,255,.14)}
+.ag-ring.r2{width:220px;height:220px;margin:-110px 0 0 -110px;border:1px solid rgba(255,255,255,.08)}
+.ag-orbit{position:absolute;left:50%;top:50%;width:0;height:0;z-index:2}
+.ag-orbit i{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.38)}
+.ag-orbit i.cur{left:-5px;top:-5px;width:10px;height:10px;background:var(--gold-dot);box-shadow:0 0 12px var(--gold-dot)}
+.ag-planet-wrap{position:absolute;left:50%;top:50%;width:156px;height:156px;margin:-78px 0 0 -78px;z-index:3}
+.ag-planet{position:relative;width:100%;height:100%;border-radius:50%;display:grid;place-items:center;text-align:center;
+  background:radial-gradient(120px 120px at 30% 30%,#2A3A7A 0%,#16204A 40%,#0E1430 70%,#080C1A 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 20px 60px rgba(0,0,0,.6),0 0 44px rgba(90,143,255,.32)}
+.ag-planet::before{content:"";position:absolute;inset:8px;border-radius:50%;border:1px dashed rgba(255,255,255,.16)}
+.ag-planet::after{content:"";position:absolute;inset:-12px;border-radius:50%;border:1px solid rgba(255,255,255,.06);transform:rotateX(65deg)}
+.ag-planet .k{font-size:10.5px;letter-spacing:.16em;color:#AEB8D8;font-weight:700}
+.ag-planet .lv{font-size:17px;font-weight:800;line-height:1.2}
+.ag-planet .nm{font-size:11.5px;font-weight:800;letter-spacing:.08em;color:var(--gold-dot)}
+.ag-planet .xp{margin-top:5px;display:inline-block;padding:2px 9px;border-radius:99px;background:var(--gold-fill);color:var(--gold-on);font-size:11px;font-weight:800}
+.ag-card{position:absolute;z-index:4;width:160px;padding:12px 13px;border-radius:16px;color:#fff;
+  background:rgba(18,24,46,.82);border:1px solid rgba(255,255,255,.12);
+  -webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);
+  box-shadow:0 16px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06)}
+.ag-card .k{font-size:10.5px;letter-spacing:.12em;font-weight:800;color:#AEB8D8;text-transform:uppercase}
+.ag-card .v{display:flex;align-items:baseline;gap:6px;margin-top:4px;font-size:22px;font-weight:800;line-height:1.1}
+.ag-card .v small{font-size:12px;font-weight:700;color:#C9D3F2}
+.ag-card .s{font-size:12px;color:#AEB8D8;margin-top:3px}
+.ag-card .mbar{height:5px;border-radius:99px;background:rgba(255,255,255,.12);margin-top:9px;overflow:hidden}
+.ag-card .mbar i{display:block;height:100%;border-radius:99px;background:var(--gold-fill)}
+.ag-card .mbar.blue i{background:linear-gradient(90deg,#3D5AFE,#8FA2FF)}
+.ag-card a{color:#BFD0FF;font-weight:700;font-size:12.5px;display:inline-flex;gap:4px;align-items:center;margin-top:7px}
+.ag-card a:hover{text-decoration:underline}
+.ag-card .flame{color:#FFA24C}
+.ag-c1{left:18px;top:22px}
+.ag-c2{right:18px;top:48px}
+.ag-c3{left:30px;bottom:28px}
+.ag-meta{position:absolute;right:16px;bottom:18px;z-index:4;font-size:11.5px;color:#C9D3F2;padding:4px 11px;border-radius:99px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+@media (max-width:960px){
+  .ag-hero{grid-template-columns:minmax(0,1fr)}
+  .ag-space{min-height:400px}
+}
+@media (max-width:520px){
+  .ag-card{width:140px;padding:10px 11px}
+  .ag-card .v{font-size:19px}
+  .ag-c1{left:12px;top:14px}.ag-c2{right:12px;top:30px}.ag-c3{left:12px;bottom:16px}
+  .ag-meta{display:none}
+  .ag-left{padding:20px}
+}
+
+/* Gentle lift on hover: cards "float" up */
+@media (prefers-reduced-motion:no-preference){
+  @keyframes ag-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  @keyframes ag-float-sm{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  @keyframes ag-spin{to{transform:rotate(360deg)}}
+  @keyframes ag-pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,185,79,0)}50%{box-shadow:0 0 0 12px rgba(232,185,79,.16)}}
+  @keyframes ag-twinkle{0%,100%{opacity:var(--o)}50%{opacity:calc(var(--o) * .3)}}
+  .ag-c1{animation:ag-float 6s ease-in-out infinite}
+  .ag-c2{animation:ag-float-sm 6.5s ease-in-out infinite .7s}
+  .ag-c3{animation:ag-float 7s ease-in-out infinite 1.4s}
+  .ag-planet{animation:ag-float-sm 9s ease-in-out infinite}
+  .ag-orbit{animation:ag-spin 90s linear infinite}
+  .star.tw{animation:ag-twinkle var(--d,5s) ease-in-out infinite var(--dl,0s)}
+  .jnode.current .jdot,.lv-tile.current .pulse-dot{animation:ag-pulse 2.4s ease-in-out infinite}
+  .lift{transition:transform .25s ease,box-shadow .25s ease}
+  .lift:hover{transform:translateY(-4px);box-shadow:0 2px 4px rgba(15,23,42,.05),0 22px 44px rgba(15,23,42,.12)}
+  :root[data-theme="dark"] .lift:hover{box-shadow:0 22px 44px rgba(0,0,0,.5)}
+  .fab{animation:ag-float-sm 5s ease-in-out infinite}
+  .fab:hover{animation-play-state:paused}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="app" id="app">
+  <!-- SIDEBAR (G-02) -->
+  <aside class="sidebar" id="sidebar" aria-label="Primary">
+    <div class="brand-row">
+      <a class="brand" href="#/home" aria-label="AI Accelerator Hub, home">
+        <span class="logo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 4 4 21h8z" fill="#3878F6"/><path d="M12 4l8 17h-8z" fill="#8658E8"/><circle cx="12" cy="3.6" r="2.2" fill="#E8B94F"/></svg>
+        </span>
+        <span class="brand-txt"><b>AI Accelerator</b><small>HUB</small></span>
+      </a>
+      <button class="rail-btn desk" id="railBtn" type="button" aria-label="Collapse sidebar" aria-expanded="true" title="Collapse sidebar"></button>
+      <button class="rail-btn only-mobile" id="sideClose" type="button" aria-label="Close menu"></button>
+    </div>
+    <nav class="nav" id="sideNav" aria-label="Main"></nav>
+    <div class="side-foot" id="sideFoot"></div>
+  </aside>
+  <div class="overlay" id="overlay" hidden></div>
+
+  <div class="main-col">
+    <!-- TOP BAR (G-03) -->
+    <header class="topbar">
+      <button class="icon-btn only-mobile" id="menuBtn" type="button" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false"></button>
+      <nav class="crumb" aria-label="Breadcrumb">
+        <span class="crumb-pre">You are here</span>
+        <span class="crumb-cur" id="crumbCur" aria-current="page">Home</span>
+        <span id="crumbChev" aria-hidden="true"></span>
+      </nav>
+      <div class="top-right">
+        <span class="pill pill-streak" id="streakPill"></span>
+        <span class="pill pill-rank" id="rankPill"></span>
+        <button class="icon-btn" id="themeBtn" type="button"></button>
+        <button class="icon-btn sound" id="soundBtn" type="button"></button>
+        <div class="user-wrap">
+          <button class="user-chip" id="userBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userMenu"></button>
+          <div class="menu" id="userMenu" role="menu" hidden></div>
+        </div>
+      </div>
+    </header>
+    <main id="main" tabindex="-1"></main>
+  </div>
+</div>
+
+<button class="fab" id="fab" type="button" aria-label="Open Unstuck help"></button>
+<div id="drawerRoot"></div>
+<div id="modalRoot"></div>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Escape first, then turn URLs into safe links (FEED-06)
+const linkify = s => esc(s).replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)\]]/g, u => `<a href="${u}" target="_blank" rel="noopener noreferrer nofollow">${u}</a>`);
+const plural = (n, one, many) => `${n} ${n === 1 ? one : (many || one + 's')}`;
+const initials = n => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+const DAY = 86400000, NOW = Date.now();
+const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+function ago(ts) {
+  const s = (ts - Date.now()) / 1000, a = Math.abs(s);
+  if (a < 60) return 'just now';
+  if (a < 3600) return rtf.format(Math.round(s / 60), 'minute');
+  if (a < 86400) return rtf.format(Math.round(s / 3600), 'hour');
+  if (a < 86400 * 7) return rtf.format(Math.round(s / 86400), 'day');
+  if (a < 86400 * 35) return rtf.format(Math.round(s / 604800), 'week');
+  return rtf.format(Math.round(s / 2592000), 'month');
+}
+const fullDate = ts => new Date(ts).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+const timeTag = ts => `<time datetime="${new Date(ts).toISOString()}" title="${esc(fullDate(ts))}">${ago(ts)}</time>`;
+let uid = 1000; const nid = p => `${p}${++uid}`;
+
+/* Icons (decorative; aria-hidden) */
+const ICONS = {
+  home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/>',
+  levels: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01"/>',
+  ranks: '<path d="M8 21V11h8v10M2 21v-6h6M16 21V7h6v14M1 21h22"/>',
+  feed: '<path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/>',
+  resources: '<path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/>',
+  trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
+  lifebuoy: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="m4.9 4.9 4.3 4.3M14.8 14.8l4.3 4.3M14.8 9.2l4.3-4.3M4.9 19.1l4.3-4.3"/>',
+  feedback: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v4M12 14h.01"/>',
+  certificate: '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M7 9h10M7 13h5"/><circle cx="17" cy="17" r="3"/><path d="m15.5 19.5-.5 2.5 2-1 2 1-.5-2.5"/>',
+  gem: '<path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M12 21 8 9l4-6 4 6z"/>',
+  medal: '<circle cx="12" cy="15" r="6"/><path d="M8.5 10 6 3h4l2 4 2-4h4l-2.5 7"/>',
+  lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  chevDown: '<path d="m6 9 6 6 6-6"/>',
+  chevRight: '<path d="m9 6 6 6-6 6"/>',
+  arrowRight: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  panelClose: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M16 15l-3-3 3-3"/>',
+  panelOpen: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M13 9l3 3-3 3"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  volume: '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>',
+  volumeX: '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6M21 9l-5 6"/>',
+  flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3.4.4 1.6 1.3 2.9 2.5 2.9z"/>',
+  heart: '<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/>',
+  reply: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/>',
+  flag: '<path d="M4 22V4M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1"/>',
+  trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/>',
+  send: '<path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>',
+  mic: '<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10a7 7 0 0 1-14 0M12 19v3"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  rocket: '<path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.9A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22.4 22.4 0 0 1-4 2z"/><path d="M9 12H4s.6-3 2-4c1.6-1.1 5 0 5 0M12 15v5s3-.6 4-2c1.1-1.6 0-5 0-5"/>',
+  external: '<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  play: '<circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4z" fill="currentColor"/>',
+  pin: '<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+  bulb: '<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/>',
+  headset: '<path d="M3 14v-2a9 9 0 0 1 18 0v2"/><path d="M21 16a2 2 0 0 1-2 2h-1v-6h1a2 2 0 0 1 2 2zM3 16a2 2 0 0 0 2 2h1v-6H5a2 2 0 0 0-2 2z"/><path d="M19 18a4 4 0 0 1-4 3h-2"/>',
+  briefcase: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M2 13h20"/>',
+  smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+  video: '<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m22 8-6 4 6 4z"/>',
+  sparkle: '<path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/>',
+  stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
+  github: '<path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.3-.3-2.5-1-3.5.3-1.2.3-2.4 0-3.5 0 0-1 0-3 1.5a10.6 10.6 0 0 0-6 0C7 2 6 2 6 2c-.3 1.1-.3 2.3 0 3.5A5.4 5.4 0 0 0 5 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1.1-.8 1.7-.2.6-.2 1.2-.2 1.8v4M9 18c-4.5 2-5-2-7-2"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  settings: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>'
+};
+const ic = (n, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+
+/* =========================================================
+   DATA  (demo data — names are fictional; level config from
+   docs/AI_ACCELERATOR_HUB_JOURNEY_GAMIFICATION_MODEL.md)
+   ========================================================= */
+const LEVELS = [
+  { idx: 1, name: 'AI Awakening', sub: 'The Mould & the Cookie', short: 'Awakening', xp: 120 },
+  { idx: 2, name: 'Prompt Craft', sub: 'Talking to Giants', short: 'Prompt', xp: 140 },
+  { idx: 3, name: 'Memory & State', sub: 'Agents That Remember', short: 'Memory', xp: 150 },
+  { idx: 4, name: 'Tools & Bridges', sub: 'MCP Unlocked', short: 'MCP', xp: 160 },
+  { idx: 5, name: 'RAG Foundations', sub: 'Chunk & Retrieve', short: 'RAG', xp: 170 },
+  { idx: 6, name: 'Advanced RAG', sub: 'Hybrid & Re-ranking', short: 'RAG+', xp: 180 },
+  { idx: 7, name: 'Agent Architectures', sub: 'ReAct & Teams', short: 'Agents', xp: 200 },
+  { idx: 8, name: 'Guardrails & Evals', sub: 'Ship Safely', short: 'Evals', xp: 190 },
+  { idx: 9, name: 'Ship It', sub: 'Your First GenAI App', short: 'Ship', xp: 250 },
+  { idx: 10, name: 'Capstone I', sub: 'Real-World Use Case', short: 'Capstone', xp: 300 },
+  { idx: 11, name: 'Specialization Deep-Dive', sub: 'Go deep, not wide', short: 'Deep-dive', xp: 220 },
+  { idx: 12, name: 'Specialization Build', sub: 'Project II', short: 'Build II', xp: 280 },
+  { idx: 13, name: 'Team & Scale', sub: 'From Solo to Squad', short: 'Team', xp: 260 },
+  { idx: 14, name: 'Portfolio & Open Source', sub: 'Launch in Public', short: 'Portfolio', xp: 300 },
+  { idx: 15, name: 'Career Launch', sub: 'Get Paid for AI', short: 'Career', xp: 350 }
+];
+const STAGES = [
+  { name: 'Ignition', from: 1, to: 3 }, { name: 'Craft', from: 4, to: 6 }, { name: 'Ship', from: 7, to: 10 },
+  { name: 'Specialize', from: 11, to: 13 }, { name: 'Launch', from: 14, to: 15 }
+];
+const SHOWCASE_LEVEL = 10; // D-2: showcase submission happens at Capstone I
+const L1_ACTS = [
+  { n: 1, kind: 'Mission Briefing', title: 'Cookie Factory', xp: 5, detail: 'Why objects matter, the factory story, and a preview of the Boss: The Mould Trial.' },
+  { n: 2, kind: 'Learn', title: 'Classes, Objects, Attributes', xp: 18, detail: '9-minute video, notes on shared vs personal attributes, and a 4-question quiz.' },
+  { n: 3, kind: 'Explore GitHub', title: 'Cookie Demo', xp: 10, detail: 'Open the cookie-demo repo, run python demo.py, and answer 2 questions.' },
+  { n: 4, kind: 'Build', title: 'Your Cookie Class', xp: 35, detail: 'Write class Cookie with oven_temp, create 2 instances, and pass pytest tests/test_cookie.py.' },
+  { n: 5, kind: 'Submit Proof', title: 'Repo + reflection', xp: 5, detail: 'Share your repo link and a short reflection. XP is added when a reviewer approves it.' },
+  { n: 6, kind: 'Evaluation + Boss', title: 'The Mould Trial', xp: 47, detail: 'Rubric with 5 areas and the Boss challenge Cookie.count. You get 3 attempts.' }
+];
+const TIERS = [{ name: 'Bronze', min: 0 }, { name: 'Silver', min: 500 }, { name: 'Gold', min: 1500 }, { name: 'Diamond', min: 2970 }];
+const RANKS = [{ name: 'Newcomer', min: 0 }, { name: 'Builder', min: 200 }, { name: 'Engineer', min: 800 }, { name: 'Architect', min: 1800 }];
+const pickBy = (arr, xp) => arr.reduce((a, t) => (xp >= t.min ? t : a), arr[0]);
+const nextOf = (arr, xp) => arr.find(t => t.min > xp) || null;
+
+const S = {
+  route: 'home',
+  theme: document.documentElement.getAttribute('data-theme'),
+  sound: store.get('ah2_sound', false),               // D-5: off by default
+  rail: store.get('ah2_rail', false),
+  tierOpen: store.get('ah2_tier_open', true),
+  user: { first: 'Demo', name: 'Demo Learner', city: 'Hyderabad', streak: 3, longest: 7, freezes: 1, multiplier: 1.0, squad: 'Squad Orion' },
+  acts: { 1: 'done', 2: 'done', 3: 'current', 4: 'todo', 5: 'todo', 6: 'todo' },
+  submittedShowcase: false
+};
+const userXp = () => L1_ACTS.filter(a => S.acts[a.n] === 'done').reduce((s, a) => s + a.xp, 0);
+const actsDone = () => L1_ACTS.filter(a => S.acts[a.n] === 'done').length;
+const levelsDone = () => (actsDone() === 6 ? 1 : 0);
+const currentAct = () => L1_ACTS.find(a => S.acts[a.n] === 'current') || L1_ACTS.find(a => S.acts[a.n] === 'todo');
+
+const COHORT = [
+  { name: 'Ananya Rao', city: 'Bengaluru', xp: 1340 }, { name: 'Karthik Iyer', city: 'Chennai', xp: 890 },
+  { name: 'Meera Joshi', city: 'Pune', xp: 612 }, { name: 'Farhan Ali', city: 'Hyderabad', xp: 455 },
+  { name: 'Sneha Kulkarni', city: 'Mumbai', xp: 310 }, { name: 'Rahul Verma', city: 'Delhi', xp: 198 },
+  { name: 'Divya Nair', city: 'Kochi', xp: 140 }, { name: 'Arjun Mehta', city: 'Ahmedabad', xp: 62 },
+  { name: 'Pooja Singh', city: 'Jaipur', xp: 35 }, { name: 'Vikram Das', city: 'Kolkata', xp: 12 }
+];
+const person = name => {
+  const c = COHORT.find(p => p.name === name);
+  return { name, city: c ? c.city : '', rank: pickBy(RANKS, c ? c.xp : 0).name };
+};
+const ME = () => ({ name: 'You', city: S.user.city, rank: pickBy(RANKS, userXp()).name, me: true });
+
+const mkReply = (who, text, d, likes = 0) => ({ id: nid('r'), author: person(who), text, at: NOW - d * DAY, likes, liked: false, reported: false });
+const FEED = {
+  tab: 'posts', filter: 'all', tag: 0, limit: 6, draft: '', openReply: null, replyDraft: {},
+  posts: [
+    { id: nid('p'), author: null, me: true, tag: 1, text: 'Finished the Learn activity. The "shared or personal" notes finally made class vs instance attributes click for me. Moving on to the cookie-demo repo tonight.', at: NOW - 2 * DAY, likes: 2, replies: [] },
+    { id: nid('p'), author: person('Ananya Rao'), tag: 0, text: 'Tip for anyone setting up Python on Windows: install from python.org and tick "Add to PATH" on the first screen. Saved me an hour. #setup', at: NOW - 3 * DAY, likes: 6, replies: [mkReply('Karthik Iyer', 'This fixed it for me too, thanks!', 2.6, 1), mkReply('Meera Joshi', 'Also restart the terminal after installing.', 2.2)] },
+    { id: nid('p'), author: person('Karthik Iyer'), tag: 1, text: 'Stuck on the pytest step: it says "no tests ran". My file is called cookie_test.py. Any idea?', at: NOW - 4 * DAY, likes: 1, replies: [mkReply('Ananya Rao', 'pytest looks for test_*.py by default. Rename it to test_cookie.py.', 3.8, 3)] },
+    { id: nid('p'), author: person('Meera Joshi'), tag: 2, text: 'Few-shot prompting tip: put your 2–3 examples in exactly the format you want back. My eval score went from 5/10 to 8/10.', at: NOW - 5 * DAY, likes: 4, replies: [] },
+    { id: nid('p'), author: person('Farhan Ali'), tag: 0, text: 'The Saturday workshop recording is up in Resources, under "Level 1 sessions".', at: NOW - 6 * DAY, likes: 3, replies: [] },
+    { id: nid('p'), author: person('Sneha Kulkarni'), tag: 1, text: 'Submitted my Cookie class! Repo: https://github.com/example/cookie-demo\nFeedback welcome.', at: NOW - 8 * DAY, likes: 5, replies: [mkReply('Rahul Verma', 'Clean code. Nice use of a class attribute for the count.', 7.5, 1)] },
+    { id: nid('p'), author: person('Rahul Verma'), tag: 3, text: 'Memory level: pass the same session_id on every call. Otherwise each message starts a fresh conversation.', at: NOW - 9 * DAY, likes: 2, replies: [] },
+    { id: nid('p'), author: person('Divya Nair'), tag: 0, text: 'Anyone in Kochi want to pair on Level 1 this weekend?', at: NOW - 11 * DAY, likes: 1, replies: [] },
+    { id: nid('p'), author: person('Arjun Mehta'), tag: 1, text: 'The Boss preview looks tough. Should Cookie.count be a class attribute or a method?', at: NOW - 12 * DAY, likes: 0, replies: [mkReply('Meera Joshi', 'A class attribute, increased in __init__. The Coach explains it well if you ask.', 11.6, 2)] },
+    { id: nid('p'), author: person('Pooja Singh'), tag: 0, text: 'Day 3 of my streak. Small steps!', at: NOW - 14 * DAY, likes: 2, replies: [] },
+    { id: nid('p'), author: person('Vikram Das'), tag: 1, text: 'Done with the Mission Briefing. Excited for the build.', at: NOW - 15 * DAY, likes: 0, replies: [] },
+    { id: nid('p'), author: person('Ananya Rao'), tag: 4, text: 'MCP tip: validate tool inputs with Pydantic before calling anything external. Errors become readable instead of mysterious.', at: NOW - 18 * DAY, likes: 7, replies: [] }
+  ]
+};
+FEED.posts.forEach(p => { p.liked = false; p.reported = false; p.status = 'live'; });
+
+const RES_GROUPS = [
+  { id: 'l1-sessions', title: 'Level 1 sessions', level: null, items: [
+    { type: 'video', title: 'Kick-off: how the 15 levels work', meta: 'Recording · 42 min' },
+    { type: 'video', title: 'Saturday workshop: classes and objects', meta: 'Recording · 1 h 10 min' },
+    { type: 'page', title: 'Workshop slides: The Mould & the Cookie', meta: 'Slides · 24 pages' }] },
+  { id: 'l1-a1', title: 'Mission Briefing — Cookie Factory', level: 1, items: [
+    { type: 'page', title: 'Mission brief', meta: 'Page' },
+    { type: 'page', title: 'Boss preview: The Mould Trial', meta: 'Page' }] },
+  { id: 'l1-a2', title: 'Learn — Classes, Objects, Attributes', level: 1, items: [
+    { type: 'video', title: 'Classes vs objects', meta: 'Video · 9 min' },
+    { type: 'page', title: 'Notes: shared or personal?', meta: 'Page' },
+    { type: 'prompt', title: 'Explain classes and objects with an everyday example, then quiz me with 3 questions.', meta: 'Prompt' },
+    { type: 'mine', title: 'Your quiz result: 4 of 4', meta: 'Your work' }] },
+  { id: 'l1-a3', title: 'Explore GitHub — Cookie Demo', level: 1, items: [
+    { type: 'link', title: 'cookie-demo repository', meta: 'GitHub' },
+    { type: 'prompt', title: 'Walk me through this repository file by file and tell me what demo.py does.', meta: 'Prompt' }] }
+];
+
+const PROJECTS = [
+  { name: 'Nisha Patel', city: 'Hyderabad', d: 10, cat: 'Support bot', brief: 'A ticket triage bot for a SaaS help desk', title: 'TriageMate: sorts and drafts replies to support tickets', desc: 'Support tickets arrive by email and chat, and urgent ones get buried. Build a bot that tags each ticket, sets its priority and drafts a first reply for a human to approve.', video: true },
+  { name: 'Rohan Gupta', city: 'Delhi', d: 14, cat: 'Healthcare', brief: 'A clinic appointment assistant', title: '', desc: 'Patients call the front desk to book, move and cancel visits. Build an assistant that handles bookings in chat, checks the doctor\'s calendar and sends reminders.', video: false },
+  { name: 'Lakshmi Menon', city: 'Kochi', d: 17, cat: 'Knowledge search', brief: 'Search over a company handbook', title: 'HandbookGPT with page citations', desc: 'Staff ask HR the same policy questions every week. Build a search assistant that answers from the handbook and shows the page it used.', video: true },
+  { name: 'Imran Siddiqui', city: 'Lucknow', d: 21, cat: 'Support bot', brief: 'A ticket triage bot for a SaaS help desk', title: '', desc: 'Support tickets arrive by email and chat, and urgent ones get buried. Build a bot that tags each ticket, sets its priority and drafts a first reply for a human to approve.', video: false },
+  { name: 'Aditi Bose', city: '', d: 23, cat: 'Healthcare', brief: 'A clinic appointment assistant', title: '', desc: 'Patients call the front desk to book, move and cancel visits. Build an assistant that handles bookings in chat, checks the doctor\'s calendar and sends reminders.', video: false },
+  { name: 'Suresh Pillai', city: 'Chennai', d: 26, cat: 'Knowledge search', brief: 'Search over a company handbook', title: 'Policy Pal', desc: 'Staff ask HR the same policy questions every week. Build a search assistant that answers from the handbook and shows the page it used.', video: false },
+  { name: 'Kavya Shetty', city: 'Mangaluru', d: 29, cat: 'Retail', brief: 'An inventory reorder helper for a small shop', title: '', desc: 'A shop owner runs out of fast sellers because nobody tracks stock. Build a helper that reads the sales sheet, flags low stock and drafts the supplier order.', video: true },
+  { name: 'Manish Tiwari', city: 'Indore', d: 33, cat: 'Retail', brief: 'An inventory reorder helper for a small shop', title: '', desc: 'A shop owner runs out of fast sellers because nobody tracks stock. Build a helper that reads the sales sheet, flags low stock and drafts the supplier order.', video: false },
+  { name: 'Ritu Malhotra', city: 'Chandigarh', d: 36, cat: 'Knowledge search', brief: 'Search over a company handbook', title: '', desc: 'Staff ask HR the same policy questions every week. Build a search assistant that answers from the handbook and shows the page it used.', video: false },
+  { name: 'Deepak Rao', city: 'Visakhapatnam', d: 40, cat: 'Healthcare', brief: 'A clinic appointment assistant', title: 'ClinicDesk', desc: 'Patients call the front desk to book, move and cancel visits. Build an assistant that handles bookings in chat, checks the doctor\'s calendar and sends reminders.', video: false }
+].map((p, i) => ({ ...p, id: 'proj-' + (i + 1), at: NOW - p.d * DAY, url: null }));
+const COVERS = [
+  { bg: 'linear-gradient(135deg,#1A9A75,#0F6B52)', fg: '#FFFFFF' },
+  { bg: 'linear-gradient(135deg,#E6F7F0,#C5EBDD)', fg: '#0F5C47' },
+  { bg: 'linear-gradient(135deg,#E3EBFD,#C7D7F8)', fg: '#1B2A6B' },
+  { bg: 'linear-gradient(135deg,#FBF1D9,#F2DDA8)', fg: '#6B4E16' },
+  { bg: 'linear-gradient(135deg,#1A2466,#0D1440)', fg: '#FFFFFF' }
+];
+const coverFor = id => { let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; return COVERS[h % COVERS.length]; };
+let showLimit = 6;
+
+/* =========================================================
+   SHELL: theme, sound, sidebar, header, router
+   ========================================================= */
+const ROUTES = {
+  home: { label: 'Home', title: 'Home' },
+  levels: { label: 'Levels', title: 'Levels', group: true },
+  ranks: { label: 'Ranks', title: 'Ranks', group: true },
+  feed: { label: 'Feed', title: 'Feed', group: true },
+  resources: { label: 'Resources', title: 'Resources', group: true },
+  showcase: { label: 'The showcase', title: 'Showcase', group: true },
+  unstuck: { label: 'Unstuck', title: 'Unstuck' },
+  feedback: { label: 'Feedback', title: 'Feedback' },
+  certificates: { label: 'Certificates', title: 'Certificates' },
+  'next-tier': { label: 'Next tier', title: 'Next tier' }
+};
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+let actx = null;
+function blip(freq = 660) {
+  if (!S.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime;
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.2);
+  } catch (e) {}
+}
+
+function renderHeader() {
+  const xp = userXp();
+  $('#streakPill').innerHTML = `${ic('flame', 'ic-sm')}<span><b>${S.user.streak}</b><span class="days-word"> days</span> ×${S.user.multiplier.toFixed(1)}</span>`;
+  $('#streakPill').title = `Streak: ${plural(S.user.streak, 'day')}. XP multiplier ×${S.user.multiplier.toFixed(1)}. A day counts when you finish at least one activity.`;
+  const rank = pickBy(RANKS, xp), nr = nextOf(RANKS, xp);
+  $('#rankPill').textContent = rank.name.toUpperCase();
+  $('#rankPill').title = `Rank: ${rank.name}${nr ? ` · ${nr.min - xp} XP to ${nr.name}` : ''}`;
+  const dark = S.theme === 'dark';
+  $('#themeBtn').innerHTML = ic(dark ? 'moon' : 'sun');
+  $('#themeBtn').setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+  $('#themeBtn').title = $('#themeBtn').getAttribute('aria-label');
+  $('#soundBtn').innerHTML = ic(S.sound ? 'volume' : 'volumeX');
+  $('#soundBtn').setAttribute('aria-pressed', String(S.sound));
+  $('#soundBtn').setAttribute('aria-label', 'Sound effects');
+  $('#soundBtn').title = S.sound ? 'Sound effects on' : 'Sound effects off';
+  $('#userBtn').innerHTML = `<span class="avatar avatar-sm me" aria-hidden="true">${initials(S.user.name)}</span><span class="uname">${esc(S.user.name)}</span>`;
+  $('#userBtn').setAttribute('aria-label', `Account menu for ${S.user.name}`);
+  $('#userMenu').innerHTML = `
+    <a role="menuitem" href="#" data-action="demoOnly" data-msg="Profile is not designed yet.">${ic('user', 'ic-sm')}Profile</a>
+    <a role="menuitem" href="#" data-action="demoOnly" data-msg="Settings are not designed yet.">${ic('settings', 'ic-sm')}Settings</a>
+    <hr><button role="menuitem" type="button" data-action="demoOnly" data-msg="Signing out is disabled in this demo.">${ic('logout', 'ic-sm')}Sign out</button>`;
+  $('#menuBtn').innerHTML = ic('menu');
+  $('#crumbChev').innerHTML = ic('chevRight', 'ic-sm');
+}
+
+function renderNav() {
+  const xp = userXp(), tier = pickBy(TIERS, xp), next = nextOf(TIERS, xp), r = S.route;
+  const item = (id, label, icon, child) => {
+    const active = r === id;
+    return `<a href="#/${id}" class="nav-item ${child ? 'child' : 'top'} ${active ? 'active' : ''}" ${active ? 'aria-current="page"' : ''} title="${esc(label)}">${ic(icon)}<span class="lbl">${esc(label)}</span>${active && child ? '<span class="dot" aria-hidden="true"></span>' : ''}</a>`;
+  };
+  const inGroup = !!(ROUTES[r] && ROUTES[r].group);
+  const open = S.tierOpen || S.rail;
+  $('#sideNav').innerHTML =
+    item('home', 'Home', 'home') +
+    `<div class="tier ${inGroup ? 'has-active' : ''}">
+       <button class="tier-btn" type="button" data-action="toggleTier" aria-expanded="${open}" aria-controls="tierPanel" title="${tier.name} tier">
+         ${ic('medal', 'medal')}<span class="lbl">${tier.name.toUpperCase()}</span>${ic('chevDown', 'chev ic-sm')}
+       </button>
+       <div class="tier-panel" id="tierPanel" ${open ? '' : 'hidden'}>
+         ${item('levels', 'Levels', 'levels', true)}${item('ranks', 'Ranks', 'ranks', true)}${item('feed', 'Feed', 'feed', true)}${item('resources', 'Resources', 'resources', true)}${item('showcase', 'Showcase', 'trophy', true)}
+       </div>
+     </div>
+     <div class="side-div" role="separator"></div>` +
+    item('unstuck', 'Unstuck', 'lifebuoy') + item('feedback', 'Feedback', 'feedback') + item('certificates', 'Certificates', 'certificate') +
+    (next ? `<a href="#/next-tier" class="nav-item top ${r === 'next-tier' ? 'active' : ''}" ${r === 'next-tier' ? 'aria-current="page"' : ''} title="${next.name} tier — locked">${ic('gem')}<span class="lbl">${next.name}</span><span class="lock" aria-label="Locked">${ic('lock', 'ic-sm')}</span></a>` : '');
+  const pct = next ? Math.round(((xp - tier.min) / (next.min - tier.min)) * 100) : 100;
+  $('#sideFoot').innerHTML = next
+    ? `<b>${tier.name} tier</b>${next.min - xp} XP to ${next.name}<div class="bar" role="progressbar" aria-label="Progress to ${next.name} tier" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${Math.max(pct, 2)}%"></i></div>`
+    : `<b>${tier.name} tier</b>Top tier reached`;
+  ROUTES['next-tier'].label = next ? next.name : 'Next tier';
+  ROUTES['next-tier'].title = ROUTES['next-tier'].label;
+  // Rail toggle icon
+  const rb = $('#railBtn');
+  rb.innerHTML = ic(S.rail ? 'panelOpen' : 'panelClose', 'ic-sm');
+  rb.setAttribute('aria-label', S.rail ? 'Expand sidebar' : 'Collapse sidebar');
+  rb.title = rb.getAttribute('aria-label');
+  rb.setAttribute('aria-expanded', String(!S.rail));
+  $('#sideClose').innerHTML = ic('x', 'ic-sm');
+}
+
+function setTheme(t) {
+  S.theme = t; document.documentElement.setAttribute('data-theme', t); store.set('ah2_theme', t); renderHeader();
+}
+function setRail(v) { S.rail = v; store.set('ah2_rail', v); $('#app').classList.toggle('is-rail', v); renderNav(); }
+function openSide() {
+  $('#sidebar').classList.add('is-open'); $('#overlay').hidden = false;
+  $('#menuBtn').setAttribute('aria-expanded', 'true'); document.body.style.overflow = 'hidden';
+  const first = $('#sidebar a, #sidebar button'); if (first) first.focus();
+}
+function closeSide(restore = true) {
+  if (!$('#sidebar').classList.contains('is-open')) return;
+  $('#sidebar').classList.remove('is-open'); $('#overlay').hidden = true;
+  $('#menuBtn').setAttribute('aria-expanded', 'false'); document.body.style.overflow = '';
+  if (restore) $('#menuBtn').focus();
+}
+
+function parseRoute() {
+  const h = location.hash || '#/home';
+  const legacy = { '#levels': 'levels', '#journey': 'home', '#graph': 'home', '#leaderboard': 'ranks' };
+  if (legacy[h]) return legacy[h];
+  const m = h.match(/^#\/([\w-]+)/);
+  return m && ROUTES[m[1]] ? m[1] : 'home';
+}
+function router() {
+  S.route = parseRoute();
+  const meta = ROUTES[S.route];
+  renderNav();
+  $('#crumbCur').textContent = meta.label;
+  document.title = `${meta.title} · AI Accelerator Hub`;
+  $('#fab').hidden = S.route === 'unstuck';
+  const main = $('#main');
+  main.innerHTML = PAGES[S.route]();
+  if (AFTER[S.route]) AFTER[S.route]();
+  closeSide(false);
+  window.scrollTo(0, 0);
+  main.focus({ preventScroll: true });
+}
+
+/* Page header (G-05) */
+const DECO = `<svg class="deco" viewBox="0 0 420 200" preserveAspectRatio="xMaxYMin slice" aria-hidden="true" fill="none">
+  ${Array.from({ length: 9 }, (_, i) => `<path d="M60 ${40 + i * 9} C 160 ${-10 + i * 9}, 260 ${110 + i * 9}, 440 ${20 + i * 9}" stroke="#D4AC5E" stroke-opacity="${0.12 + i * 0.03}" stroke-width="1"/>`).join('')}
+  ${Array.from({ length: 24 }, (_, i) => `<circle cx="${300 + (i % 8) * 12}" cy="${140 + Math.floor(i / 8) * 12}" r="1.6" fill="#B78B3F" fill-opacity=".35"/>`).join('')}
+</svg>`;
+function pageHeader({ variant = 'cream', eyebrow = '', title, desc = '', note = '' }) {
+  return `<section class="ph ph-${variant}" aria-labelledby="pageTitle">
+    ${variant === 'cream' ? DECO : ''}${variant === 'navy' ? stars(60, 5, 0.85) : ''}
+    <div style="position:relative">
+      ${eyebrow ? `<span class="eyebrow">${eyebrow}</span>` : ''}
+      <h1 id="pageTitle">${title}</h1>
+      ${desc ? `<p class="desc">${desc}</p>` : ''}
+      ${note}
+    </div>
+  </section>`;
+}
+const interimNote = () => `<p class="pending-note note xs" style="max-width:62ch">${ic('clock', 'ic-sm')}<span>Interim layout. The UI reference has no design for this screen yet, so this page reuses the existing standalone sections.</span></p>`;
+
+/* =========================================================
+   PAGES
+   ========================================================= */
+const PAGES = {};
+const AFTER = {};
+
+/* ---------- HOME (interim; no reference PDF) ---------- */
+PAGES.home = () => {
+  const xp = userXp(), a = currentAct(), done = actsDone(), lv = LEVELS[0];
+  const me = myRank();
+  return `
+  ${pageHeader({ variant: 'plain', title: `Welcome back, ${esc(S.user.first)}`, desc: 'Here is what to do next.', note: interimNote() })}
+  <div class="grid-12" style="margin-top:20px">
+    <section class="card ag-hero span-12" aria-labelledby="upNext">
+    <div class="ag-left">
+      <div class="row gap-16">
+        <span class="lv-num" aria-hidden="true">1</span>
+        <div style="min-width:0">
+          <div class="section-label" id="upNext">Up next</div>
+          <h2 class="h2" style="margin-top:2px">${esc(a.kind)} — ${esc(a.title)}</h2>
+          <p class="muted small">Level 1 · ${esc(lv.name)}: ${esc(lv.sub)} · Activity ${a.n} of 6 · +${a.xp} XP</p>
+        </div>
+      </div>
+      <p class="text-2">${esc(a.detail)}</p>
+      <div class="row gap-12 wrap">
+        <a class="btn btn-gold" href="#/levels" data-action="gotoAct" data-act="${a.n}">Continue ${ic('arrowRight', 'ic-sm')}</a>
+        <button class="btn btn-outline" type="button" data-action="askCoach" data-ctx="Level 1 · ${esc(a.kind)} — ${esc(a.title)}">${ic('headset', 'ic-sm')}Ask Coach</button>
+      </div>
+      <div class="stack gap-16" style="margin-top:auto;padding-top:18px;border-top:1px solid var(--border)" aria-labelledby="progTitle">
+      <h2 class="section-label" id="progTitle">Your progress</h2>
+      <div>
+        <div class="row between small"><span class="bold">Level 1</span><span class="muted num">${done} of 6 activities</span></div>
+        <div class="bar" style="margin-top:8px" role="progressbar" aria-label="Level 1 activities" aria-valuemin="0" aria-valuemax="6" aria-valuenow="${done}"><i style="width:${(done / 6) * 100}%"></i></div>
+        <div class="muted xs" style="margin-top:6px">${xp} of ${lv.xp} XP</div>
+      </div>
+      <div>
+        <div class="row between small"><span class="bold">Journey</span><span class="muted num">${levelsDone()} of 15 levels</span></div>
+        <div class="bar blue" style="margin-top:8px" role="progressbar" aria-label="Journey levels completed" aria-valuemin="0" aria-valuemax="15" aria-valuenow="${levelsDone()}"><i style="width:${Math.max((levelsDone() / 15) * 100, 1.5)}%"></i></div>
+      </div>
+      </div>
+    </div>
+    ${agSpace()}
+    </section>
+
+    <section class="card card-pad span-12" aria-labelledby="journeyTitle">
+      <div class="row between wrap gap-8"><h2 class="h3" id="journeyTitle">Your 15-level journey</h2><span class="muted small">Finish a level to unlock the next one</span></div>
+      ${journeyRail()}
+    </section>
+
+    <div class="card mini span-3 lift"><div class="k">Next mission</div><div class="v">Build — Your Cookie Class</div><div class="s">About 90 min · +35 XP</div></div>
+    <div class="card mini span-3 lift"><div class="k">This weekend</div><div class="v">Sat workshop · Sun build sprint</div><div class="s">Attending does not complete a level</div></div>
+    <div class="card mini span-3 lift"><div class="k">Submissions</div><div class="v">${S.acts[5] === 'review' ? '1 in review' : 'None pending'}</div><div class="s">Proof is activity 5 of each level</div></div>
+    <div class="card mini span-3 lift"><div class="k">Your squad</div><div class="v">${esc(S.user.squad)}</div><div class="s">3 of 4 members active this week</div></div>
+  </div>`;
+};
+/* Star field — deterministic (seeded) so it does not jump on re-render */
+function stars(n, seed = 1, maxO = 0.8) {
+  let s = seed * 9301 + 49297;
+  const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  let out = '';
+  for (let i = 0; i < n; i++) {
+    const size = rnd() < 0.15 ? 2.5 : rnd() < 0.5 ? 1.5 : 1;
+    const o = (0.2 + rnd() * (maxO - 0.2)).toFixed(2);
+    const tw = rnd() < 0.45;
+    out += `<span class="star${tw ? ' tw' : ''}" style="left:${(rnd() * 100).toFixed(2)}%;top:${(rnd() * 100).toFixed(2)}%;width:${size}px;height:${size}px;--o:${o};--d:${(3 + rnd() * 4).toFixed(1)}s;--dl:${(rnd() * 3).toFixed(1)}s"></span>`;
+  }
+  return `<div class="stars" aria-hidden="true">${out}</div>`;
+}
+/* Orbital "anti-gravity" stage: planet = current level, dots = the 15 levels,
+   floating glass cards = real XP / streak / rank (no fake "live" badges). */
+function agSpace() {
+  const xp = userXp(), lv = LEVELS[0], me = myRank();
+  const R = 150;
+  const dots = LEVELS.map((l, i) => {
+    const ang = (i / LEVELS.length) * 360;
+    return `<i class="${l.idx === 1 ? 'cur' : ''}" style="transform:rotate(${ang}deg) translateY(-${R}px)"></i>`;
+  }).join('');
+  const lvPct = Math.round((xp / lv.xp) * 100);
+  const rankPct = Math.round(((me.total - me.pos + 1) / me.total) * 100);
+  return `<div class="ag-space">
+    ${stars(54, 11)}
+    <div class="ag-glow" aria-hidden="true"></div>
+    <div class="ag-ring r1" aria-hidden="true"></div>
+    <div class="ag-ring r2" aria-hidden="true"></div>
+    <div class="ag-orbit" aria-hidden="true">${dots}</div>
+    <div class="ag-planet-wrap" aria-hidden="true"><div class="ag-planet"><div>
+      <div class="k">CURRENT</div><div class="lv">L01</div><div class="nm">${esc(lv.short.toUpperCase())}</div>
+      <div class="xp">${lv.xp} XP</div></div></div></div>
+    <div class="ag-card ag-c1">
+      <div class="k">XP balance</div>
+      <div class="v">${xp}<small>XP</small></div>
+      <div class="mbar" role="progressbar" aria-label="Level 1 XP" aria-valuemin="0" aria-valuemax="${lv.xp}" aria-valuenow="${xp}"><i style="width:${Math.max(lvPct, 3)}%"></i></div>
+      <div class="s">${lv.xp - xp} XP to finish Level 1</div>
+    </div>
+    <div class="ag-card ag-c2">
+      <div class="k">Daily streak</div>
+      <div class="v"><span class="flame">${ic('flame', 'ic-sm')}</span>${S.user.streak}<small>days</small></div>
+      <div class="s">Longest ${S.user.longest} · ${plural(S.user.freezes, 'freeze')} left</div>
+    </div>
+    <div class="ag-card ag-c3">
+      <div class="k">Cohort rank</div>
+      <div class="v">#${me.pos}<small>of ${me.total}</small></div>
+      <div class="mbar blue" aria-hidden="true"><i style="width:${Math.max(rankPct, 3)}%"></i></div>
+      <a href="#/ranks">View ranks ${ic('arrowRight', 'ic-sm')}</a>
+    </div>
+    <span class="ag-meta" aria-hidden="true">15 levels · 1 journey</span>
+  </div>`;
+}
+function journeyRail() {
+  const nodes = LEVELS.map(l => {
+    const cls = l.idx === 1 ? (levelsDone() ? 'done' : 'current') : '';
+    const state = l.idx === 1 ? (levelsDone() ? 'completed' : 'in progress') : 'locked';
+    return `<li class="jnode ${cls}"><span class="jdot">${l.idx === 1 && !levelsDone() ? '01' : l.idx > 1 ? ic('lock', 'ic-sm') : ic('check', 'ic-sm')}</span><span class="jl">${esc(l.short)}</span><span class="jx">${l.xp} XP</span><span class="sr-only">Level ${l.idx}, ${state}</span></li>`;
+  }).join('');
+  return `<div class="rail-scroll" tabindex="0" aria-label="Journey levels, scroll sideways"><ol class="jrail" style="list-style:none;margin:0">${nodes}</ol></div>
+    <div class="stages">${STAGES.map(s => `<span class="badge badge-neutral">${s.name} · ${s.from}–${s.to}</span>`).join('')}</div>`;
+}
+
+/* ---------- LEVELS (interim; keeps standalone timeline + proof form) ---------- */
+PAGES.levels = () => `
+  ${pageHeader({ eyebrow: 'Your journey', title: '15 levels, one shipped project each', desc: 'Every level ends with something you built and submitted, checked by a reviewer. Finish a level to unlock the next.', note: interimNote() })}
+  <section aria-labelledby="allLv">
+    <div class="row between wrap gap-8" style="margin-bottom:12px"><h2 class="h3" id="allLv">All levels</h2><span class="muted small">${levelsDone()} of 15 complete</span></div>
+    <div class="lv-grid">${LEVELS.map(l => {
+      const cur = l.idx === 1;
+      const status = cur ? `${ic('clock', 'ic-sm')}In progress · ${actsDone()}/6` : `${ic('lock', 'ic-sm')}${l.idx === 2 ? 'Finish Level 1 to unlock' : 'Locked'}`;
+      const inner = `<span class="code">L${String(l.idx).padStart(2, '0')} · ${l.xp} XP</span><span class="nm">${esc(l.name)}</span><span class="muted xs">${esc(l.sub)}</span><span class="st">${status}</span>`;
+      return cur
+        ? `<button type="button" class="lv-tile current" data-action="gotoAct" data-act="${currentAct().n}" aria-label="Level 1, ${esc(l.name)}, in progress. Go to activities">${inner}</button>`
+        : `<div class="lv-tile locked" aria-label="Level ${l.idx}, ${esc(l.name)}, locked">${inner}</div>`;
+    }).join('')}</div>
+    <div class="stages">${STAGES.map(s => `<span class="badge badge-neutral">${s.name} · Levels ${s.from}–${s.to}</span>`).join('')}</div>
+  </section>
+
+  <section class="card card-pad" style="margin-top:24px" aria-labelledby="l1Title">
+    <div class="row between wrap gap-12" style="margin-bottom:18px">
+      <div><div class="section-label">Level 1 · Ignition</div><h2 class="h2" id="l1Title">AI Awakening: The Mould & the Cookie</h2></div>
+      <div class="row gap-8"><span class="badge badge-gold">${LEVELS[0].xp} XP</span><span class="badge badge-neutral">6 activities</span></div>
+    </div>
+    <ol class="tl" style="list-style:none;margin:0;padding:0">${L1_ACTS.map(actRow).join('')}</ol>
+  </section>`;
+function actRow(a) {
+  const st = S.acts[a.n];
+  const label = { done: '<span class="badge badge-success">' + ic('check', 'ic-sm') + 'Done</span>', current: '<span class="badge badge-gold">Up next</span>', review: '<span class="badge badge-info">In review</span>', todo: '' }[st];
+  const ctx = `Level 1 · ${a.kind} — ${a.title}`;
+  const proof = a.n === 5 && st !== 'review' ? `
+    <form class="stack gap-12" style="margin-top:14px" data-form="proof" novalidate>
+      <div>
+        <label class="field-label" for="repoUrl">Repository link</label>
+        <input class="input" id="repoUrl" name="repo" type="url" inputmode="url" placeholder="https://github.com/your-name/cookie-demo" aria-describedby="repoHint">
+        <div class="field-hint" id="repoHint">A public link that starts with https://</div>
+      </div>
+      <div>
+        <label class="field-label" for="reflection">Reflection</label>
+        <textarea class="textarea" id="reflection" name="reflection" rows="3" placeholder="What did you learn about classes vs objects?" aria-describedby="reflHint"></textarea>
+        <div class="field-hint" id="reflHint">At least 10 words.</div>
+      </div>
+      <div><button class="btn btn-gold" type="submit">${ic('upload', 'ic-sm')}Submit for review</button></div>
+    </form>` : '';
+  const reviewNote = a.n === 5 && st === 'review' ? `<p class="pending-note small" style="margin-top:12px">${ic('check', 'ic-sm')}<span>Submitted for review. You'll get +${a.xp} XP when it's approved. If changes are needed, you can resubmit without losing anything.</span></p>` : '';
+  return `<li class="act ${st}" id="act-${a.n}">
+    <span class="act-n" aria-hidden="true">${st === 'done' ? ic('check', 'ic-sm') : a.n}</span>
+    <div class="act-main">
+      <div class="row between gap-12 wrap"><div class="act-title">${esc(a.kind)} — ${esc(a.title)} ${label}</div><span class="act-xp">+${a.xp} XP</span></div>
+      <p class="text-2 small" style="margin-top:4px">${esc(a.detail)}</p>
+      <div class="act-tools"><button class="btn btn-soft btn-sm" type="button" data-action="askCoach" data-ctx="${esc(ctx)}">${ic('headset', 'ic-sm')}Ask Coach</button></div>
+      ${proof}${reviewNote}
+    </div>
+    <span class="sr-only">Status: ${st === 'todo' ? 'not started' : st}</span>
+  </li>`;
+}
+
+/* ---------- RANKS (interim; no reference PDF) ---------- */
+function cohortRows() {
+  return [...COHORT.map(c => ({ ...c, me: false })), { name: S.user.name, city: S.user.city, xp: userXp(), me: true }].sort((a, b) => b.xp - a.xp);
+}
+function myRank() { const r = cohortRows(); return { pos: r.findIndex(x => x.me) + 1, total: r.length }; }
+PAGES.ranks = () => {
+  const rows = cohortRows(), me = myRank();
+  return `
+  ${pageHeader({ variant: 'plain', title: 'Ranks', desc: `Your cohort, ranked by XP. You are #${me.pos} of ${me.total}.`, note: interimNote() })}
+  <div class="card" style="margin-top:20px;overflow-x:auto">
+    <table class="tbl">
+      <caption class="sr-only">Cohort ranking by XP</caption>
+      <thead><tr><th scope="col">#</th><th scope="col">Learner</th><th scope="col">City</th><th scope="col">Rank</th><th scope="col" style="text-align:right">XP</th></tr></thead>
+      <tbody>${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''}">
+        <td class="num bold">${i + 1}</td>
+        <td><div class="row gap-12"><span class="avatar avatar-sm ${r.me ? 'me' : ''}" aria-hidden="true">${initials(r.name)}</span><span class="${r.me ? 'bold' : ''}">${esc(r.name)}${r.me ? ' <span class="badge badge-gold" style="margin-left:6px">You</span>' : ''}</span></div></td>
+        <td class="text-2">${esc(r.city)}</td>
+        <td><span class="badge badge-neutral">${pickBy(RANKS, r.xp).name}</span></td>
+        <td class="num bold" style="text-align:right">${r.xp.toLocaleString('en-IN')}</td></tr>`).join('')}</tbody>
+    </table>
+  </div>
+  <p class="muted small" style="margin-top:12px">XP is added by the server when an activity is complete or a review is approved.</p>`;
+};
+
+/* ---------- FEED (REF-FEED) ---------- */
+const tagLabel = t => (t === 0 ? 'General' : `Level ${t}`);
+PAGES.feed = () => `
+  ${pageHeader({ eyebrow: 'Feed', title: 'What everyone is working on', desc: 'Ask when you are stuck, share what worked, and put your wins on the wall. Only people in your cohort can see it.' })}
+  <div class="tabs" role="tablist" aria-label="Feed sections" style="margin-bottom:20px">
+    ${[['posts', 'Posts', 'feed'], ['wins', 'Wins', 'trophy']].map(([id, l, i]) => `<button class="tab" role="tab" id="tab-${id}" type="button" aria-selected="${FEED.tab === id}" aria-controls="feedPanel" tabindex="${FEED.tab === id ? 0 : -1}" data-action="feedTab" data-tab="${id}">${ic(i, 'ic-sm')}${l}</button>`).join('')}
+  </div>
+  <div id="feedPanel" role="tabpanel" aria-labelledby="tab-${FEED.tab}">${FEED.tab === 'posts' ? feedPosts() : feedWins()}</div>`;
+function feedWins() {
+  return `<div class="card empty">
+    <div class="ic-wrap">${ic('trophy', 'ic-lg')}</div>
+    <h2 class="h3">Wins are coming soon</h2>
+    <p class="text-2" style="margin-top:6px">For now, share your win as a post on the Posts tab.</p>
+    <button class="btn btn-gold btn-sm" style="margin-top:16px" type="button" data-action="feedTab" data-tab="posts">Go to Posts</button>
+  </div>`;
+}
+function feedPosts() {
+  const levelChips = LEVELS.map(l => l.idx);
+  return `
+  <section class="card composer" aria-labelledby="compTitle" style="margin-bottom:24px">
+    <div class="composer-inner">
+      <h2 class="h3" id="compTitle" style="font-size:18px">Share something with everyone in your cohort</h2>
+      <p class="text-2" style="margin-top:4px">A question you are stuck on, or something you figured out. It does not have to be finished. Wins go on the Wins tab.</p>
+      <div class="row gap-16" style="align-items:flex-start;margin-top:18px">
+        <span class="avatar me" aria-hidden="true">${initials(S.user.name)}</span>
+        <div style="flex:1;min-width:0">
+          <label class="field-label" for="postText">Your post</label>
+          <div class="ta-wrap">
+            <textarea class="textarea" id="postText" maxlength="2000" placeholder="What are you working on, ${esc(S.user.first)}?" aria-describedby="postHint postCount">${esc(FEED.draft)}</textarea>
+            <button class="emoji-btn" type="button" data-action="emojiToggle" aria-label="Add emoji" aria-expanded="false" aria-controls="emojiPop">${ic('smile')}</button>
+            <div class="emoji-pop" id="emojiPop" hidden role="group" aria-label="Emoji">${['🎉', '🚀', '🙏', '💡', '🔥', '✅', '👏', '🤔', '😅', '💪', '📌', '⭐'].map(e => `<button type="button" data-action="emojiPick" data-e="${e}" aria-label="Insert ${e}">${e}</button>`).join('')}</div>
+          </div>
+          <div class="row between xs muted" style="margin-top:6px"><span></span><span id="postCount">${FEED.draft.length}/2000</span></div>
+        </div>
+      </div>
+      <div class="row gap-12" style="margin-top:14px;align-items:center">
+        <span class="bold small" id="tagLbl" style="flex-shrink:0">Tag it</span>
+        <div class="chips" role="radiogroup" aria-labelledby="tagLbl" style="flex:1;min-width:0">
+          ${[0, ...levelChips].map(t => `<button class="chip ${FEED.tag === t ? '' : 'chip-soft'}" type="button" role="radio" aria-checked="${FEED.tag === t}" data-action="feedTag" data-t="${t}">${tagLabel(t)}</button>`).join('')}
+        </div>
+      </div>
+      <div class="row gap-12 wrap" style="justify-content:flex-end;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <span class="muted small" id="postHint" ${FEED.draft.trim() ? 'hidden' : ''}>Write something to post.</span>
+        <button class="btn btn-gold" id="postBtn" type="button" data-action="feedPost" ${FEED.draft.trim() ? '' : 'disabled'}>${ic('send', 'ic-sm')}Post</button>
+      </div>
+      <p class="muted xs" style="margin-top:12px">Only people in your cohort see it. Posts that look like selling, crypto or spam also go to a moderator to check.</p>
+    </div>
+  </section>
+
+  <div class="row gap-12" style="margin-bottom:14px">
+    <span class="section-label" id="showLbl" style="flex-shrink:0">Show</span>
+    <div class="chips" role="radiogroup" aria-labelledby="showLbl" style="flex:1;min-width:0">
+      ${[['all', 'Everything'], ...LEVELS.map(l => [String(l.idx), `Level ${l.idx}`])].map(([v, l]) => `<button class="chip" type="button" role="radio" aria-checked="${FEED.filter === v}" data-action="feedFilter" data-f="${v}">${l}</button>`).join('')}
+    </div>
+  </div>
+  <div id="feedList" class="stack gap-16">${feedList()}</div>`;
+}
+function visiblePosts() {
+  return FEED.posts.filter(p => (p.status === 'live' || p.me) && (FEED.filter === 'all' || String(p.tag) === FEED.filter));
+}
+function feedList() {
+  const all = visiblePosts();
+  if (!all.length) {
+    const msg = FEED.filter === 'all' ? 'No posts yet. Be the first to share what you are working on.' : `Nothing tagged Level ${FEED.filter} yet.`;
+    return `<div class="card empty"><div class="ic-wrap">${ic('feed', 'ic-lg')}</div><p>${msg}</p></div>`;
+  }
+  const list = all.slice(0, FEED.limit);
+  return list.map(postCard).join('') + (all.length > FEED.limit
+    ? `<div style="text-align:center;margin-top:8px"><button class="btn btn-cream" type="button" data-action="feedMore">Load more posts</button></div>`
+    : `<p class="muted small" style="text-align:center;margin-top:8px">You're all caught up.</p>`);
+}
+function likeBtn(item, kind) {
+  const n = item.likes;
+  return `<button class="act-btn" type="button" data-action="like" data-kind="${kind}" data-id="${item.id}" aria-pressed="${item.liked}" aria-label="Like, ${plural(n, 'like')}">${ic('heart', 'ic-sm')}<span aria-hidden="true">${n > 0 ? n : 'Like'}</span></button>`;
+}
+function postCard(p) {
+  const a = p.me ? ME() : p.author;
+  const meta = [a.city, a.rank].filter(Boolean).map(esc).join(' · ');
+  const replyOpen = FEED.openReply === p.id;
+  return `<article class="card post" aria-labelledby="pn-${p.id}">
+    <div class="post-head">
+      <span class="avatar ${p.me ? 'me' : ''}" aria-hidden="true">${p.me ? initials(S.user.name) : initials(a.name)}</span>
+      <div style="flex:1;min-width:0">
+        <div class="post-name" id="pn-${p.id}">${esc(a.name)}</div>
+        <div class="post-meta">${meta} · ${timeTag(p.at)}</div>
+      </div>
+      <div class="row gap-8">
+        ${p.status === 'pending' ? `<span class="badge badge-warn">Pending review</span>` : ''}
+        <span class="badge ${p.tag === 0 ? 'badge-neutral' : 'badge-gold'}">${tagLabel(p.tag)}</span>
+      </div>
+    </div>
+    <div class="post-body">${linkify(p.text)}</div>
+    <div class="post-actions">
+      ${likeBtn(p, 'post')}
+      <button class="act-btn" type="button" data-action="replyToggle" data-id="${p.id}" aria-expanded="${replyOpen}" aria-label="Reply, ${plural(p.replies.length, 'reply', 'replies')}">${ic('reply', 'ic-sm')}<span aria-hidden="true">Reply${p.replies.length ? ` (${p.replies.length})` : ''}</span></button>
+      <span class="act-right">${p.me
+        ? `<button class="btn btn-text" type="button" data-action="deletePost" data-id="${p.id}">${ic('trash', 'ic-sm')}Delete</button>`
+        : p.reported ? `<span class="muted small">Reported</span>` : `<button class="btn btn-text" type="button" data-action="report" data-kind="post" data-id="${p.id}">${ic('flag', 'ic-sm')}Report</button>`}</span>
+    </div>
+    ${p.replies.length ? `<div class="thread">${p.replies.map(r => replyItem(r, p.id)).join('')}</div>` : ''}
+    ${replyOpen ? `<form class="reply-box" data-form="reply" data-id="${p.id}">
+      <label class="sr-only" for="rb-${p.id}">Reply to ${esc(a.name)}</label>
+      <textarea class="textarea" id="rb-${p.id}" rows="2" maxlength="1000" placeholder="Write a reply…" style="min-height:70px">${esc(FEED.replyDraft[p.id] || '')}</textarea>
+      <div class="row gap-8" style="justify-content:flex-end"><button class="btn btn-text" type="button" data-action="replyToggle" data-id="${p.id}">Cancel</button><button class="btn btn-ink btn-sm" type="submit">Reply</button></div>
+    </form>` : ''}
+  </article>`;
+}
+function replyItem(r, pid) {
+  const a = r.me ? ME() : r.author;
+  return `<div>
+    <div class="row gap-12" style="align-items:flex-start">
+      <span class="avatar avatar-xs ${r.me ? 'me' : ''}" aria-hidden="true">${r.me ? initials(S.user.name) : initials(a.name)}</span>
+      <div><div class="bold small">${esc(a.name)}</div><div class="post-meta xs">${esc(a.rank)} · ${timeTag(r.at)}</div></div>
+    </div>
+    <div class="reply-body">${linkify(r.text)}</div>
+    <div class="reply-actions">${likeBtn(r, 'reply')}<span class="act-right">${r.me
+      ? `<button class="btn btn-text" type="button" data-action="deleteReply" data-pid="${pid}" data-id="${r.id}">${ic('trash', 'ic-sm')}Delete</button>`
+      : r.reported ? `<span class="muted small">Reported</span>` : `<button class="btn btn-text" type="button" data-action="report" data-kind="reply" data-id="${r.id}">${ic('flag', 'ic-sm')}Report</button>`}</span></div>
+  </div>`;
+}
+const findPost = id => FEED.posts.find(p => p.id === id);
+const findReply = id => { for (const p of FEED.posts) { const r = p.replies.find(x => x.id === id); if (r) return r; } return null; };
+function refreshFeedList(focusSel) { const el = $('#feedList'); if (el) el.innerHTML = feedList(); if (focusSel) { const f = $(focusSel); if (f) f.focus(); } }
+AFTER.feed = () => {
+  const ta = $('#postText');
+  if (!ta) return;
+  ta.addEventListener('input', () => {
+    FEED.draft = ta.value;
+    const has = !!ta.value.trim();
+    $('#postBtn').disabled = !has; $('#postHint').hidden = has;
+    $('#postCount').textContent = `${ta.value.length}/2000`;
+  });
+};
+
+/* ---------- RESOURCES (REF-RES) ---------- */
+let resOpen = new Set(store.get('ah2_res_open', []));
+const RES_ICON = { video: 'video', page: 'file', prompt: 'sparkle', mine: 'check', link: 'github' };
+PAGES.resources = () => {
+  const groups = RES_GROUPS; // only Level 1 is opened, so only its groups exist (RES-02)
+  return `
+  ${pageHeader({ title: 'Everything from your activities', desc: 'The prompts, the pages and the things you have made, kept with the activity they came from. More lands here as you open each level.' })}
+  <div class="acc">${groups.map(g => {
+    const open = resOpen.has(g.id);
+    return `<section class="acc-item">
+      <h2 style="margin:0;font-size:inherit">
+        <button class="acc-head" type="button" id="ah-${g.id}" aria-expanded="${open}" aria-controls="ap-${g.id}" data-action="accToggle" data-id="${g.id}">
+          <span class="acc-title">${esc(g.title)}</span>
+          <span class="acc-meta">${g.level ? `<span class="lv">Level ${g.level}</span>` : ''}<span>${plural(g.items.length, 'item')}</span>${ic('chevDown', 'chev')}</span>
+        </button>
+      </h2>
+      <div class="acc-panel" id="ap-${g.id}" role="region" aria-labelledby="ah-${g.id}" ${open ? '' : 'hidden'}>
+        ${g.items.map((it, i) => `<div class="res-row">
+          <span class="res-ic ${it.type === 'prompt' ? 'prompt' : it.type === 'mine' ? 'mine' : ''}" aria-hidden="true">${ic(RES_ICON[it.type])}</span>
+          <div style="flex:1;min-width:0"><div class="${it.type === 'prompt' ? '' : 'bold'}" style="font-size:14.5px">${esc(it.title)}</div><div class="muted xs">${esc(it.meta)}</div></div>
+          ${it.type === 'prompt'
+            ? `<button class="btn btn-soft btn-sm" type="button" data-action="copyPrompt" data-g="${g.id}" data-i="${i}">${ic('copy', 'ic-sm')}Copy</button>`
+            : `<button class="btn btn-outline btn-sm" type="button" data-action="demoOnly" data-msg="Demo file: “${esc(it.title)}” is not included in this standalone page.">Open</button>`}
+        </div>`).join('')}
+      </div>
+    </section>`;
+  }).join('')}</div>
+  <div class="pending-note" style="margin-top:20px">${ic('lock', 'ic-sm')}<span>Level 2 resources appear here when you open Level 2. Finish Level 1 to unlock it.</span></div>`;
+};
+
+/* ---------- SHOWCASE (REF-SHOW) ---------- */
+PAGES.showcase = () => {
+  const list = [...PROJECTS].sort((a, b) => b.at - a.at);
+  const n = list.length;
+  const lv = LEVELS[SHOWCASE_LEVEL - 1];
+  return `
+  ${pageHeader({ variant: 'navy', eyebrow: 'The showcase', title: `<span class="hl">${n}</span> ${n === 1 ? 'project' : 'projects'} built from real briefs`, desc: 'Every learner who shipped a reviewed capstone is on the wall. Newest first.' })}
+  ${S.submittedShowcase ? '' : `<a class="cta-green" href="#/levels">
+    ${ic('rocket', 'ic-lg')}
+    <span style="flex:1;min-width:0"><span class="big" style="display:block">Submit your project in Level ${lv.idx} — ${esc(lv.name)} to join the wall.</span>
+    <span class="sub" style="display:block">Your project and your name will show here for every member. Level ${lv.idx} unlocks after Level ${lv.idx - 1}.</span></span>
+    ${ic('arrowRight')}
+  </a>`}
+  <div class="grid2" id="projGrid">${list.slice(0, showLimit).map(projCard).join('')}</div>
+  <div style="text-align:center;margin-top:24px">${n > showLimit ? `<button class="btn btn-cream" type="button" data-action="showMore">Load more projects</button>` : `<p class="muted small">That's every project on the wall.</p>`}</div>`;
+};
+function projCard(p) {
+  const c = coverFor(p.id);
+  return `<article class="card proj lift" aria-labelledby="pa-${p.id}">
+    <div class="proj-cover" style="background:${c.bg};color:${c.fg}" aria-hidden="true"><span class="proj-ring">${initials(p.name)}</span></div>
+    <div class="proj-body">
+      <div class="row gap-8 wrap"><span class="badge badge-gold">${esc(p.cat)}</span><span class="badge badge-gold">Built for ${esc(p.brief.charAt(0).toLowerCase() + p.brief.slice(1))}</span></div>
+      <div class="proj-author" id="pa-${p.id}"><span class="avatar avatar-xs" aria-hidden="true">${initials(p.name)}</span>${esc(p.name)}</div>
+      <div class="proj-meta">${p.city ? `<span>${ic('pin', 'ic-sm')}${esc(p.city)}</span>` : ''}<span>${timeTag(p.at)}</span></div>
+      ${p.title ? `<div class="proj-title">${esc(p.title)}</div>` : ''}
+      <p class="proj-desc">${esc(p.desc)}</p>
+      <div class="proj-actions">
+        <a class="btn btn-gold" href="${p.url ? esc(p.url) : '#'}" ${p.url ? 'target="_blank" rel="noopener noreferrer"' : 'data-action="demoOnly" data-msg="Demo data: this project has no live link in the standalone page."'} aria-label="Open project by ${esc(p.name)} (opens in a new tab)">Open project ${ic('external', 'ic-sm')}</a>
+        ${p.video ? `<button class="btn btn-cream" type="button" data-action="video" data-name="${esc(p.name)}" aria-label="Watch demo video by ${esc(p.name)}">${ic('play', 'ic-sm')}Video</button>` : ''}
+      </div>
+    </div>
+  </article>`;
+}
+
+/* ---------- UNSTUCK (REF-UNSTUCK) ---------- */
+const MODES = {
+  coach: { title: 'Learning Coach', desc: 'Help with this app: steps, XP, proof', icon: 'headset', tile: '', ph: 'Ask Coach…',
+    sugg: ["Where do I find today's activities?", 'How do I submit proof?', 'Why is Level 2 locked?', 'How do XP and streaks work?'] },
+  career: { title: 'Career Coach', desc: 'Help with your path: track, portfolio, next move', icon: 'briefcase', tile: 'gold', ph: 'Ask Career Coach…',
+    sugg: ['Which track should I choose?', 'How should my GitHub look?', 'How do I get freelance work?'] }
+};
+const CHAT = { mode: 'coach', threads: { coach: [], career: [] }, draft: '', img: null, ctx: '', timer: null, listening: false, rec: null };
+const REPLIES = {
+  coach: [
+    [/activit|today|where|find/i, "You can find today's work on Home, under “Up next”. It always shows the next activity to do.\n\nTo see every activity of a level in order, open Levels in the left menu.\n\nOn a phone, the menu opens from the ☰ button at the top-left."],
+    [/proof|submit|repo/i, 'Submit proof is activity 5 of each level. Paste your public GitHub repo link (it must start with https://) and write a short reflection of at least 10 words.\n\nA reviewer checks it. You get the XP when it is approved, not when you press Submit. If changes are needed, you can resubmit without losing anything.'],
+    [/lock|unlock|level 2|next level/i, 'A level unlocks when the level before it is complete, including the review of your proof and the Boss challenge. There are no time gates.\n\nYou are on Level 1 now. Finish activities 3 to 6 and Level 2 opens.'],
+    [/xp|point|streak|rank|tier/i, 'XP comes from finishing activities. Each activity shows what it is worth, for example +35 XP for the Build step.\n\nYour streak grows by one each day you finish at least one activity. Just logging in does not count. Your rank and tier are based on total XP.'],
+    [/pytest|test|error|stuck|bug/i, 'If pytest says “no tests ran”, check the file name. pytest looks for files named test_*.py, for example tests/test_cookie.py.\n\nIf it is a different error, paste the last few lines here, or attach a screenshot.'],
+    [/how.*(app|work)/i, 'Here is the short version:\n\n1. Home shows your next activity.\n2. Each level has 6 activities, done in order.\n3. Activity 5 is where you submit proof; a reviewer approves it.\n4. Finish all 6 and the next level unlocks.\n\nFeed is for questions and tips, Resources keeps everything from your activities, and Showcase shows finished capstones.']
+  ],
+  coachDefault: 'I can help with steps, XP, unlocking and proof. Tell me which activity you are on, or paste the error you see. You can also attach a screenshot.',
+  career: [
+    [/track|special/i, 'Tracks open at Level 11, after the Capstone. Pick the one that matches the job you want next, not the one that sounds hardest.\n\nFor now, the best career move is to finish Level 1 and ship a clean first repo. Every track builds on it.'],
+    [/portfolio|github|cv|resume|look/i, 'Recruiters look at shipped work first. Keep each level\'s repo public, with a README that says what it does, how to run it, and one screenshot.\n\nAt Level 14 you will turn these into a portfolio page.'],
+    [/job|interview|freelance|money|income|paid|client/i, 'Level 15 covers interviews, freelance proposals and pricing. Until then, collect proof: a short post in Feed for each level you finish becomes a ready-made story for interviews.']
+  ],
+  careerDefault: 'I help with your path: which track to choose, how to present your projects, and what to do next for a job or freelance work. What are you aiming for?'
+};
+function replyFor(mode, text) {
+  const rules = REPLIES[mode];
+  for (const [re, ans] of rules) if (re.test(text)) return ans;
+  return REPLIES[mode + 'Default'];
+}
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function chatHTML(compact) {
+  const m = MODES[CHAT.mode];
+  const streaming = !!CHAT.timer;
+  return `<div class="chat ${compact ? 'compact' : ''}" data-chat>
+    <div class="seg" role="radiogroup" aria-label="Who do you want to ask?">
+      ${Object.entries(MODES).map(([id, md]) => `<button class="seg-opt" type="button" role="radio" aria-checked="${CHAT.mode === id}" tabindex="${CHAT.mode === id ? 0 : -1}" data-action="chatMode" data-mode="${id}">
+        <span class="tile ${md.tile}" aria-hidden="true">${ic(md.icon)}</span><span><b>${md.title}</b><small>${md.desc}</small></span></button>`).join('')}
+    </div>
+    <p class="chat-intro">Ask about the app, your XP, or whatever has you stuck. You can add a screenshot too.</p>
+    <div class="msgs ${CHAT.threads[CHAT.mode].length ? '' : 'is-empty'}" role="log" aria-live="polite" aria-label="Conversation with ${m.title}" data-msgs>${msgsHTML()}</div>
+    ${CHAT.ctx ? `<div class="ctx">${ic('pin', 'ic-sm')}<span>About: ${esc(CHAT.ctx)}</span><button type="button" data-action="ctxClear" aria-label="Remove context">${ic('x', 'ic-sm')}</button></div>` : ''}
+    ${CHAT.img ? `<div class="att"><img src="${CHAT.img}" alt="Attached screenshot preview"><button class="btn-text btn" type="button" data-action="imgClear" aria-label="Remove screenshot">${ic('x', 'ic-sm')}</button></div>` : ''}
+    <form class="chat-comp" data-form="chat">
+      <button class="sq" type="button" data-action="imgPick" aria-label="Attach a screenshot">${ic('image')}</button>
+      <input type="file" accept="image/png,image/jpeg,image/webp" hidden data-file>
+      <label class="sr-only" for="chatTa-${compact ? 'd' : 'p'}">Message ${m.title}</label>
+      <textarea class="textarea" id="chatTa-${compact ? 'd' : 'p'}" rows="1" placeholder="${m.ph}" data-chatta>${esc(CHAT.draft)}</textarea>
+      ${SpeechRec ? `<button class="sq ${CHAT.listening ? 'listening' : ''}" type="button" data-action="mic" aria-pressed="${CHAT.listening}" aria-label="${CHAT.listening ? 'Stop voice input' : 'Speak your question'}">${ic('mic')}</button>` : ''}
+      ${streaming
+        ? `<button class="sq send" type="button" data-action="chatStop" aria-label="Stop answer">${ic('stop')}</button>`
+        : `<button class="sq send" type="submit" aria-label="Send" ${CHAT.draft.trim() || CHAT.img ? '' : 'disabled'}>${ic('send')}</button>`}
+    </form>
+    <p class="demo-note">Demo: replies in this standalone page are scripted, not a live model. Enter sends · Shift+Enter adds a new line.</p>
+  </div>`;
+}
+function msgsHTML() {
+  const t = CHAT.threads[CHAT.mode];
+  if (!t.length) return `<div class="sugg" role="group" aria-label="Suggested questions">${MODES[CHAT.mode].sugg.map(s => `<button type="button" data-action="chatSugg" data-q="${esc(s)}">${esc(s)}</button>`).join('')}</div>`;
+  return t.map(m => `<div class="msg ${m.role}${m.streaming ? ' typing' : ''}" data-msg="${m.id}">${m.img ? `<img src="${m.img}" alt="Screenshot you attached">` : ''}<span data-txt>${esc(m.text)}</span></div>`).join('');
+}
+function renderChats() {
+  $$('[data-chat-root]').forEach(root => {
+    const hadFocus = root.contains(document.activeElement) && document.activeElement.matches('[data-chatta]');
+    root.innerHTML = chatHTML(root.dataset.chatRoot === 'drawer');
+    bindChat(root);
+    if (hadFocus) { const ta = $('[data-chatta]', root); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+    const ms = $('[data-msgs]', root); ms.scrollTop = ms.scrollHeight;
+  });
+}
+function bindChat(root) {
+  const ta = $('[data-chatta]', root);
+  const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 156) + 'px'; };
+  grow();
+  ta.addEventListener('input', () => {
+    CHAT.draft = ta.value; grow();
+    const send = $('button[type="submit"]', root); if (send) send.disabled = !(ta.value.trim() || CHAT.img);
+  });
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendChat(); }
+  });
+  const file = $('[data-file]', root);
+  file.addEventListener('change', () => {
+    const f = file.files[0]; if (!f) return;
+    if (!/^image\/(png|jpeg|webp)$/.test(f.type)) { toast('Please attach a PNG, JPEG or WebP image.'); return; }
+    if (f.size > 5 * 1024 * 1024) { toast('That image is over 5 MB. Please attach a smaller screenshot.'); return; }
+    const r = new FileReader();
+    r.onload = () => { CHAT.img = r.result; renderChats(); };
+    r.readAsDataURL(f);
+  });
+}
+function sendChat(text) {
+  if (CHAT.timer) return;
+  const q = (text != null ? text : CHAT.draft).trim();
+  if (!q && !CHAT.img) return;
+  const mode = CHAT.mode, th = CHAT.threads[mode];
+  th.push({ id: nid('m'), role: 'me', text: q || '(screenshot)', img: CHAT.img });
+  const full = (CHAT.ctx ? `About ${CHAT.ctx}:\n\n` : '') + (q ? replyFor(mode, q + ' ' + CHAT.ctx) : 'Thanks for the screenshot. Tell me what you expected to see, and which activity you are on, and I will walk you through it.');
+  const msg = { id: nid('m'), role: 'ai', text: '', streaming: true };
+  th.push(msg);
+  CHAT.draft = ''; CHAT.img = null;
+  const words = full.split(/(\s+)/); let i = 0;
+  CHAT.timer = setInterval(() => {
+    i += 2; msg.text = words.slice(0, i).join('');
+    $$(`[data-msg="${msg.id}"] [data-txt]`).forEach(el => { el.textContent = msg.text; const ms = el.closest('[data-msgs]'); ms.scrollTop = ms.scrollHeight; });
+    if (i >= words.length) finishStream(msg);
+  }, 45);
+  renderChats();
+}
+function finishStream(msg) {
+  clearInterval(CHAT.timer); CHAT.timer = null; msg.streaming = false; blip(520); renderChats();
+}
+function stopStream() {
+  const th = CHAT.threads[CHAT.mode]; const msg = th[th.length - 1];
+  if (msg && msg.streaming) { msg.text += msg.text ? ' …' : '(stopped)'; finishStream(msg); }
+}
+PAGES.unstuck = () => `
+  ${pageHeader({ variant: 'plain', title: 'Unstuck', desc: 'Learning Coach: help with a step. Career Coach: help with your path.' })}
+  <section class="card card-pad" style="margin-top:20px" aria-label="Ask a coach" data-chat-root="page"></section>
+  <div class="grid2" style="margin-top:24px">
+    <div class="card help-card lift">
+      <div class="top"><span class="tile" aria-hidden="true">${ic('bulb')}</span><div><h2 class="h3">Stuck on a step?</h2><p class="text-2 small" style="margin-top:4px">Press “Ask Coach” on the activity. Same coach, and there it knows which step you are on.</p></div></div>
+      <button class="link" type="button" data-action="chatSugg" data-q="How does this app work?">How this app works ${ic('arrowRight', 'ic-sm')}</button>
+    </div>
+    <div class="card help-card lift">
+      <div class="top"><span class="tile gold" aria-hidden="true">${ic('feedback')}</span><div><h2 class="h3">Found a bug, or got an idea?</h2><p class="text-2 small" style="margin-top:4px">Tell us what broke, or what would make this easier. We read every note you send.</p></div></div>
+      <a class="link" href="#/feedback">Tell us on Feedback ${ic('arrowRight', 'ic-sm')}</a>
+    </div>
+  </div>
+  <aside class="card note-card" style="margin-top:24px" aria-label="A note from the mentor team">
+    <div class="eyebrow">A note from the mentor team</div>
+    <p class="script" style="margin-top:14px">${esc(S.user.first)},</p>
+    <p class="text-2" style="margin-top:8px;max-width:62ch">Your first build will feel rough. Ship it anyway. A working Cookie class you submit today teaches you more than a perfect one you keep polishing. Submit it, read the review, fix one thing, and go again. That loop is the whole program, from Level 1 to Level 15.</p>
+    <p class="script" style="margin-top:16px">The Mentor Team</p>
+    <p class="muted small">AI Accelerator Hub</p>
+  </aside>`;
+AFTER.unstuck = () => renderChats();
+
+/* Coach drawer (G-04) */
+let drawerReturn = null;
+function openDrawer(ctx) {
+  if (S.route === 'unstuck') { if (ctx) { CHAT.ctx = ctx; renderChats(); } const ta = $('[data-chatta]'); if (ta) ta.focus(); return; }
+  if (ctx != null) CHAT.ctx = ctx;
+  drawerReturn = document.activeElement;
+  $('#drawerRoot').innerHTML = `<div class="drawer-back" data-action="drawerClose"></div>
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+      <div class="drawer-head">${ic('lifebuoy')}<h2 class="h3" id="drawerTitle" style="flex:1">Unstuck</h2>
+        <a class="btn btn-text" href="#/unstuck" data-action="drawerClose">Open full page</a>
+        <button class="icon-btn" type="button" data-action="drawerClose" aria-label="Close">${ic('x', 'ic-sm')}</button></div>
+      <div class="drawer-body" data-chat-root="drawer" style="display:flex;flex-direction:column"></div>
+    </aside>`;
+  document.body.style.overflow = 'hidden';
+  renderChats();
+  const ta = $('#drawerRoot [data-chatta]'); if (ta) ta.focus();
+}
+function closeDrawer() {
+  if (!$('#drawerRoot').innerHTML) return;
+  $('#drawerRoot').innerHTML = ''; document.body.style.overflow = '';
+  if (drawerReturn && document.contains(drawerReturn)) drawerReturn.focus(); else $('#fab').focus();
+}
+
+/* ---------- Not-yet-designed pages (§9) ---------- */
+function comingSoon(icon, title, text, extra = '') {
+  return `${pageHeader({ variant: 'plain', title, desc: '' })}
+  <div class="card empty" style="margin-top:20px">
+    <div class="ic-wrap">${ic(icon, 'ic-lg')}</div>
+    <h2 class="h3">${title} is coming soon</h2>
+    <p class="text-2" style="margin-top:6px;max-width:52ch;margin-left:auto;margin-right:auto">${text}</p>
+    ${extra}
+  </div>`;
+}
+PAGES.feedback = () => comingSoon('feedback', 'Feedback', 'Meanwhile, tell the Learning Coach what broke, or post it in Feed with the General tag.', `<div class="row gap-8" style="justify-content:center;margin-top:16px"><button class="btn btn-gold btn-sm" type="button" data-action="askCoach" data-ctx="">Ask Coach</button><a class="btn btn-outline btn-sm" href="#/feed">Go to Feed</a></div>`);
+PAGES.certificates = () => comingSoon('certificate', 'Certificates', 'Your certificate for each completed level will appear here.');
+PAGES['next-tier'] = () => {
+  const xp = userXp(), next = nextOf(TIERS, xp);
+  return next ? comingSoon('gem', `${next.name} tier`, `Locked. Earn ${next.min - xp} more XP to reach ${next.name}. What this tier includes has not been designed yet.`) : comingSoon('gem', 'Top tier', 'You have reached the top tier.');
+};
+
+/* =========================================================
+   DIALOGS
+   ========================================================= */
+function openDialog({ title, body, confirm, danger, onConfirm }) {
+  const ret = document.activeElement;
+  const root = $('#modalRoot');
+  root.innerHTML = `<div class="backdrop" data-dlg-back><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgT">
+    <h2 id="dlgT">${title}</h2><div style="margin-top:10px" class="text-2">${body}</div>
+    <div class="actions"><button class="btn btn-outline btn-sm" type="button" data-dlg-cancel>Cancel</button>${confirm ? `<button class="btn ${danger ? 'btn-danger' : 'btn-ink'} btn-sm" type="button" data-dlg-ok>${confirm}</button>` : ''}</div>
+  </div></div>`;
+  const dlg = $('.dialog', root);
+  const close = () => { root.innerHTML = ''; document.removeEventListener('keydown', onKey, true); if (ret && document.contains(ret)) ret.focus(); };
+  const onKey = e => {
+    if (e.key === 'Escape') { e.stopPropagation(); close(); }
+    if (e.key === 'Tab') {
+      const f = $$('button,select,textarea,input,a[href]', dlg); const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  };
+  document.addEventListener('keydown', onKey, true);
+  $('[data-dlg-cancel]', root).onclick = close;
+  $('[data-dlg-back]', root).onclick = e => { if (e.target.hasAttribute('data-dlg-back')) close(); };
+  const ok = $('[data-dlg-ok]', root); if (ok) ok.onclick = () => { if (onConfirm(dlg) !== false) close(); };
+  ($('select,textarea', dlg) || $('[data-dlg-cancel]', dlg)).focus();
+}
+
+/* =========================================================
+   ACTIONS (event delegation)
+   ========================================================= */
+const ACTIONS = {
+  toggleTier() { if (S.rail) return; S.tierOpen = !S.tierOpen; store.set('ah2_tier_open', S.tierOpen); renderNav(); $('.tier-btn').focus(); },
+  demoOnly(t, e) { e.preventDefault(); toast(t.dataset.msg); closeUserMenu(); },
+  gotoAct(t, e) {
+    e.preventDefault();
+    const go = () => { const el = $('#act-' + t.dataset.act); if (el) { el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' }); el.setAttribute('tabindex', '-1'); el.focus({ preventScroll: true }); } };
+    if (S.route !== 'levels') { location.hash = '#/levels'; setTimeout(go, 30); } else go();
+  },
+  askCoach(t) { openDrawer(t.dataset.ctx || ''); },
+  /* Feed */
+  feedTab(t) { FEED.tab = t.dataset.tab; $('#main').innerHTML = PAGES.feed(); AFTER.feed(); $('#tab-' + FEED.tab).focus(); },
+  feedTag(t) { FEED.tag = +t.dataset.t; $$('[data-action="feedTag"]').forEach(b => { const on = +b.dataset.t === FEED.tag; b.setAttribute('aria-checked', on); b.classList.toggle('chip-soft', !on); }); },
+  feedFilter(t) { FEED.filter = t.dataset.f; FEED.limit = 6; $$('[data-action="feedFilter"]').forEach(b => b.setAttribute('aria-checked', b.dataset.f === FEED.filter)); refreshFeedList(); },
+  feedMore() { FEED.limit += 6; refreshFeedList(); },
+  emojiToggle(t) { const p = $('#emojiPop'); p.hidden = !p.hidden; t.setAttribute('aria-expanded', String(!p.hidden)); if (!p.hidden) $('button', p).focus(); },
+  emojiPick(t) {
+    const ta = $('#postText'); const s = ta.selectionStart ?? ta.value.length;
+    ta.value = ta.value.slice(0, s) + t.dataset.e + ta.value.slice(ta.selectionEnd ?? s);
+    ta.dispatchEvent(new Event('input')); $('#emojiPop').hidden = true; $('[data-action="emojiToggle"]').setAttribute('aria-expanded', 'false');
+    ta.focus(); ta.setSelectionRange(s + t.dataset.e.length, s + t.dataset.e.length);
+  },
+  feedPost() {
+    const text = FEED.draft.trim(); if (!text) return;
+    const flagged = /crypto|bitcoin|forex|buy now|discount code|earn ₹?\d+|whatsapp me|dm for price/i.test(text);
+    FEED.posts.unshift({ id: nid('p'), author: null, me: true, tag: FEED.tag, text, at: Date.now(), likes: 0, liked: false, replies: [], status: flagged ? 'pending' : 'live' });
+    FEED.draft = ''; FEED.filter = 'all'; FEED.limit = 6;
+    $('#main').innerHTML = PAGES.feed(); AFTER.feed(); blip(780);
+    toast(flagged ? 'Posted. A moderator will check it before others can see it.' : 'Posted to your cohort.');
+    $('#postText').focus();
+  },
+  like(t) {
+    const item = t.dataset.kind === 'post' ? findPost(t.dataset.id) : findReply(t.dataset.id);
+    if (!item) return;
+    item.liked = !item.liked; item.likes += item.liked ? 1 : -1; if (item.liked) blip(880);
+    t.outerHTML = likeBtn(item, t.dataset.kind);
+    const nb = $(`[data-action="like"][data-id="${item.id}"]`); if (nb) nb.focus();
+  },
+  replyToggle(t) { FEED.openReply = FEED.openReply === t.dataset.id ? null : t.dataset.id; refreshFeedList(FEED.openReply ? `#rb-${FEED.openReply}` : `[data-action="replyToggle"][data-id="${t.dataset.id}"]`); },
+  report(t) {
+    const item = t.dataset.kind === 'post' ? findPost(t.dataset.id) : findReply(t.dataset.id);
+    openDialog({
+      title: 'Report this ' + t.dataset.kind,
+      body: `<label class="field-label" for="repReason">Why are you reporting it?</label>
+        <select class="select" id="repReason"><option>Spam or selling</option><option>Harassment or hate</option><option>Off-topic</option><option>Something else</option></select>
+        <label class="field-label" for="repNote" style="margin-top:12px">Anything else? (optional)</label>
+        <textarea class="textarea" id="repNote" rows="3" style="min-height:80px"></textarea>
+        <p class="muted xs" style="margin-top:8px">A moderator will check it. The author is not told who reported it.</p>`,
+      confirm: 'Send report',
+      onConfirm: () => { item.reported = true; refreshFeedList(); toast('Thanks. A moderator will check it.'); }
+    });
+  },
+  deletePost(t) {
+    openDialog({ title: 'Delete your post?', body: 'This removes the post and its replies for everyone. You cannot undo this.', confirm: 'Delete', danger: true,
+      onConfirm: () => { FEED.posts = FEED.posts.filter(p => p.id !== t.dataset.id); refreshFeedList(); toast('Post deleted.'); } });
+  },
+  deleteReply(t) {
+    openDialog({ title: 'Delete your reply?', body: 'You cannot undo this.', confirm: 'Delete', danger: true,
+      onConfirm: () => { const p = findPost(t.dataset.pid); p.replies = p.replies.filter(r => r.id !== t.dataset.id); refreshFeedList(); toast('Reply deleted.'); } });
+  },
+  /* Resources */
+  accToggle(t) {
+    const id = t.dataset.id, open = t.getAttribute('aria-expanded') !== 'true';
+    t.setAttribute('aria-expanded', String(open)); $('#ap-' + id).hidden = !open;
+    open ? resOpen.add(id) : resOpen.delete(id); store.set('ah2_res_open', [...resOpen]);
+  },
+  copyPrompt(t) {
+    const g = RES_GROUPS.find(x => x.id === t.dataset.g), text = g.items[+t.dataset.i].title;
+    const done = () => toast('Prompt copied.');
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+    else fallbackCopy(text, done);
+  },
+  /* Showcase */
+  showMore() { showLimit += 6; $('#main').innerHTML = PAGES.showcase(); },
+  video(t) { openDialog({ title: 'Demo video', body: `The demo video by ${esc(t.dataset.name)} is not included in this standalone page.` }); },
+  /* Chat */
+  chatMode(t) { CHAT.mode = t.dataset.mode; renderChats(); const r = t.closest('[data-chat-root]'); const b = r && $(`[data-mode="${CHAT.mode}"]`, r); if (b) b.focus(); },
+  chatSugg(t) { if (S.route !== 'unstuck' && !$('#drawerRoot').innerHTML) openDrawer(''); sendChat(t.dataset.q); },
+  chatStop() { stopStream(); },
+  ctxClear() { CHAT.ctx = ''; renderChats(); },
+  imgPick(t) { $('[data-file]', t.closest('[data-chat]')).click(); },
+  imgClear() { CHAT.img = null; renderChats(); },
+  mic() {
+    if (!SpeechRec) return;
+    if (CHAT.listening && CHAT.rec) { CHAT.rec.stop(); return; }
+    try {
+      const rec = new SpeechRec(); rec.lang = 'en-IN'; rec.interimResults = false;
+      rec.onresult = e => { CHAT.draft = (CHAT.draft ? CHAT.draft + ' ' : '') + e.results[0][0].transcript; };
+      rec.onend = () => { CHAT.listening = false; CHAT.rec = null; renderChats(); };
+      rec.onerror = () => toast('Voice input is not available right now.');
+      CHAT.rec = rec; CHAT.listening = true; rec.start(); renderChats();
+    } catch (e) { toast('Voice input is not available in this browser.'); }
+  },
+  drawerClose(t, e) { if (t.tagName === 'A') { closeDrawer(); return; } e.preventDefault(); closeDrawer(); }
+};
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { toast('Copy failed. Select the text and copy it manually.'); }
+  ta.remove();
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-action]');
+  if (t && ACTIONS[t.dataset.action]) ACTIONS[t.dataset.action](t, e);
+  if (!e.target.closest('.user-wrap')) closeUserMenu(false);
+  const pop = $('#emojiPop'); if (pop && !pop.hidden && !e.target.closest('.ta-wrap')) pop.hidden = true;
+});
+document.addEventListener('submit', e => {
+  const f = e.target, kind = f.dataset.form; if (!kind) return;
+  e.preventDefault();
+  if (kind === 'chat') sendChat();
+  if (kind === 'reply') {
+    const ta = $('textarea', f), text = ta.value.trim(); if (!text) { ta.focus(); return; }
+    const p = findPost(f.dataset.id);
+    p.replies.push({ id: nid('r'), me: true, author: null, text, at: Date.now(), likes: 0, liked: false });
+    FEED.replyDraft[p.id] = ''; FEED.openReply = null; refreshFeedList(`[data-action="replyToggle"][data-id="${p.id}"]`); blip(700);
+  }
+  if (kind === 'proof') {
+    const url = $('#repoUrl'), refl = $('#reflection');
+    [url, refl].forEach(el => { el.removeAttribute('aria-invalid'); const n = el.parentNode.querySelector('.field-err'); if (n) n.remove(); });
+    const err = (el, msg, id) => { el.setAttribute('aria-invalid', 'true'); const d = document.createElement('div'); d.className = 'field-err'; d.id = id; d.textContent = msg; el.parentNode.appendChild(d); el.setAttribute('aria-describedby', id); };
+    let ok = true;
+    if (!/^https:\/\/\S+\.\S+/.test(url.value.trim())) { err(url, 'Enter a link that starts with https://', 'repoErr'); ok = false; } else url.setAttribute('aria-describedby', 'repoHint');
+    if (refl.value.trim().split(/\s+/).filter(Boolean).length < 10) { err(refl, 'Write at least 10 words.', 'reflErr'); ok = false; } else refl.setAttribute('aria-describedby', 'reflHint');
+    if (!ok) { $('[aria-invalid="true"]', f).focus(); return; }
+    S.acts[5] = 'review';
+    $('#main').innerHTML = PAGES.levels(); blip(660);
+    toast('Submitted for review.');
+    const el = $('#act-5'); el.setAttribute('tabindex', '-1'); el.focus();
+  }
+});
+document.addEventListener('input', e => {
+  if (e.target.matches('.reply-box textarea')) FEED.replyDraft[e.target.closest('form').dataset.id] = e.target.value;
+});
+// Arrow keys for tabs / radio groups
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if ($('#modalRoot').innerHTML) return;
+    if ($('#drawerRoot').innerHTML) { closeDrawer(); return; }
+    if (!$('#userMenu').hidden) { closeUserMenu(); return; }
+    closeSide();
+  }
+  const group = e.target.closest('[role="tablist"],[role="radiogroup"]');
+  if (group && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
+    const items = $$('[role="tab"],[role="radio"]', group); const i = items.indexOf(e.target); if (i < 0) return;
+    e.preventDefault();
+    let n = e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1 : (i + (['ArrowRight', 'ArrowDown'].includes(e.key) ? 1 : -1) + items.length) % items.length;
+    items[n].focus(); items[n].click();
+  }
+});
+
+/* User menu */
+function closeUserMenu(restore = true) {
+  const m = $('#userMenu'); if (m.hidden) return;
+  m.hidden = true; $('#userBtn').setAttribute('aria-expanded', 'false'); if (restore) $('#userBtn').focus();
+}
+$('#userBtn').addEventListener('click', () => {
+  const m = $('#userMenu'); const open = m.hidden; m.hidden = !open;
+  $('#userBtn').setAttribute('aria-expanded', String(open)); if (open) $('[role="menuitem"]', m).focus();
+});
+$('#themeBtn').addEventListener('click', () => setTheme(S.theme === 'dark' ? 'light' : 'dark'));
+$('#soundBtn').addEventListener('click', () => { S.sound = !S.sound; store.set('ah2_sound', S.sound); renderHeader(); blip(660); });
+$('#railBtn').addEventListener('click', () => setRail(!S.rail));
+$('#menuBtn').addEventListener('click', openSide);
+$('#sideClose').addEventListener('click', () => closeSide());
+$('#overlay').addEventListener('click', () => closeSide());
+$('#fab').innerHTML = `${ic('lifebuoy')}Unstuck`;
+$('#fab').addEventListener('click', () => openDrawer(`${ROUTES[S.route].label} page`));
+window.addEventListener('resize', () => { if (window.innerWidth >= 1024) closeSide(false); });
+window.addEventListener('hashchange', () => { closeDrawer(); router(); });
+
+/* Boot */
+$('#sidebar').insertAdjacentHTML('afterbegin', stars(42, 3, 0.45));
+$('#app').classList.toggle('is-rail', S.rail);
+renderHeader();
+router();
+</script>
+</body>
+</html>

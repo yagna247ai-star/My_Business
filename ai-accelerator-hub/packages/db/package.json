@@ -1,0 +1,23 @@
+{
+  "name": "@aihub/db",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI Accelerator Hub — Prisma schema, migrations, seed (single source of truth)",
+  "main": "index.ts",
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma migrate reset --force"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.19.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.19.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

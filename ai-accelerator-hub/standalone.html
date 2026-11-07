@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Accelerator Hub — Demo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
+<style>
+  :root{--navy:#080c1a;--navy2:#101426;--card:#12182e;--card2:#1a2340;--border:#1e2a4a;--muted:#9aa3c2;--muted2:#6b7594;--blue:#3a7bff;--blue2:#5a8fff;--purple:#7c5cff;--gold:#E8B94F;--gold2:#f2cf7e;--surface-app:#F4F7FD;--surface-card:#FFFFFF;--surface-sidebar:linear-gradient(180deg,#0A1A36 0%,#061229 100%);--text-primary:#0F172A;--text-secondary:#475569;--border-subtle:#E6EBF5;--gold-fill:linear-gradient(180deg,#EBD298,#B1873D);--gold-ink:#6B4E16;--success:#137A5D}
+  [data-theme="light"]{--navy:var(--surface-app)}
+  /* PageHeader (G-05) */
+  .pageheader{border-radius:20px;padding:20px;background:linear-gradient(120deg,#FFFFFF 60%,#F7EFDB);border:1px solid var(--border-subtle,#E6EBF5);position:relative;overflow:hidden}
+  .pageheader .eyebrow{font-size:11px;letter-spacing:0.14em;font-weight:800;color:var(--gold-ink)}
+  .pageheader h2{font-size:32px;font-weight:800;letter-spacing:-0.02em;color:#0F172A}
+  .pageheader .sub{font-size:14px;color:#475569;margin-top:4px}
+  .pageheader.navy{background:linear-gradient(120deg,#0E1646,#123C5E);border-color:transparent}
+  .pageheader.navy h2,.pageheader.navy .sub{color:#fff}
+  /* FAB (G-04) */
+  #unstuckFab{position:fixed;right:24px;bottom:24px;z-index:40;display:inline-flex;align-items:center;gap:8px;background:#0E1737;color:#fff;border-radius:999px;padding:12px 18px;font-weight:700;font-size:14px;box-shadow:0 12px 30px rgba(0,0,0,0.4)}
+  @media(max-width:640px){#unstuckFab{bottom:calc(16px + env(safe-area-inset-bottom))}}
+  /* Feed / cards */
+  .post-card{background:#fff;color:#0F172A;border:1px solid #E6EBF5;border-radius:16px;box-shadow:0 8px 24px rgba(15,23,42,0.06)}
+  .chip{display:inline-flex;align-items:center;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600;background:#F2F7FE;color:#0F172A}
+  .chip[aria-pressed="true"]{background:linear-gradient(180deg,#EBD298,#B1873D);color:#3d2f0c}
+  .btn-gold{background:linear-gradient(180deg,#EBD298,#B1873D);color:#3d2f0c;font-weight:700;border-radius:999px}
+  /* Light theme (G-01): applied when <html data-theme="light">; dark navy stays default */
+  [data-theme="light"] body{background:#F4F7FD;color:#0F172A}
+  [data-theme="light"] .stars,[data-theme="light"] .fixed.inset-0.pointer-events-none{display:none}
+  [data-theme="light"] #sidebar .sticky{background:#fff;border-color:#E6EBF5}
+  [data-theme="light"] main section,[data-theme="light"] main details{background:#fff;color:#0F172A;border-color:#E6EBF5}
+  [data-theme="light"] #sidebar [class*="text-white"]{color:#0F172A}
+  [data-theme="light"] main [class*="text-white"]{color:#0F172A}
+  [data-theme="light"] main [class*="text-white/60"],[data-theme="light"] main [class*="text-white/50"],[data-theme="light"] #sidebar [class*="text-white/60"]{color:#475569}
+  [data-theme="light"] #coachThread .text-white,[data-theme="light"] .pageheader.navy [class*="text-white"]{color:#fff}
+  [data-theme="light"] main [class*="gold"],[data-theme="light"] #sidebar [class*="gold"]{color:#6B4E16}
+  [data-theme="light"] main .btn-gold,[data-theme="light"] #sidebar .btn-gold{color:#3d2f0c}
+  /* Reduced motion (A11Y-04) */
+  @media(prefers-reduced-motion:reduce){.float,.float2,.float3{animation:none}html{scroll-behavior:auto}#sidebar,.side-group-panel,.side-chevron{transition:none}}
+  label.flabel{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+  *{font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+  html{scroll-behavior:smooth}
+  body{background:var(--navy);color:#fff;overflow-x:hidden}
+  /* Star field — toned down: single subtle layer, 40 stars, low opacity */
+  .stars{position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:0.15}
+  .star{position:absolute;width:1px;height:1px;background:#fff;border-radius:999px;opacity:0.5}
+  /* Float — reduced motion: 6-7s, subtle */
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes float2{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,199,94,0.0)}50%{box-shadow:0 0 0 12px rgba(240,199,94,0.12)}}
+  @keyframes orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+  .float{animation:float 6s ease-in-out infinite}
+  .float2{animation:float2 6.5s ease-in-out infinite}
+  .float3{animation:float 7s ease-in-out infinite;animation-delay:0.8s}
+  /* Sidebar collapsible — enterprise, subtle (max-height + opacity, no bounce) */
+  .side-group-panel{overflow:hidden;max-height:600px;opacity:1;transition:max-height 260ms ease, opacity 200ms ease}
+  .side-group-panel.is-collapsed{max-height:0;opacity:0}
+  .side-chevron{transition:transform 200ms ease;flex-shrink:0}
+  .side-group-btn[aria-expanded="false"] .side-chevron{transform:rotate(-90deg)}
+  .side-group-btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:10px}
+  /* Rail mode — 272px → 64px icon-only, bottom handle */
+  #sidebar{transition:width 260ms ease, transform 260ms ease}
+  #sidebar.is-rail{width:64px}
+  #sidebar.is-rail .rail-label, #sidebar.is-rail .side-group-btn span:not(.side-chevron), #sidebar.is-rail .side-group-panel a .label{opacity:0;width:0;overflow:hidden;pointer-events:none}
+  #sidebar.is-rail .side-group-btn{justify-content:center;padding-left:8px;padding-right:8px}
+  #sidebar.is-rail .side-group-panel a{justify-content:center;padding-left:8px;padding-right:8px}
+  #sidebar.is-rail .side-group-panel a .icon{margin-right:0}
+  #sidebar.is-rail #railToggleBtn .rail-label{opacity:0;width:0}
+  #sidebar.is-rail #railToggleBtn{justify-content:center}
+  /* Mobile drawer */
+  @media(max-width:1023px){
+    #sidebar{position:fixed;inset:0 auto 0 0;width:280px;z-index:50;transform:translateX(-100%);background:var(--navy);border-right:1px solid var(--border);overflow-y:auto;display:block !important}
+    #sidebar.is-open{transform:translateX(0)}
+    #sidebar:not(.is-open){visibility:hidden;pointer-events:none}
+    #sidebar.is-open{visibility:visible;pointer-events:auto}
+    #sidebarOverlay{transition:opacity 200ms ease}
+    #sidebar.is-rail{width:280px}
+    #sidebar.is-rail .rail-label, #sidebar.is-rail .side-group-btn span:not(.side-chevron), #sidebar.is-rail .side-group-panel a .label{opacity:1;width:auto;overflow:visible;pointer-events:auto}
+  }
+  /* Glass */
+  .glass{backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4)}
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:5px;height:5px}
+  ::-webkit-scrollbar-thumb{background:#1e2a4a;border-radius:999px}
+  /* Focus */
+  :focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+</style>
+</head>
+<body class="min-h-screen relative">
+<!-- Nebula -->
+<div class="fixed inset-0 pointer-events-none" style="background: radial-gradient(1200px 600px at 20% -10%, rgba(92,95,255,0.14), transparent 60%), radial-gradient(900px 500px at 90% 0%, rgba(58,123,255,0.12), transparent 60%), radial-gradient(800px 400px at 50% 100%, rgba(124,92,255,0.08), transparent 60%), linear-gradient(180deg, var(--navy) 0%, var(--navy2) 100%);"></div>
+<div class="stars" id="stars"></div>
+
+<!-- Sidebar overlay (mobile) -->
+<div id="sidebarOverlay" class="fixed inset-0 z-40 hidden bg-black/50 backdrop-blur-[2px]" onclick="closeSidebar()" aria-hidden="true"></div>
+<!-- App header (G-03): breadcrumb + streak + rank + theme + sound + user -->
+<div class="sticky top-0 z-40 border-b border-white/10 bg-[rgba(8,12,26,0.9)] glass">
+  <div class="mx-auto flex h-16 max-w-[1160px] items-center justify-between gap-3 px-4 md:px-6">
+    <div class="flex min-w-0 items-center gap-3">
+      <button id="hamburgerBtn" type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 lg:hidden" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar" onclick="toggleSidebar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <nav aria-label="Breadcrumb" class="truncate text-sm"><span class="text-white/60">You are here&nbsp;</span><strong id="crumbNow" class="font-bold text-white">Home</strong><span class="text-white/60" aria-hidden="true"> &rsaquo;</span></nav>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="streakPill" class="hidden md:inline-flex items-center gap-1.5 rounded-full bg-[#F2F7FE] px-2.5 py-1 text-xs font-semibold text-[#0F172A]" title="Daily streak and XP multiplier">✦ 3 days ×1.0</span>
+      <span id="rankBadge" class="hidden sm:inline-flex rounded-full border border-[#B1873D] bg-[#F9F5E7] px-2.5 py-1 text-xs font-bold tracking-wide text-[#6B4E16]">OPERATOR</span>
+      <button id="themeBtn" type="button" onclick="toggleTheme()" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/80 hover:bg-white/10" aria-label="Switch to light theme" aria-pressed="false" title="Toggle theme"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+      <button id="soundBtn" type="button" onclick="toggleSound()" class="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/80 hover:bg-white/10" aria-label="Mute sound effects" aria-pressed="false" title="Sound effects (off by default)"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/></svg></button>
+      <span class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 py-1 pl-1 pr-3"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--gold)] text-xs font-extrabold text-[#3d2f0c]" aria-hidden="true">DL</span><span class="hidden text-xs font-semibold sm:inline">Demo Learner</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- App shell: sidebar + main -->
+<div class="relative mx-auto flex max-w-[1160px] gap-6 px-4 md:px-6">
+  <!-- Sidebar — 5 collapsible groups (LEARN 4, BUILD 3, COMMUNITY 3, GROW 4, SUPPORT 3) -->
+  <aside id="sidebar" class="hidden w-[272px] shrink-0 lg:block" aria-label="Primary">
+    <div class="sticky top-[76px] rounded-[20px] border border-white/10 bg-[rgba(18,24,46,0.72)] glass p-3">
+      <!-- Brand row with collapse (G-02): logo left, |< button top-right -->
+      <div class="mb-2 hidden items-center justify-between lg:flex">
+        <span class="flex items-center gap-2 px-2"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[10px] font-extrabold text-[var(--navy)]">AH</span><span class="rail-label text-[11px] font-extrabold tracking-[0.12em] text-white/80">AI ACCELERATOR HUB</span></span>
+        <button type="button" onclick="toggleRail()" class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 hover:bg-white/10" aria-label="Collapse sidebar" title="Collapse sidebar (rail mode)"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6l-6 6 6 6"/><path d="M20 6v12"/></svg></button>
+      </div>
+      <!-- Mobile close -->
+      <div class="mb-2 flex items-center justify-between lg:hidden">
+        <span class="px-2 text-[11px] font-extrabold tracking-[0.12em] text-white/60">MENU</span>
+        <button type="button" class="rounded-full border border-white/10 bg-white/5 p-1.5 text-white/60 hover:bg-white/10" aria-label="Close menu" onclick="closeSidebar()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <nav class="space-y-4" aria-label="Sidebar groups">
+        <!-- LEARN -->
+        <div class="side-group" data-group="LEARN">
+          <button type="button" class="side-group-btn flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-left hover:bg-white/[0.04]" aria-expanded="true" aria-controls="panel-LEARN">
+            <span class="rail-label text-[11px] font-semibold tracking-[0.14em] text-white/45">LEARN</span>
+            <svg class="side-chevron h-3.5 w-3.5 text-white/35" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div id="panel-LEARN" class="side-group-panel mt-1 space-y-1">
+            <a href="/dashboard" data-route="Home" aria-current="page" class="group flex items-center gap-2 rounded-xl bg-white text-xs font-semibold text-[var(--navy)] px-3 py-2" title="Home — Dashboard"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-5H9v5H4a1 1 0 0 1-1-1z"/></svg><span class="label">Home</span></a>
+            <a href="/levels" data-route="My Levels" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="My Levels"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 2 7l10 5 10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg><span class="label">My Levels</span></a>
+            <a href="/missions" data-route="Learning Missions" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="Learning Missions"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg><span class="label">Learning Missions</span></a>
+            <a href="/playground" data-route="AI Playground" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="AI Playground"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v3"/><path d="M12 18v3"/><path d="M5.6 5.6l2.1 2.1"/><path d="M16.3 16.3l2.1 2.1"/><path d="M3 12h3"/><path d="M18 12h3"/><path d="M5.6 18.4l2.1-2.1"/><path d="M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="4.5"/></svg><span class="label">AI Playground</span></a>
+          </div>
+        </div>
+        <!-- BUILD -->
+        <div class="side-group" data-group="BUILD">
+          <button type="button" class="side-group-btn flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-left hover:bg-white/[0.04]" aria-expanded="true" aria-controls="panel-BUILD">
+            <span class="rail-label text-[11px] font-semibold tracking-[0.14em] text-white/45">BUILD</span>
+            <svg class="side-chevron h-3.5 w-3.5 text-white/35" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div id="panel-BUILD" class="side-group-panel mt-1 space-y-1">
+            <a href="/projects" data-route="My Projects" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="My Projects"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M10 13H8M16 17H8M13 13h2"/></svg><span class="label">My Projects</span></a>
+            <a href="/github" data-route="GitHub Lab" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="GitHub Lab"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 19c-4 1.5-4-1-6-1"/><circle cx="12" cy="8" r="6"/><path d="M15.5 14a4 4 0 0 1-7 0"/></svg><span class="label">GitHub Lab</span></a>
+            <a href="/hackathons" data-route="Hackathons" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="Hackathons"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8"/><path d="M12 17a5 5 0 0 0 5-5V7H7v5a5 5 0 0 0 5 5z"/><path d="M7 7H5a3 3 0 0 0 3 3"/><path d="M17 7h2a3 3 0 0 1-3 3"/></svg><span class="label">Hackathons</span></a>
+          </div>
+        </div>
+        <!-- COMMUNITY -->
+        <div class="side-group" data-group="COMMUNITY">
+          <button type="button" class="side-group-btn flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-left hover:bg-white/[0.04]" aria-expanded="true" aria-controls="panel-COMMUNITY">
+            <span class="rail-label text-[11px] font-semibold tracking-[0.14em] text-white/45">COMMUNITY</span>
+            <svg class="side-chevron h-3.5 w-3.5 text-white/35" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div id="panel-COMMUNITY" class="side-group-panel mt-1 space-y-1">
+            <a href="/squads" data-route="Squads" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="Squads"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="label">Squads</span></a>
+            <a href="#feed" data-route="Feed" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="Feed — /feed in the full app"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9-9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg><span class="label">Feed</span></a>
+            <a href="#leaderboard" data-route="Ranks" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="Ranks — /leaderboard in the full app"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 17V3"/><path d="M6 17v-4"/><path d="M18 17v-6"/></svg><span class="label">Ranks</span></a>
+            <a href="#showcase" data-route="Showcase" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="Showcase — /showcase in the full app"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17a5 5 0 0 0 5-5V7H7v5a5 5 0 0 0 5 5z"/><path d="M7 7H5"/><path d="M17 7h2"/></svg><span class="label">Showcase</span></a>
+          </div>
+        </div>
+        <!-- GROW -->
+        <div class="side-group" data-group="GROW">
+          <button type="button" class="side-group-btn flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-left hover:bg-white/[0.04]" aria-expanded="true" aria-controls="panel-GROW">
+            <span class="rail-label text-[11px] font-semibold tracking-[0.14em] text-white/45">GROW</span>
+            <svg class="side-chevron h-3.5 w-3.5 text-white/35" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div id="panel-GROW" class="side-group-panel mt-1 space-y-1">
+            <a href="#resources" data-route="Resources" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="Resources — /resources in the full app"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="label">Resources</span></a>
+            <a href="/career" data-route="AI Career Paths" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="AI Career Paths"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v8"/><path d="M8 12h8"/></svg><span class="label">AI Career Paths</span></a>
+            <a href="/portfolio" data-route="My Portfolio" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="My Portfolio"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><span class="label">My Portfolio</span></a>
+            <a href="/certificates" data-route="Certificates" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="Certificates"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5 12 15l3.5-2.5"/><path d="M12 15v4"/></svg><span class="label">Certificates</span></a>
+          </div>
+        </div>
+        <!-- SUPPORT -->
+        <div class="side-group" data-group="SUPPORT">
+          <button type="button" class="side-group-btn flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-left hover:bg-white/[0.04]" aria-expanded="true" aria-controls="panel-SUPPORT">
+            <span class="rail-label text-[11px] font-semibold tracking-[0.14em] text-white/45">SUPPORT</span>
+            <svg class="side-chevron h-3.5 w-3.5 text-white/35" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div id="panel-SUPPORT" class="side-group-panel mt-1 space-y-1">
+            <a href="#unstuck" data-route="Unstuck" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="Unstuck — /coach in the full app"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V5a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg><span class="label">Unstuck</span></a>
+            <a href="/feedback" data-route="Feedback" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="Feedback"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.5 8.5 0 0 1-12 7.8"/><path d="M14 7a3 3 0 0 1 0 6H9"/><path d="M7 10V7a3 3 0 0 1 6 0v3"/></svg><span class="label">Feedback</span></a>
+            <a href="/profile" data-route="Profile" class="group flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/[0.06] hover:text-white" title="Profile"><svg class="icon h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="label">Profile</span></a>
+          </div>
+        </div>
+      </nav>
+      <!-- Rail toggle — bottom handle, desktop only -->
+      <button id="railToggleBtn" type="button" onclick="toggleRail()" class="mt-3 hidden lg:flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-white/60 hover:bg-white/5 hover:text-white" aria-label="Collapse sidebar to icons" aria-expanded="false" title="Minimize sidebar to icons">
+        <span class="rail-label flex items-center gap-2"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/><path d="M9 18l-6-6 6-6" opacity="0.35"/></svg>Collapse</span>
+        <svg class="rail-chevron h-3.5 w-3.5 text-white/40" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </aside>
+<!-- HERO — anti-gravity, split, not centered pill+2CTAs -->
+<main class="relative min-w-0 flex-1 pt-10 pb-8 md:pt-12">
+  <div class="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+    <!-- Left copy -->
+    <div>
+      <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs">
+        <span class="rounded-full bg-[var(--gold)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--navy)]">NEW</span>
+        <span class="text-white/70">15 levels · 8 tracks · 1 graph · 10 roles</span>
+        <span class="hidden sm:inline-flex h-1 w-1 rounded-full bg-white/20"></span>
+        <span class="hidden sm:inline text-white/40">DPDP · ap-south-1</span>
+      </div>
+      <h1 class="mt-5 text-[32px] font-extrabold leading-[0.95] tracking-[-0.03em] sm:text-[42px] lg:text-[48px]">
+        Learn AI like<br>
+        <span class="font-light tracking-[-0.04em] text-white/90">a space mission.</span>
+      </h1>
+      <p class="mt-4 max-w-[52ch] text-[14px] leading-6 text-white/60">Every level ends in a shipped repo, not a watched video. Your portfolio — not a certificate — gets you discovered. Cohort-based, mentor-reviewed, graph-powered.</p>
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <a href="#levels" class="rounded-full bg-[var(--blue)] px-5 py-2.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(58,123,255,0.3)] hover:bg-[var(--blue2)]">Join Level 1 — Free</a>
+        <a href="#graph" class="rounded-full border border-white/10 bg-white/[0.06] px-5 py-2.5 text-sm font-semibold backdrop-blur hover:bg-white/10">View graph →</a>
+        <span class="text-xs text-white/40">No card · Mentor + AI review · GitHub portfolio</span>
+      </div>
+      <!-- Stats — not 3-card grid, but inline proof -->
+      <div class="mt-8 flex flex-wrap gap-6 border-t border-white/5 pt-6">
+        <div><div class="text-xl font-extrabold">2,970</div><div class="text-xs tracking-wide text-white/40">XP to Grandmaster</div></div>
+        <div class="h-8 w-px bg-white/10 hidden sm:block"></div>
+        <div><div class="text-xl font-extrabold">15</div><div class="text-xs tracking-wide text-white/40">Levels · DAG</div></div>
+        <div class="h-8 w-px bg-white/10 hidden sm:block"></div>
+        <div><div class="text-xl font-extrabold">8</div><div class="text-xs tracking-wide text-white/40">Tracks · choose 1</div></div>
+        <div class="hidden sm:flex items-center gap-2 text-xs text-white/60 ml-2"><span>Mentor + AI reviewed</span><span class="rounded border border-white/10 px-1.5 py-0.5">Cohort-based</span></div>
+      </div>
+    </div>
+
+    <!-- Right — orbital anti-gravity (planet + float cards) -->
+    <div class="relative lg:h-[520px] flex items-center justify-center">
+      <!-- Glow -->
+      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[420px] w-[420px] rounded-full opacity-40" style="background: radial-gradient(circle, rgba(92,95,255,0.22) 0%, rgba(58,123,255,0.14) 30%, transparent 70%); filter: blur(20px);"></div>
+      <!-- Orbit rings -->
+      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[340px] w-[340px] rounded-full border border-white/[0.07]" style="border-style: dashed;"></div>
+      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[260px] w-[260px] rounded-full border border-white/[0.05]"></div>
+      <!-- Planet -->
+      <div class="relative z-10 flex h-[160px] w-[160px] items-center justify-center rounded-full" style="background: radial-gradient(120px 120px at 30% 30%, #2a3a7a 0%, #16204a 40%, #0e1430 70%, #080c1a 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(90,143,255,0.25);">
+        <div class="absolute inset-2 rounded-full border border-white/10" style="border-style: dashed; opacity:0.5"></div>
+        <div class="text-center">
+          <div class="text-[10px] tracking-[0.16em] text-white/40">CURRENT</div>
+          <div class="text-sm font-extrabold">L01</div>
+          <div class="text-[11px] font-bold tracking-wide text-[var(--gold)]">AWAKENING</div>
+          <div class="mt-1 inline-flex rounded-full bg-[var(--gold)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--navy)]">120 XP</div>
+        </div>
+        <!-- Ring -->
+        <div class="absolute -inset-3 rounded-full border border-white/5" style="transform: rotateX(65deg);"></div>
+      </div>
+      <!-- Orbit dots (levels) — slowed to 80s -->
+      <div class="absolute left-1/2 top-1/2 h-[340px] w-[340px] -translate-x-1/2 -translate-y-1/2" style="animation: orbit 80s linear infinite;">
+        <div class="absolute left-1/2 top-0 -translate-x-1/2 h-2 w-2 rounded-full bg-[var(--gold)] shadow-[0_0_10px_var(--gold)]"></div>
+        <div class="absolute right-0 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-white/60"></div>
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-white/30"></div>
+      </div>
+      <!-- Floating glass cards — anti-gravity (XP, streak and rank share one display source) -->
+      <div class="float absolute left-0 top-6 z-20 w-[150px] rounded-2xl border border-white/10 bg-[rgba(18,24,46,0.9)] glass p-3 shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
+        <div class="flex items-center justify-between"><span class="text-[10px] tracking-wide text-white/60">XP BALANCE</span></div>
+        <div class="mt-1 flex items-baseline gap-1"><span class="text-xl font-extrabold">57</span><span class="text-xs font-bold text-[var(--gold)]">XP</span><span class="ml-auto text-[10px] text-white/60">of 120</span></div>
+        <div class="mt-2 h-1 rounded-full bg-white/10"><div class="h-1 w-[47%] rounded-full bg-[var(--gold)]"></div></div>
+        <div class="mt-2 text-[10px] leading-3 text-white/60">XP is awarded by the server after review.</div>
+      </div>
+      <div class="float2 absolute right-0 top-10 z-20 w-[148px] rounded-2xl border border-white/10 bg-[rgba(18,24,46,0.9)] glass p-3 shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
+        <div class="flex items-center justify-between"><span class="text-[10px] tracking-wide text-white/60">DAILY STREAK</span></div>
+        <div class="mt-1 flex items-center gap-2"><span class="text-lg font-extrabold">3</span><span class="text-xs text-white/60">days ×1.0</span><span class="ml-auto rounded-full bg-white/5 px-1.5 py-0.5 text-[10px] border border-white/10">❄︎ 1</span></div>
+        <div class="mt-1 text-[10px] text-white/60">Longest 7 · grace</div>
+      </div>
+      <div class="float3 absolute left-6 bottom-10 z-20 w-[160px] rounded-2xl border border-white/10 bg-[rgba(18,24,46,0.9)] glass p-3 shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
+        <div class="flex items-center justify-between"><span class="text-[10px] tracking-wide text-white/60">RANK · COHORT</span></div>
+        <div class="mt-1 text-lg font-extrabold">#2 <span class="text-xs font-normal text-white/60">in cohort</span></div>
+        <div class="mt-1 h-1 rounded-full bg-white/10"><div class="h-1 w-[62%] rounded-full bg-[var(--blue)]"></div></div>
+        <a href="#leaderboard" class="mt-2 block text-center rounded-full bg-[var(--blue)] py-1 text-[11px] font-bold text-white">View →</a>
+      </div>
+      <!-- Small meta -->
+      <div class="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-[11px] text-white/60 backdrop-blur">15 levels · unlocks in order</div>
+    </div>
+  </div>
+
+  <!-- Dashboard — refined, not equal 3-col -->
+  <section class="mt-10 grid gap-4 lg:grid-cols-12">
+    <!-- Hero metric row -->
+    <div class="lg:col-span-8 rounded-[20px] border border-white/10 bg-[rgba(18,24,46,0.6)] glass p-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--gold)] text-[var(--navy)] font-extrabold">1</div>
+        <div><div class="text-sm font-bold">Level 1 — AI Awakening: The Mould & the Cookie</div><div class="text-xs text-white/50">L01_AWAKENING · available · 120 XP · Think in objects</div></div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="rounded-full bg-[var(--gold)] px-2.5 py-1 text-xs font-bold text-[var(--navy)]">available</span>
+        <a href="#levels" class="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-[var(--navy)]">Continue →</a>
+      </div>
+    </div>
+    <div class="lg:col-span-4 rounded-[20px] border border-white/10 bg-[rgba(18,24,46,0.6)] glass p-4">
+      <div class="text-xs tracking-wide text-white/60">WEEKLY PROGRESS</div>
+      <div class="mt-1 flex items-baseline gap-2"><span class="text-2xl font-extrabold">1%</span><span class="text-xs text-white/60">0/15 levels · 1/90 activities</span></div>
+      <div class="mt-2 h-1.5 rounded-full bg-white/10"><div class="h-1.5 rounded-full bg-[var(--purple)]" style="width:7%"></div></div>
+    </div>
+    <!-- 10 small cards — varied, not bento -->
+    <div class="lg:col-span-3 rounded-2xl border border-white/10 bg-[rgba(18,24,46,0.6)] p-3"><div class="text-[11px] tracking-wide text-white/40">NEXT MISSION</div><div class="mt-1 text-sm font-bold">Build: Your Cookie Class</div><div class="text-xs text-white/40">90m · 35 XP · pytest</div></div>
+    <div class="lg:col-span-3 rounded-2xl border border-white/10 bg-[rgba(18,24,46,0.6)] p-3"><div class="text-[11px] tracking-wide text-white/40">WEEKEND</div><div class="mt-1 text-sm font-bold">Sat workshop · Sun 4h hack</div><div class="text-xs text-white/40">Attendance ≠ pass</div></div>
+    <div class="lg:col-span-3 rounded-2xl border border-white/10 bg-[rgba(18,24,46,0.6)] p-3"><div class="text-[11px] tracking-wide text-white/40">SUBMISSIONS</div><div class="mt-1 text-sm font-bold">0 pending</div><div class="text-xs text-white/40">Ship Cookie class → ledger +5</div></div>
+    <div class="lg:col-span-3 rounded-2xl border border-white/10 bg-[rgba(18,24,46,0.6)] p-3"><div class="text-[11px] tracking-wide text-white/40">CAREER</div><div class="mt-1 text-sm font-bold">42% <span class="text-xs font-normal text-white/40">competency</span></div><div class="mt-1 h-1 rounded-full bg-white/10"><div class="h-1 w-[42%] rounded-full bg-[var(--gold)]"></div></div></div>
+    <div class="lg:col-span-6 rounded-2xl border border-white/10 bg-[rgba(18,24,46,0.6)] p-3 flex items-center justify-between"><div><div class="text-[11px] tracking-wide text-white/60">TEAM ACTIVITY</div><div class="text-sm font-bold">Demo Squad · 4 members · 2 active this week</div></div><span class="rounded-full bg-white/5 border border-white/10 px-2 py-1 text-xs">3–5 per team</span></div>
+    <div class="lg:col-span-6 rounded-2xl border border-white/10 bg-[rgba(18,24,46,0.6)] p-3 flex items-center justify-between"><div><div class="text-[11px] tracking-wide text-white/60">NEXT MILESTONE</div><div class="text-sm font-bold">Complete Level 1 to unlock Level 2</div></div><span class="rounded-full bg-[var(--gold)] px-2 py-1 text-xs font-bold text-[#3d2f0c]">120 XP</span></div>
+  </section>
+
+  <!-- JOURNEY RAIL — play journey, orbital, not grid -->
+  <section id="journey" class="mt-8 rounded-[20px] border border-white/10 bg-[rgba(18,24,46,0.5)] glass p-4 md:p-5">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h2 class="text-sm font-bold tracking-wide">15-LEVEL CAREER JOURNEY — PLAY RAIL</h2>
+      <span class="rounded-full bg-white/5 border border-white/10 px-2.5 py-1 text-xs text-white/60">Complete a level to unlock the next</span>
+    </div>
+    <div class="relative mt-6 overflow-x-auto pb-2">
+      <div class="relative flex items-center gap-0 min-w-[820px] px-2">
+        <!-- Line -->
+        <div class="absolute left-6 right-6 top-1/2 h-px bg-gradient-to-r from-[var(--gold)] via-[var(--blue)] to-white/10"></div>
+        <!-- Nodes -->
+        <div class="relative flex w-full justify-between">
+          <div class="flex flex-col items-center gap-1.5"><div class="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--gold)] text-[11px] font-extrabold text-[var(--navy)] shadow-[0_0_0_8px_rgba(240,199,94,0.15)]" style="animation:pulse 2.2s infinite">01</div><div class="text-[11px] font-bold">Awakening</div><div class="text-[10px] text-[var(--gold)]">120 XP</div><span class="rounded-full bg-[var(--gold)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--navy)]">YOU</span></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-90"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--blue)] text-[11px] font-bold text-white border border-white/20">02</div><div class="text-[11px] font-semibold text-white/80">Prompt</div><div class="text-[10px] text-white/40">140</div></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-60"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">03</div><div class="text-[11px] text-white/50">Memory</div><div class="text-[10px] text-white/60">150</div></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-60"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">04</div><div class="text-[11px] text-white/50">MCP</div><div class="text-[10px] text-white/60">160</div></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-60"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">05</div><div class="text-[11px] text-white/50">RAG</div><div class="text-[10px] text-white/60">170</div></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-60"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">06</div><div class="text-[11px] text-white/50">RAG+</div><div class="text-[10px] text-white/60">180</div></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-60"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">07</div><div class="text-[11px] text-white/50">Agents</div><div class="text-[10px] text-white/60">200</div></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-60"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">08</div><div class="text-[11px] text-white/60">Eval</div><div class="text-[10px] text-white/60">210</div></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-60"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">09</div><div class="text-[11px] text-white/60">Workflow</div><div class="text-[10px] text-white/60">220</div></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-90"><div class="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--purple)] text-[11px] font-bold text-white border border-white/20">10</div><div class="text-[11px] font-bold">Capstone</div><div class="text-[10px] text-white/60">250</div></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-60"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">11</div><div class="text-[11px] text-white/60">Track</div><div class="text-[10px] text-white/60">280</div></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-60"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">12</div><div class="text-[11px] text-white/60">Track</div><div class="text-[10px] text-white/60">300</div></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-60"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">13</div><div class="text-[11px] text-white/60">Track</div><div class="text-[10px] text-white/60">320</div></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-60"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">14</div><div class="text-[11px] text-white/60">Hack</div><div class="text-[10px] text-white/60">335</div></div>
+          <div class="flex flex-col items-center gap-1.5 opacity-60"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">15</div><div class="text-[11px] text-white/60">Career</div><div class="text-[10px] text-white/60">350</div></div>
+        </div>
+      </div>
+      <div class="mt-3 flex gap-2 text-[11px] text-white/60"><span class="rounded bg-white/5 border border-white/10 px-1.5 py-0.5">Ignition 1-3</span><span class="rounded bg-white/5 border border-white/10 px-1.5 py-0.5">Craft 4-6</span><span class="rounded bg-white/5 border border-white/10 px-1.5 py-0.5">Ship 7-10</span><span class="rounded bg-white/5 border border-white/10 px-1.5 py-0.5">Specialize 11-13</span><span class="rounded bg-white/5 border border-white/10 px-1.5 py-0.5">Launch 14-15</span></div>
+    </div>
+  </section>
+
+  <!-- Internal diagnostics (not learner UI): graph map for mentors/admins -->
+  <details id="graph" class="mt-6 rounded-[20px] border border-white/10 bg-[rgba(18,24,46,0.5)] glass p-4">
+    <summary class="cursor-pointer list-none">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-bold">Internal diagnostics — learning graph <span class="ml-1 rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold text-white/60">mentors only</span></h2>
+          <p class="text-xs leading-4 text-white/60">Unlock map for the 15 levels. Hidden from the learner flow in the full app.</p>
+        </div>
+        <span class="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-[var(--navy)]">Expand</span>
+      </div>
+    </summary>
+    <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="text-xs text-white/60">Tap to test the unlock check for Level 2.</div>
+      <button onclick="runCanUnlock()" class="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-[var(--navy)]">Test canUnlock(L02) →</button>
+    </div>
+    <div id="mynetwork" class="mt-4 h-[360px] rounded-[16px] border border-white/10 bg-[radial-gradient(600px_300px_at_30%_20%,rgba(124,92,255,0.12),transparent),radial-gradient(500px_200px_at_80%_80%,rgba(58,123,255,0.10),transparent),#0a0f1f] overflow-hidden"></div>
+    <div class="mt-3 grid gap-3 md:grid-cols-3">
+      <div class="rounded-xl bg-[rgba(10,15,31,0.9)] border border-white/5 p-3"><div class="text-xs font-bold text-white/80">Unlock rule for Level 3</div><p class="mt-2 text-xs leading-4 text-white/60">Levels 1 and 2 must be approved before Level 3 opens.</p></div>
+      <div class="rounded-xl bg-[rgba(10,15,31,0.9)] border border-white/5 p-3"><div class="text-xs font-bold text-white/80">Unlock check for Level 2</div><p id="canUnlockCode" class="mt-2 text-xs leading-4 text-white/60">Level 1 is not complete, so Level 2 stays locked.</p><div id="canUnlockResult" class="mt-2 text-xs font-bold text-[var(--gold)]">Click Test →</div></div>
+      <div class="rounded-xl bg-[rgba(10,15,31,0.9)] border border-white/5 p-3"><div class="text-xs font-bold text-white/80">Rank source</div><p class="mt-2 text-xs leading-4 text-white/60">Ranks total approved XP per learner in this cohort.</p><div class="mt-1 text-xs text-white/60">Falls back to app data when the cache is unavailable.</div></div>
+    </div>
+  </details>
+
+  <!-- LEVELS — not grid, but curated -->
+  <section id="levels" class="mt-6">
+    <div class="flex items-center justify-between"><h2 class="text-sm font-bold tracking-wide">15-LEVEL CAREER JOURNEY</h2><span class="text-xs text-white/60">All 15 published · real 6-activity configs · 90 activities</span></div>
+    <div class="mt-3 grid gap-2 grid-cols-3 md:grid-cols-5">
+      <div class="rounded-2xl border border-[var(--gold)]/30 bg-[var(--gold)]/10 p-3 text-center"><div class="text-[11px] font-extrabold text-[var(--gold)]">L01</div><div class="text-xs font-bold">Awakening</div><div class="text-xs text-[var(--gold)]">120 XP · available</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center"><div class="text-[11px] font-bold text-white/60">L02</div><div class="text-xs font-bold text-white/80">Prompt</div><div class="text-xs text-white/60">140 XP · locked</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center opacity-80"><div class="text-[11px] font-bold text-white/60">L03</div><div class="text-xs font-bold text-white/60">Memory</div><div class="text-xs text-white/60">150 XP · locked</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center opacity-70"><div class="text-[11px] font-bold text-white/60">L04</div><div class="text-xs font-bold text-white/60">MCP</div><div class="text-xs text-white/60">160 XP · locked</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center opacity-70"><div class="text-[11px] font-bold text-white/60">L05</div><div class="text-xs font-bold text-white/60">RAG</div><div class="text-xs text-white/60">170 XP · locked</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L06</div><div class="text-xs">RAG+</div><div class="text-xs text-white/60">180 XP · locked</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L07</div><div class="text-xs">Agents</div><div class="text-xs text-white/60">200 XP · locked</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L08</div><div class="text-xs">Eval</div><div class="text-xs text-white/60">210 XP · locked</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L09</div><div class="text-xs">Workflow</div><div class="text-xs text-white/60">220 XP · locked</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L10</div><div class="text-xs">Capstone</div><div class="text-xs text-white/60">250 XP · locked</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L11</div><div class="text-xs">Track</div><div class="text-xs text-white/60">280 XP · locked</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L12</div><div class="text-xs">Track</div><div class="text-xs text-white/60">300 XP · locked</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L13</div><div class="text-xs">Track</div><div class="text-xs text-white/60">320 XP · locked</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L14</div><div class="text-xs">Hack</div><div class="text-xs text-white/60">335 XP · locked</div></div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L15</div><div class="text-xs">Career</div><div class="text-xs text-white/60">350 XP · locked</div></div>
+    </div>
+    <div class="mt-2 text-xs text-white/60">Locked tiles unlock in order — complete Level 1 to open Level 2.</div>
+  </section>
+
+  <!-- L01 — timeline, not flat list -->
+  <section class="mt-6 rounded-[20px] border border-white/10 bg-[rgba(18,24,46,0.5)] glass p-4">
+    <div class="flex items-center gap-2"><h3 class="text-sm font-bold">Level 1 — AI Awakening: The Mould & the Cookie</h3><span class="rounded-full bg-[var(--gold)] px-2 py-1 text-xs font-bold text-[var(--navy)]">120 XP</span><span class="text-xs text-white/60">6 activities</span></div>
+    <div class="mt-4 relative">
+      <div class="absolute left-[15px] top-2 bottom-2 w-px bg-gradient-to-b from-[var(--gold)] via-[var(--blue)] to-white/10 hidden md:block"></div>
+      <div class="space-y-3">
+        <div class="relative flex gap-3 rounded-2xl border border-[var(--gold)]/20 bg-[var(--gold)]/5 p-3 md:ml-6"><span class="hidden md:flex absolute -left-[29px] top-4 h-3 w-3 rounded-full bg-[var(--gold)] shadow-[0_0_0_6px_rgba(232,185,79,0.15)]"></span><div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--gold)] text-xs font-bold text-[#3d2f0c]">1</div><div class="flex-1"><div class="text-sm font-bold">Mission Briefing — Cookie Factory <span class="rounded-full bg-[var(--gold)] px-1.5 py-0.5 text-[10px] font-bold text-[#3d2f0c]">done</span></div><div class="text-xs text-white/60">Mould broken · model cookies as objects · Factory Ops · Boss preview: The Mould Trial</div><div class="mt-2"><button type="button" onclick="openCoach('L01','briefing')" class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80 hover:bg-white/10">Ask Coach</button></div></div><span class="text-xs font-bold text-[var(--gold)] self-center">+5</span></div>
+        <div class="relative flex gap-3 rounded-2xl border border-[var(--blue)]/20 bg-[var(--blue)]/5 p-3 md:ml-6"><span class="hidden md:flex absolute -left-[29px] top-4 h-3 w-3 rounded-full bg-[var(--blue)] animate-pulse"></span><div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--blue)] text-xs font-bold text-white">2</div><div class="flex-1"><div class="text-sm font-bold">Learn — Classes, Objects, Attributes <span class="rounded-full bg-[var(--blue)] px-1.5 py-0.5 text-[10px] font-bold text-white">in progress</span></div><div class="text-xs text-white/50">Video 9m (80% watch) · MD Shared or Personal? · Quiz 4 Qs (60%)</div></div><span class="text-xs font-bold text-[var(--gold)] self-center">+18</span></div>
+        <div class="relative flex gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3 md:ml-6 opacity-80"><span class="hidden md:flex absolute -left-[29px] top-4 h-3 w-3 rounded-full bg-white/20"></span><div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold">3</div><div class="flex-1"><div class="text-sm font-bold">Explore GitHub — Cookie Demo</div><div class="text-xs text-white/40">org/cookie-demo `python demo.py` · 2 Qs</div></div><span class="text-xs font-bold text-white/60 self-center">+10</span></div>
+        <div class="relative flex gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3 md:ml-6 opacity-80"><span class="hidden md:flex absolute -left-[29px] top-4 h-3 w-3 rounded-full bg-white/20"></span><div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold">4</div><div class="flex-1"><div class="text-sm font-bold">Build — Your Cookie Class (pytest)</div><div class="text-xs text-white/40">class Cookie · oven_temp · 2 instances · `pytest tests/test_cookie.py`</div></div><span class="text-xs font-bold text-white/60 self-center">+35</span></div>
+        <div class="relative rounded-2xl border border-white/10 bg-white/[0.04] p-3 md:ml-6">
+          <span class="hidden md:flex absolute -left-[29px] top-4 h-3 w-3 rounded-full bg-white/20"></span>
+          <div class="flex items-center gap-3"><div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold">5</div><div class="flex-1"><div class="text-sm font-bold">Submit Proof</div><div class="text-xs text-white/60">Repo link + 50-word reflection · reviewed before XP</div></div><span class="text-xs font-bold text-white/60">+5</span></div>
+          <form onsubmit="submitProof(event)" class="mt-3 grid gap-2 md:grid-cols-[1fr_auto]">
+            <div><label class="flabel" for="repoUrl">GitHub repository URL</label><input id="repoUrl" type="url" placeholder="https://github.com/you/cookie-demo" aria-describedby="submitMsg" class="w-full rounded-full border border-white/10 bg-black/20 px-3 py-2 text-sm placeholder:text-white/60"></div>
+            <div class="flex items-end"><button type="submit" class="rounded-full bg-white px-4 py-2 text-sm font-bold text-[var(--navy)]">Submit →</button></div>
+            <div class="md:col-span-2"><label class="flabel" for="reflection">Reflection (at least 10 words)</label><textarea id="reflection" rows="2" aria-describedby="submitMsg" class="w-full rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-sm placeholder:text-white/60" placeholder="What you learned about objects vs instances"></textarea></div>
+          </form>
+          <div id="submitMsg" class="mt-2 text-xs font-bold text-[var(--gold)]"></div>
+        </div>
+        <div class="relative flex gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3 md:ml-6 opacity-60"><span class="hidden md:flex absolute -left-[29px] top-4 h-3 w-3 rounded-full bg-white/10"></span><div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/5 text-xs font-bold">6</div><div class="flex-1"><div class="text-sm font-bold">Evaluation + Boss — The Mould Trial</div><div class="text-xs text-white/40">Rubric 5 dims · Boss `Cookie.count` · 3/3 harness · 3 attempts</div></div><span class="text-xs font-bold text-white/60">+47</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ranks (reference IA label; full Ranks page design is in §9, not specified) -->
+  <section id="leaderboard" class="mt-6 rounded-[20px] border border-white/10 bg-[rgba(18,24,46,0.5)] glass p-4">
+    <h3 class="text-sm font-bold">Ranks — this week's cohort board</h3>
+    <div class="mt-3 overflow-hidden rounded-2xl border border-white/10">
+      <div class="grid grid-cols-3 gap-2 bg-black/20 px-3 py-2 text-xs font-semibold tracking-wide text-white/60"><span>Rank</span><span>Learner</span><span>XP</span></div>
+      <div class="divide-y divide-white/5 text-sm">
+        <div class="grid grid-cols-3 gap-2 px-3 py-2.5"><span class="font-bold">1</span><span class="font-semibold">Aarav S.</span><span class="font-extrabold text-[var(--gold)]">1,340</span></div>
+        <div class="grid grid-cols-3 gap-2 border border-[var(--gold)]/40 bg-[var(--gold)]/10 px-3 py-2.5" aria-current="true"><span class="font-bold">2</span><span class="font-semibold">Demo Learner (you)</span><span class="font-bold">57</span></div>
+        <div class="grid grid-cols-3 gap-2 px-3 py-2.5"><span>3</span><span>Priya M.</span><span>890</span></div>
+      </div>
+    </div>
+    <div class="mt-2 text-xs text-white/60">Rankings reward approved work. Seasonal and team boards appear here.</div>
+  </section>
+
+  <!-- FEED (REF-FEED): route /feed in the full app -->
+  <section id="feed" class="mt-6">
+    <div class="pageheader"><div class="eyebrow">FEED</div><h2>What everyone is working on</h2><p class="sub">Ask when you are stuck, share what worked, and put your wins on the wall. Only people in your cohort can see it.</p></div>
+    <div class="mt-3 rounded-2xl bg-white p-1.5 text-[#0F172A]" role="tablist" aria-label="Feed tabs">
+      <button type="button" role="tab" aria-selected="true" id="tabPosts" onclick="feedTab('posts')" class="btn-gold rounded-full px-4 py-1.5 text-sm">Posts</button>
+      <button type="button" role="tab" aria-selected="false" id="tabWins" onclick="feedTab('wins')" class="rounded-full px-4 py-1.5 text-sm font-semibold">Wins</button>
+    </div>
+    <div id="feedPosts" role="tabpanel" aria-labelledby="tabPosts" class="mt-3 space-y-3">
+      <div class="post-card p-4" style="border-top:3px solid #B1873D">
+        <div class="text-sm font-bold">Share something with everyone in your cohort</div>
+        <p class="mt-1 text-sm" style="color:#475569">A question you are stuck on, or something you figured out. It does not have to be finished.</p>
+        <div class="mt-3 flex items-start gap-2"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold text-sm" style="background:#F9F5E7;color:#6B4E16;border:1px solid #B1873D" aria-hidden="true">DL</span>
+          <label class="sr-only" for="feedBox" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Your post</label>
+          <textarea id="feedBox" rows="2" placeholder="What are you working on, Demo?" class="w-full rounded-xl border p-2 text-sm" style="border-color:#E6EBF5"></textarea></div>
+        <div class="mt-2 flex items-center gap-2 text-sm"><span id="tagLabel">Tag it</span><span class="flex gap-1" role="group" aria-labelledby="tagLabel"><button type="button" class="chip" aria-pressed="true" onclick="feedTag(this)">General</button><button type="button" class="chip" aria-pressed="false" onclick="feedTag(this)">Level 1</button><button type="button" class="chip" aria-pressed="false" onclick="feedTag(this)">Level 2</button></span></div>
+        <div class="mt-2 flex items-center justify-between"><span id="postHint" class="text-sm" style="color:#475569">Write something to post.</span><button type="button" id="postBtn" onclick="feedPost()" disabled class="btn-gold rounded-full px-4 py-1.5 text-sm opacity-50">Post</button></div>
+        <p class="mt-2 text-sm" style="color:#475569">Only people in your cohort see it. Selling, crypto or spam goes to a moderator first.</p>
+      </div>
+      <div class="mb-1 mt-4 text-xs font-bold tracking-wide text-white/60">SHOW</div>
+      <div class="flex flex-wrap gap-1.5" role="group" aria-label="Filter posts"><button type="button" class="chip" aria-pressed="true" onclick="feedTag(this)">Everything</button><button type="button" class="chip" aria-pressed="false" onclick="feedTag(this)">Level 1</button><button type="button" class="chip" aria-pressed="false" onclick="feedTag(this)">Level 2</button></div>
+      <article class="post-card p-4" aria-labelledby="p1t">
+        <div class="flex items-start justify-between gap-2"><div class="flex items-center gap-2"><span class="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold" style="background:#F9F5E7;color:#6B4E16;border:1px solid #B1873D" aria-hidden="true">AR</span><div><div class="text-sm font-bold" id="p1t">Aarav R.</div><div class="text-sm" style="color:#475569">Hyderabad · Operator · 2 days ago</div></div></div><span class="rounded-full px-2 py-0.5 text-xs font-semibold" style="background:#F2F7FE">Level 1</span></div>
+        <p class="mt-2 text-sm" style="color:#0F172A">Finished the Cookie class exercise. The trick was keeping oven state on the instance, not the class. #Level1 #Python</p>
+        <div class="mt-2 flex items-center gap-2 border-t pt-2" style="border-color:#E6EBF5"><button type="button" class="chip" aria-pressed="false" aria-label="Like, 4 likes" onclick="feedLike(this)">♡ 4</button><button type="button" class="chip" onclick="feedReply(this)" aria-expanded="false">Reply</button><button type="button" class="ml-auto text-sm underline" style="color:#475569" onclick="feedReport(this)">Report</button></div>
+      </article>
+      <article class="post-card p-4" aria-labelledby="p2t">
+        <div class="flex items-start justify-between gap-2"><div class="flex items-center gap-2"><span class="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold" style="background:#F9F5E7;color:#6B4E16;border:1px solid #B1873D" aria-hidden="true">PS</span><div><div class="text-sm font-bold" id="p2t">Priya S.</div><div class="text-sm" style="color:#475569">Chennai · Newcomer · 5 hours ago</div></div></div><span class="rounded-full px-2 py-0.5 text-xs font-semibold" style="background:#F2F7FE">General</span></div>
+        <p class="mt-2 text-sm" style="color:#0F172A">Where do I find today's activities? I opened Levels but I am not sure which one is mine.</p>
+        <div class="mt-2 flex items-center gap-2 border-t pt-2" style="border-color:#E6EBF5"><button type="button" class="chip" aria-pressed="false" aria-label="Like, 0 likes" onclick="feedLike(this)">Like</button><button type="button" class="chip" onclick="feedReply(this)" aria-expanded="false">Reply</button><button type="button" class="ml-auto text-sm underline" style="color:#475569" onclick="feedReport(this)">Report</button></div>
+      </article>
+      <div class="text-center"><button type="button" onclick="feedMore(this)" class="rounded-full border px-4 py-1.5 text-sm font-semibold" style="border-color:#B1873D;color:#6B4E16;background:#F9F5E7">Load more posts</button></div>
+    </div>
+    <div id="feedWins" role="tabpanel" aria-labelledby="tabWins" hidden class="mt-3 space-y-3">
+      <article class="post-card p-4"><div class="flex items-center gap-2"><span class="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold" style="background:linear-gradient(180deg,#EBD298,#B1873D);color:#3d2f0c" aria-hidden="true">KB</span><div><div class="text-sm font-bold">Kabir B. shipped the Level 10 capstone</div><div class="text-sm" style="color:#475569">Bengaluru · Engineer · 1 day ago</div></div></div></article>
+    </div>
+  </section>
+
+  <!-- SHOWCASE (REF-SHOW): route /showcase in the full app -->
+  <section id="showcase" class="mt-6">
+    <div class="pageheader navy"><div class="eyebrow" style="color:#EBD298">THE SHOWCASE</div><h2><span id="showCount" style="color:#7DE3B0">2</span> projects built for real businesses</h2><p class="sub">Every member who submitted a project is on the wall. Newest first.</p></div>
+    <a href="#levels" class="mt-3 flex items-center gap-3 rounded-2xl p-4 text-white" style="background:#137A5D"><span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-lg" aria-hidden="true">▲</span><span><span class="block text-sm font-bold">Submit your project in Level 10 to join the wall.</span><span class="block text-sm opacity-80">Your project and your name will show here for every member.</span></span></a>
+    <div class="mt-3 grid gap-4 md:grid-cols-2">
+      <article class="overflow-hidden rounded-2xl border bg-white text-[#0F172A]" style="border-color:#E6EBF5"><div class="flex h-24 items-center justify-center" style="background:#168767"><span class="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white text-lg font-extrabold text-white">SD</span></div><div class="p-4"><span class="rounded-full px-2 py-0.5 text-xs font-semibold" style="background:#F9F5E7;color:#6B4E16">CRM</span> <span class="rounded-full px-2 py-0.5 text-xs font-semibold" style="background:#F9F5E7;color:#6B4E16">Built for a bakery owner</span><div class="mt-2 text-sm font-bold">Sana D.</div><div class="text-sm" style="color:#475569">Hyderabad · 10 days ago</div><p class="mt-1 text-sm">Order tracking that texts customers when their cake is ready.</p><a href="https://example.com" target="_blank" rel="noopener noreferrer" class="btn-gold mt-3 block rounded-full py-2 text-center text-sm" aria-label="Open project by Sana D., opens in a new tab">Open project ↗</a></div></article>
+      <article class="overflow-hidden rounded-2xl border bg-white text-[#0F172A]" style="border-color:#E6EBF5"><div class="flex h-24 items-center justify-center" style="background:#0E1646"><span class="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white text-lg font-extrabold text-white">MK</span></div><div class="p-4"><span class="rounded-full px-2 py-0.5 text-xs font-semibold" style="background:#F9F5E7;color:#6B4E16">Automation</span> <span class="rounded-full px-2 py-0.5 text-xs font-semibold" style="background:#F9F5E7;color:#6B4E16">Built for a clinic</span></div><div class="mt-2 px-4 text-sm font-bold">Meera K.</div><div class="px-4 text-sm" style="color:#475569">3 weeks ago</div><p class="mt-1 px-4 text-sm">Appointment reminders that cut no-shows in a two-doctor clinic.</p><div class="flex gap-2 p-4"><a href="https://example.com" target="_blank" rel="noopener noreferrer" class="btn-gold flex-1 rounded-full py-2 text-center text-sm" aria-label="Open project by Meera K., opens in a new tab">Open project ↗</a><button type="button" class="flex-1 rounded-full border px-2 py-2 text-sm font-semibold" style="border-color:#B1873D;color:#6B4E16">▶ Video</button></div></article>
+    </div>
+  </section>
+
+  <!-- RESOURCES (REF-RES): route /resources in the full app -->
+  <section id="resources" class="mt-6">
+    <div class="pageheader"><div class="eyebrow">RESOURCES</div><h2>Everything from your activities</h2><p class="sub">The prompts, the pages and the things you have made, kept with the activity they came from. More lands here as you open each Level.</p></div>
+    <div class="mt-3 space-y-2" id="resList">
+      <div class="rounded-2xl bg-white p-1 text-[#0F172A]" style="border:1px solid #E6EBF5"><button type="button" class="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left" aria-expanded="false" aria-controls="resA" onclick="resToggle(this)"><span class="text-sm font-bold">Level 1 sessions</span><span class="text-sm" style="color:#475569">10 items <span aria-hidden="true">▾</span></span></button><div id="resA" hidden class="px-3 pb-3 text-sm"><ul class="list-disc pl-5"><li>Workshop recording — Cookie Factory kickoff <button type="button" class="underline" style="color:#6B4E16">Open</button></li><li>Sunday hack recording — demo day <button type="button" class="underline" style="color:#6B4E16">Open</button></li></ul></div></div>
+      <div class="rounded-2xl bg-white p-1 text-[#0F172A]" style="border:1px solid #E6EBF5"><button type="button" class="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left" aria-expanded="false" aria-controls="resB" onclick="resToggle(this)"><span class="text-sm font-bold">Learn — Classes, Objects, Attributes</span><span class="text-sm" style="color:#475569"><span class="rounded px-1.5 py-0.5 text-xs font-bold" style="background:#F2F7FE">Level 1</span> 3 items <span aria-hidden="true">▾</span></span></button><div id="resB" hidden class="px-3 pb-3 text-sm"><ul class="list-disc pl-5"><li>Lesson video (9 min) <button type="button" class="underline" style="color:#6B4E16">Open</button></li><li>Prompt pack — class design <button type="button" class="underline" style="color:#6B4E16">Copy prompt</button></li><li>Quiz — 4 questions <button type="button" class="underline" style="color:#6B4E16">Open</button></li></ul></div></div>
+      <div class="rounded-2xl bg-white p-1 text-[#0F172A]" style="border:1px solid #E6EBF5"><button type="button" class="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left" aria-expanded="false" aria-controls="resC" onclick="resToggle(this)"><span class="text-sm font-bold">Explore GitHub — Cookie Demo</span><span class="text-sm" style="color:#475569"><span class="rounded px-1.5 py-0.5 text-xs font-bold" style="background:#F2F7FE">Level 1</span> 1 item <span aria-hidden="true">▾</span></span></button><div id="resC" hidden class="px-3 pb-3 text-sm"><ul class="list-disc pl-5"><li>Repo walkthrough <button type="button" class="underline" style="color:#6B4E16">Open</button></li></ul></div></div>
+    </div>
+  </section>
+
+  <!-- UNSTUCK (REF-UNSTUCK): route /coach in the full app -->
+  <section id="unstuck" class="mt-6">
+    <h2 class="text-xl font-extrabold tracking-tight">Unstuck</h2>
+    <p class="mt-1 text-sm text-white/60">Coach: help with a step. Career AI: help with your next move.</p>
+    <div class="mt-3 rounded-2xl bg-white p-4 text-[#0F172A]" style="border:1px solid #E6EBF5">
+      <div class="grid grid-cols-2 gap-2 rounded-xl p-1.5" style="background:#EBF2FA" role="radiogroup" aria-label="Assistant mode">
+        <button type="button" role="radio" aria-checked="true" id="modeCoach" onclick="coachMode('coach')" class="rounded-lg bg-white px-3 py-2 text-left shadow"><span class="text-sm font-bold">Coach</span><span class="block text-sm" style="color:#475569">Help with this app: steps, points, proof</span></button>
+        <button type="button" role="radio" aria-checked="false" id="modeCareer" onclick="coachMode('career')" class="rounded-lg px-3 py-2 text-left"><span class="text-sm font-bold">Career AI</span><span class="block text-sm" style="color:#475569">Help with your next move: tracks, portfolio</span></button>
+      </div>
+      <p class="mt-2 text-sm" style="color:#475569">Ask about the app, your points, or whatever has you stuck. You can add a screenshot too.</p>
+      <div id="coachThread" aria-live="polite" class="mt-2 max-h-[320px] space-y-2 overflow-y-auto rounded-xl border p-3" style="border-color:#E6EBF5;min-height:160px">
+        <div class="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm px-3 py-2 text-sm text-white" style="background:#0E1737">Where do I find today's activities?</div>
+        <div class="w-fit max-w-[85%] rounded-2xl rounded-bl-sm border px-3 py-2 text-sm" style="background:#F2F7FE;border-color:#E6EBF5">Open Home for today's next step, then Levels for the full activity list in order.</div>
+      </div>
+      <div id="coachCtx" class="mt-2 hidden items-center justify-between rounded-full px-3 py-1 text-sm" style="background:#F9F5E7;color:#6B4E16"><span id="coachCtxText">About: Level 1</span><button type="button" onclick="coachClearCtx()" aria-label="Clear context">×</button></div>
+      <div class="mt-2 flex flex-wrap gap-1.5"><button type="button" class="chip" onclick="coachAsk(this)">How do I submit proof?</button><button type="button" class="chip" onclick="coachAsk(this)">Why is Level 2 locked?</button><button type="button" class="chip" onclick="coachAsk(this)">Where are my points?</button></div>
+      <form onsubmit="coachSend(event)" class="mt-2 flex items-end gap-2 border-t pt-2" style="border-color:#E6EBF5">
+        <button type="button" class="rounded-lg border p-2" style="border-color:#E6EBF5" aria-label="Attach a screenshot"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button>
+        <label class="sr-only" for="coachBox" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Ask Coach</label>
+        <textarea id="coachBox" rows="1" placeholder="Ask Coach…" class="min-h-9 max-h-36 flex-1 resize-y rounded-xl border p-2 text-sm" style="border-color:#E6EBF5"></textarea>
+        <button type="submit" class="rounded-lg px-3 py-2 text-sm font-bold text-white" style="background:#0E1737" aria-label="Send">➤</button>
+      </form>
+    </div>
+    <div class="mt-3 grid gap-3 md:grid-cols-2">
+      <div class="rounded-2xl bg-white p-4 text-[#0F172A]" style="border:1px solid #E6EBF5"><div class="text-sm font-bold">Stuck on a step?</div><p class="mt-1 text-sm" style="color:#475569">Press "Ask Coach" on the activity. Same Coach, and there it sees which step you are on.</p><a href="#levels" class="mt-2 inline-block text-sm font-semibold underline">How this app works →</a></div>
+      <div class="rounded-2xl bg-white p-4 text-[#0F172A]" style="border:1px solid #E6EBF5"><div class="text-sm font-bold">Found a bug, or got an idea?</div><p class="mt-1 text-sm" style="color:#475569">Tell us what broke, or what would make this easier. We read every note you send.</p><a href="/feedback" class="mt-2 inline-block text-sm font-semibold underline">Tell us on Feedback →</a></div>
+    </div>
+    <div class="mt-3 rounded-2xl bg-white p-4 text-[#0F172A]" style="border:1px solid #E6EBF5;border-top:3px solid #D6BC85"><div class="text-xs font-bold tracking-widest" style="color:#6B4E16">A NOTE FROM YOUR MENTOR</div><div class="mt-2 text-xl" style="font-family:cursive">Demo Learner,</div><p class="mt-1 text-sm" style="color:#0F172A">Ship one small thing every week. Small wins, reviewed well, become a portfolio that speaks for you.</p><div class="mt-2 text-xl" style="font-family:cursive">— Your Mentor</div><div class="text-sm" style="color:#475569">Program Mentor, AI Accelerator Hub</div></div>
+  </section>
+  <button id="unstuckFab" type="button" onclick="openCoach()" aria-label="Open Unstuck help"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Unstuck</button>
+</main>
+</div><!-- /app shell -->
+
+<script>
+  // Sidebar — collapsible groups (chevron + max-height/opacity, localStorage, a11y)
+  (function(){
+    const GROUPS=['LEARN','BUILD','COMMUNITY','GROW','SUPPORT'];
+    const KEY=p=>'ah_sidebar_collapsed_'+p;
+    function apply(group, collapsed){
+      const btn=document.querySelector('[aria-controls="panel-'+group+'"]');
+      const panel=document.getElementById('panel-'+group);
+      if(!btn||!panel) return;
+      btn.setAttribute('aria-expanded', String(!collapsed));
+      panel.classList.toggle('is-collapsed', collapsed);
+      panel.setAttribute('aria-hidden', String(collapsed));
+    }
+    GROUPS.forEach(g=>{
+      let collapsed=false;
+      try{ collapsed=localStorage.getItem(KEY(g))==='1'; }catch(e){}
+      apply(g, collapsed);
+      const btn=document.querySelector('[aria-controls="panel-'+g+'"]');
+      if(btn) btn.addEventListener('click', ()=>{
+        const nowCollapsed=document.getElementById('panel-'+g).classList.contains('is-collapsed');
+        const newCollapsed=!nowCollapsed;
+        apply(g, newCollapsed);
+        try{ if(newCollapsed) localStorage.setItem(KEY(g),'1'); else localStorage.removeItem(KEY(g)); }catch(e){}
+      });
+    });
+    // mobile drawer
+    window.toggleSidebar=function(){
+      const sb=document.getElementById('sidebar');
+      const ov=document.getElementById('sidebarOverlay');
+      const btn=document.getElementById('hamburgerBtn');
+      const willOpen=!sb.classList.contains('is-open');
+      sb.classList.toggle('is-open', willOpen);
+      if(willOpen){ ov.classList.remove('hidden'); requestAnimationFrame(()=>ov.style.opacity='1'); }
+      else { ov.style.opacity='0'; setTimeout(()=>ov.classList.add('hidden'),200); }
+      if(btn) btn.setAttribute('aria-expanded', String(willOpen));
+      document.body.style.overflow=willOpen && window.innerWidth<1024 ? 'hidden' : '';
+    };
+    window.closeSidebar=function(){
+      const sb=document.getElementById('sidebar');
+      const ov=document.getElementById('sidebarOverlay');
+      const btn=document.getElementById('hamburgerBtn');
+      sb.classList.remove('is-open');
+      ov.style.opacity='0';
+      setTimeout(()=>ov.classList.add('hidden'),200);
+      if(btn) btn.setAttribute('aria-expanded','false');
+      document.body.style.overflow='';
+    };
+    // close on resize to lg
+    window.addEventListener('resize', ()=>{
+      if(window.innerWidth>=1024){
+        const sb=document.getElementById('sidebar');
+        const ov=document.getElementById('sidebarOverlay');
+        sb.classList.remove('is-open');
+        ov.classList.add('hidden');
+        ov.style.opacity='';
+        document.body.style.overflow='';
+      }
+    });
+    // Esc closes drawer
+    window.addEventListener('keydown', (e)=>{
+      if(e.key==='Escape'){
+        const sb=document.getElementById('sidebar');
+        if(sb.classList.contains('is-open')) closeSidebar();
+      }
+    });
+  })();
+  // Rail — bottom handle, 272px ↔ 64px icon-only, desktop only
+  (function(){
+    const KEY='ah_sidebar_rail';
+    const sb=document.getElementById('sidebar');
+    const btn=document.getElementById('railToggleBtn');
+    function applyRail(collapsed){
+      if(!sb) return;
+      sb.classList.toggle('is-rail', collapsed);
+      if(btn){
+        btn.setAttribute('aria-expanded', String(collapsed));
+        const label=btn.querySelector('.rail-label');
+        if(label) label.innerHTML = collapsed
+          ? '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/><path d="M15 18l6-6 6-6" opacity="0.35"/></svg>Expand'
+          : '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/><path d="M9 18l-6-6 6-6" opacity="0.35"/></svg>Collapse';
+        const chev=btn.querySelector('.rail-chevron');
+        if(chev) chev.style.transform = collapsed ? 'rotate(180deg)' : '';
+      }
+    }
+    let rail=false; try{ rail=localStorage.getItem(KEY)==='1'; }catch(e){}
+    applyRail(rail);
+    window.toggleRail=function(){
+      const now=!sb.classList.contains('is-rail');
+      applyRail(now);
+      try{ if(now) localStorage.setItem(KEY,'1'); else localStorage.removeItem(KEY); }catch(e){}
+    };
+  })();
+  // Links — standalone is demo shell, real routes live at http://localhost:3000/*
+  document.querySelectorAll('a[data-route]').forEach(a=>{
+    a.addEventListener('click', (e)=>{
+      const href=a.getAttribute('href');
+      if(href && href.startsWith('/') && location.protocol==='file:'){
+        e.preventDefault();
+        const name=a.dataset.route||href;
+        const t=document.createElement('div');
+        t.className='fixed bottom-6 left-1/2 -translate-x-1/2 z-50 rounded-full bg-white px-4 py-2 text-xs font-bold text-[var(--navy)] shadow-[0_12px_30px_rgba(0,0,0,0.5)]';
+        t.textContent=`${name} — full app at http://localhost:3000${href} — run npm run dev`;
+        document.body.appendChild(t);
+        setTimeout(()=>t.remove(),2600);
+      }
+    });
+  });
+  // Stars — toned down to 40, low opacity
+  const s=document.getElementById('stars');
+  for(let i=0;i<40;i++){const d=document.createElement('div');d.className='star';d.style.left=Math.random()*100+'%';d.style.top=Math.random()*100+'%';d.style.opacity=0.08+Math.random()*0.12;d.style.transform=`scale(${0.5+Math.random()*1.2})`;s.appendChild(d);}
+  let xp=57; // single display source: hero, header pill, ranks row, and weekly bar all read this value
+  function submitProof(e){e.preventDefault();const u=document.getElementById('repoUrl'),r=document.getElementById('reflection'),m=document.getElementById('submitMsg');u.removeAttribute('aria-invalid');r.removeAttribute('aria-invalid');if(!u.value.trim().startsWith('https://')){m.textContent='Enter a valid https:// repository URL.';m.className='mt-2 text-xs font-bold text-red-400';u.setAttribute('aria-invalid','true');return}if(r.value.trim().split(/\s+/).filter(Boolean).length<10){m.textContent='Write at least 10 words of reflection.';m.className='mt-2 text-xs font-bold text-red-400';r.setAttribute('aria-invalid','true');return}m.textContent='Submitted for review. You will get +5 XP when it is approved.';m.className='mt-2 text-xs font-bold text-[var(--gold)]';}
+  let t=false;function runCanUnlock(){t=!t;const e=document.getElementById('canUnlockResult'),c=document.getElementById('canUnlockCode');if(t){e.textContent='Level 1 is not complete, so Level 2 stays locked.';e.className='mt-2 text-xs font-bold text-red-400';c.textContent='Level 1 is not complete, so Level 2 stays locked.';}else{e.textContent='Level 1 approved — Level 2 unlocks as available.';e.className='mt-2 text-xs font-bold text-[var(--gold)]';c.textContent='Level 1 approved — Level 2 unlocks as available.';}}
+  const nodes=new vis.DataSet([
+    {id:1,label:'L01\nAwakening',color:{background:'#f0c75e',border:'#101426',highlight:{background:'#f0c75e'}},font:{color:'#080c1a',size:11,face:'Plus Jakarta Sans'}},
+    {id:2,label:'L02\nPrompt',color:{background:'#3a7bff',border:'#1e2a4a',highlight:{background:'#5a8fff'}},font:{color:'#fff',size:11}},
+    {id:3,label:'L03\nMemory',color:{background:'#12182e',border:'#1e2a4a'},font:{color:'#6b7594',size:10}},
+    {id:4,label:'L04\nMCP',color:{background:'#12182e',border:'#1e2a4a'},font:{color:'#6b7594',size:10}},
+    {id:5,label:'L05\nRAG',color:{background:'#12182e',border:'#1e2a4a'},font:{color:'#6b7594',size:10}},
+    {id:6,label:'L06\nRAG+',color:{background:'#12182e',border:'#1e2a4a'},font:{color:'#6b7594',size:10}},
+    {id:7,label:'L07\nAgents',color:{background:'#12182e',border:'#1e2a4a'},font:{color:'#6b7594',size:10}},
+    {id:8,label:'L08\nEval',color:{background:'#12182e',border:'#1e2a4a'},font:{color:'#6b7594',size:10}},
+    {id:9,label:'L09\nWorkflow',color:{background:'#12182e',border:'#1e2a4a'},font:{color:'#6b7594',size:10}},
+    {id:10,label:'L10\nCapstone',color:{background:'#7c5cff',border:'#1e2a4a',highlight:{background:'#9a7dff'}},font:{color:'#fff',size:11}},
+    {id:11,label:'L11\nTrack',color:{background:'#12182e',border:'#1e2a4a'},font:{color:'#6b7594',size:10}},
+    {id:12,label:'L12\nTrack',color:{background:'#12182e',border:'#1e2a4a'},font:{color:'#6b7594',size:10}},
+    {id:13,label:'L13\nTrack',color:{background:'#12182e',border:'#1e2a4a'},font:{color:'#6b7594',size:10}},
+    {id:14,label:'L14\nHack',color:{background:'#12182e',border:'#1e2a4a'},font:{color:'#6b7594',size:10}},
+    {id:15,label:'L15\nCareer',color:{background:'#12182e',border:'#1e2a4a'},font:{color:'#6b7594',size:10}},
+  ]);
+  const edges=new vis.DataSet([
+    {from:2,to:1,arrows:'to',color:{color:'#3a7bff',highlight:'#5a8fff'},width:1.5,label:'unlocks',font:{size:8,color:'#6b7594'}},
+    {from:3,to:2,arrows:'to',color:{color:'#1e2a4a'}},
+    {from:4,to:3,arrows:'to',color:{color:'#1e2a4a'}},
+    {from:5,to:4,arrows:'to',color:{color:'#1e2a4a'}},
+    {from:6,to:5,arrows:'to',color:{color:'#1e2a4a'}},
+    {from:7,to:6,arrows:'to',color:{color:'#1e2a4a'}},
+    {from:8,to:7,arrows:'to',color:{color:'#1e2a4a'}},
+    {from:9,to:8,arrows:'to',color:{color:'#1e2a4a'}},
+    {from:10,to:9,arrows:'to',color:{color:'#7c5cff'}},
+    {from:11,to:10,arrows:'to',color:{color:'#7c5cff'}},
+    {from:12,to:11,arrows:'to',color:{color:'#7c5cff'}},
+    {from:13,to:12,arrows:'to',color:{color:'#7c5cff'}},
+    {from:14,to:13,arrows:'to',color:{color:'#1e2a4a'}},
+    {from:15,to:14,arrows:'to',color:{color:'#1e2a4a'}},
+  ]);
+  new vis.Network(document.getElementById('mynetwork'),{nodes,edges},{physics:{enabled:true,solver:'forceAtlas2Based',forceAtlas2Based:{gravitationalConstant:-45,springLength:90}},interaction:{hover:true,zoomView:true},edges:{smooth:{type:'curvedCW',roundness:0.14},font:{size:9}},nodes:{shape:'box',borderWidth:1,shapeProperties:{borderRadius:10},margin:{top:8,bottom:8,left:12,right:12},font:{face:'Plus Jakarta Sans'}}});
+  // Decorative sidebar icons are hidden from assistive tech (A11Y-03)
+  document.querySelectorAll('#sidebar svg.icon').forEach(s=>s.setAttribute('aria-hidden','true'));
+  // Theme (G-01): persisted choice, OS default on first visit
+  (function(){let th=null;try{th=localStorage.getItem('ah_theme')}catch(e){}if(!th&&window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches)th='light';if(th)document.documentElement.setAttribute('data-theme',th);syncThemeBtn();})();
+  function syncThemeBtn(){const b=document.getElementById('themeBtn');if(!b)return;const light=document.documentElement.getAttribute('data-theme')==='light';b.setAttribute('aria-pressed',String(light));b.setAttribute('aria-label',light?'Switch to dark theme':'Switch to light theme');}
+  window.toggleTheme=function(){const el=document.documentElement;const next=el.getAttribute('data-theme')==='light'?'dark':'light';if(next==='dark')el.removeAttribute('data-theme');else el.setAttribute('data-theme','light');try{localStorage.setItem('ah_theme',next)}catch(e){}syncThemeBtn();};
+  window.toggleSound=function(){const b=document.getElementById('soundBtn');const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',String(on));b.setAttribute('aria-label',on?'Mute sound effects':'Unmute sound effects');try{localStorage.setItem('ah_sound',on?'1':'0')}catch(e){}};
+  // Breadcrumb follows the in-page section links
+  document.querySelectorAll('#sidebar a[href^="#"]').forEach(a=>a.addEventListener('click',()=>{const c=document.getElementById('crumbNow');if(c)c.textContent=a.dataset.route||a.textContent.trim();}));
+  // Feed (FEED-02..10)
+  window.feedTab=function(which){const posts=which==='posts';document.getElementById('feedPosts').hidden=!posts;document.getElementById('feedWins').hidden=posts;document.getElementById('tabPosts').setAttribute('aria-selected',String(posts));document.getElementById('tabWins').setAttribute('aria-selected',String(!posts));};
+  window.feedTag=function(btn){btn.parentElement.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));btn.setAttribute('aria-pressed','true');};
+  (function(){const box=document.getElementById('feedBox'),btn=document.getElementById('postBtn'),hint=document.getElementById('postHint');if(!box)return;box.addEventListener('input',()=>{const has=box.value.trim().length>0;btn.disabled=!has;btn.classList.toggle('opacity-50',!has);hint.style.visibility=has?'hidden':'visible';});})();
+  window.feedPost=function(){const box=document.getElementById('feedBox');if(!box.value.trim())return;const d=document.createElement('article');d.className='post-card p-4';d.innerHTML='<div class="text-sm font-bold">You</div><div class="text-sm" style="color:#475569">Demo City · Operator · just now</div><p class="mt-2 text-sm" style="color:#0F172A"></p>';d.querySelector('p').textContent=box.value.trim();box.value='';box.dispatchEvent(new Event('input'));document.getElementById('feedPosts').insertBefore(d,document.getElementById('feedPosts').children[1]);};
+  window.feedLike=function(btn){const on=btn.getAttribute('aria-pressed')==='true';const m=(btn.textContent.match(/(\d+)/)||[])[1];let n=m?parseInt(m,10):0;n=on?n-1:n+1;btn.setAttribute('aria-pressed',String(!on));btn.textContent=n>0?('♡ '+n):'Like';btn.setAttribute('aria-label','Like, '+n+' likes');};
+  window.feedReply=function(btn){const open=btn.getAttribute('aria-expanded')==='true';btn.setAttribute('aria-expanded',String(!open));let box=btn.parentElement.nextElementSibling;if(!open&&(!box||!box.classList.contains('feed-reply'))){box=document.createElement('div');box.className='feed-reply mt-2';box.innerHTML='<label class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Write a reply</label><input class="w-full rounded-xl border p-2 text-sm" style="border-color:#E6EBF5" placeholder="Write a reply…">';btn.parentElement.after(box);box.querySelector('input').focus();}else if(box&&box.classList.contains('feed-reply')){box.hidden=open;if(!open)box.querySelector('input').focus();}};
+  window.feedReport=function(btn){btn.textContent='Reported — moderators will review';btn.disabled=true;};
+  window.feedMore=function(btn){btn.textContent='You are all caught up';btn.disabled=true;};
+  // Resources accordion (RES-03, state persists)
+  window.resToggle=function(btn){const panel=document.getElementById(btn.getAttribute('aria-controls'));const open=btn.getAttribute('aria-expanded')==='true';btn.setAttribute('aria-expanded',String(!open));panel.hidden=open;try{if(!open)localStorage.setItem('ah_res_'+panel.id,'1');else localStorage.removeItem('ah_res_'+panel.id)}catch(e){}};
+  (function(){document.querySelectorAll('#resList [aria-controls]').forEach(b=>{try{if(localStorage.getItem('ah_res_'+b.getAttribute('aria-controls'))==='1'){b.setAttribute('aria-expanded','true');document.getElementById(b.getAttribute('aria-controls')).hidden=false}}catch(e){}});})();
+  // Coach (UNS-02..04) + Ask Coach context (UNS-05/09)
+  window.coachMode=function(mode){const coach=mode==='coach';document.getElementById('modeCoach').setAttribute('aria-checked',String(coach));document.getElementById('modeCareer').setAttribute('aria-checked',String(!coach));document.getElementById('coachBox').placeholder=coach?'Ask Coach…':'Ask Career AI…';};
+  window.coachAsk=function(btn){const box=document.getElementById('coachBox');box.value=btn.textContent.trim();box.focus();};
+  window.coachClearCtx=function(){document.getElementById('coachCtx').classList.add('hidden');document.getElementById('coachCtx').classList.remove('flex');};
+  window.openCoach=function(level,activity){const bar=document.getElementById('coachCtx');if(level){document.getElementById('coachCtxText').textContent='About: Level '+level+(activity?' · '+activity:'');bar.classList.remove('hidden');bar.classList.add('flex');}document.getElementById('unstuck').scrollIntoView({behavior:window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});setTimeout(()=>document.getElementById('coachBox').focus(),400);};
+  window.coachSend=function(e){e.preventDefault();const box=document.getElementById('coachBox'),th=document.getElementById('coachThread');if(!box.value.trim())return;const u=document.createElement('div');u.className='ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm px-3 py-2 text-sm text-white';u.style.background='#0E1737';u.textContent=box.value.trim();th.appendChild(u);box.value='';const a=document.createElement('div');a.className='w-fit max-w-[85%] rounded-2xl rounded-bl-sm border px-3 py-2 text-sm';a.style.background='#F2F7FE';a.style.borderColor='#E6EBF5';a.textContent='Demo reply: open the step in Levels, then submit proof from the activity. The full app answers from your course content.';th.appendChild(a);th.scrollTop=th.scrollHeight;};
+</script>
+</body>
+</html>

@@ -1,0 +1,1385 @@
+// AI Accelerator Hub — Prisma Schema
+// Local dev: SQLite (zero infra). Prod: PostgreSQL 16 + RLS + pgvector
+// Switch provider to "postgresql" and DATABASE_URL to postgres:// for prod
+// RLS policies are applied via SQL migrations in prod (see migrations/*_rls.sql)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+  // For Postgres prod, change to:
+  // provider = "postgresql"
+  // url      = env("DATABASE_URL")
+}
+
+// ── Tenancy & Auth ──
+
+model Tenant {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  plan      String   @default("free") // free | pro | enterprise
+  settings  String? // JSON string: { branding: {...}, feature_flags: {...} }
+  isolation String   @default("shared") // shared | dedicated_db
+  status    String   @default("active") // provisioning | active | suspended | deprovisioning | purged
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships     Membership[]
+  cohorts         Cohort[]
+  hackathons      Hackathon[]
+  posts           Post[]
+  comments        Comment[]
+  reports         Report[]
+  blocks          Block[]
+  talentProfiles  TalentProfile[]
+  opportunities   Opportunity[]
+  journeys        Journey[]
+  levels          Level[]
+  activities      Activity[]
+  enrollments     Enrollment[]
+  progress        Progress[]
+  submissions     Submission[]
+  xpLedger        XpLedger[]
+  streaks         Streak[]
+  orders          Order[]
+  payments        Payment[]
+  files           File[]
+  auditLogs       AuditLog[]
+  aiConversations AiConversation[]
+  aiUsage         AiUsageLedger[]
+  projects        Project[]
+  notifications   Notification[]
+  unlockEvents    UnlockEvent[]
+  razorpayEvents  RazorpayEvent[]
+  Team            Team[]
+
+  @@index([slug])
+  @@map("tenants")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  emailVerified     Boolean  @default(false)
+  passwordHash      String? // for credentials auth (bcrypt)
+  name              String?
+  avatarUrl         String?
+  githubId          String?  @unique
+  githubUsername    String?
+  globalRole        String? // super_admin (platform-wide)
+  preferredLanguage String   @default("en") // en | hi | te | ta | kn | ml
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  memberships       Membership[]
+  enrollments       Enrollment[]
+  progress          Progress[]
+  submissions       Submission[]
+  reviews           Review[]
+  peerReviews       PeerReview[]
+  posts             Post[]
+  comments          Comment[]
+  reactions         Reaction[]
+  reports           Report[]
+  talentProfiles    TalentProfile[]
+  opportunities     Opportunity[]
+  applications      Application[]
+  xpLedger          XpLedger[]
+  streaks           Streak[]
+  streakEvents      StreakEvent[]
+  userBadges        UserBadge[]
+  aiConversations   AiConversation[]
+  aiUsage           AiUsageLedger[]
+  projects          Project[]
+  files             File[]
+  auditLogs         AuditLog[]
+  notificationPrefs NotificationPreference[]
+  Order             Order[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  code        String   @unique // super_admin, tenant_admin, program_mgr, instructor, mentor, reviewer, learner, team_lead, finance, support
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  memberships Membership[]
+
+  @@map("roles")
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  roleId    String
+  teamId    String?
+  cohortId  String?
+  status    String   @default("active") // active | suspended | invited
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  @@unique([tenantId, userId])
+  @@index([tenantId, userId])
+  @@index([userId])
+  @@map("memberships")
+}
+
+model AbacPolicy {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  name      String
+  effect    String // allow | deny
+  actions   String // JSON array string
+  resources String // JSON array string
+  condition String? // JSONLogic string
+  priority  Int      @default(100)
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@map("abac_policies")
+}
+
+// ── Cohorts & Teams ──
+
+model Cohort {
+  id         String    @id @default(cuid())
+  tenantId   String
+  name       String
+  slug       String
+  startDate  DateTime?
+  endDate    DateTime?
+  maxSize    Int?
+  mentorIds  String? // JSON array
+  schedule   String? // JSON: { unlockDates: {...}, liveLinks: [...] }
+  inviteCode String?   @unique // institution invitation code → cohort enrollment
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  teams       Team[]
+  enrollments Enrollment[]
+  hackathons  Hackathon[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@map("cohorts")
+}
+
+model Team {
+  id         String   @id @default(cuid())
+  tenantId   String
+  cohortId   String
+  name       String
+  leadUserId String?
+  createdAt  DateTime @default(now())
+
+  tenant  Tenant           @relation(fields: [tenantId], references: [id])
+  cohort  Cohort           @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  members TeamMembership[]
+  entries HackathonEntry[]
+
+  @@index([tenantId, cohortId])
+  @@map("teams")
+}
+
+model TeamMembership {
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  role     String   @default("member") // lead | member
+  joinedAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_memberships")
+}
+
+// ── Community feed (§16): tenant-scoped posts, comments, reactions, reports, blocks ──
+
+model Post {
+  id        String   @id @default(cuid())
+  tenantId  String
+  authorId  String
+  kind      String   @default("post") // post | win | question
+  body      String
+  levelCode String?
+  linkUrl   String?
+  state     String   @default("visible") // visible | hidden | removed
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant     @relation(fields: [tenantId], references: [id])
+  author   User       @relation(fields: [authorId], references: [id])
+  comments Comment[]
+  reacts   Reaction[]
+
+  @@index([tenantId, state, createdAt])
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  tenantId  String
+  postId    String
+  authorId  String
+  body      String
+  state     String   @default("visible") // visible | hidden | removed
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id])
+
+  @@index([postId, createdAt])
+  @@map("comments")
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  kind      String   @default("like") // like | celebrate
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId, kind])
+  @@map("reactions")
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  tenantId   String
+  targetType String // post | comment
+  targetId   String
+  reporterId String
+  reason     String
+  state      String   @default("open") // open | upheld | dismissed
+  resolvedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  reporter User   @relation(fields: [reporterId], references: [id])
+
+  @@index([tenantId, state, createdAt])
+  @@map("reports")
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  tenantId  String
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, blockerId, blockedId])
+  @@map("blocks")
+}
+
+// ── Talent marketplace (§19): consent-gated profiles, opportunities, applications ──
+
+model TalentProfile {
+  id         String   @id @default(cuid())
+  tenantId   String
+  userId     String
+  headline   String   @default("")
+  skills     String   @default("[]") // JSON string array, max 20
+  openTo     String   @default("[]") // JSON: subset of internships | jobs | freelance | mentorship
+  visibility String   @default("private") // private | tenant | public
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([tenantId, userId])
+  @@map("talent_profiles")
+}
+
+model Opportunity {
+  id           String   @id @default(cuid())
+  tenantId     String
+  posterId     String
+  orgName      String
+  title        String
+  kind         String   @default("internship") // internship | job | project | sponsorship
+  description  String
+  skillsWanted String   @default("[]") // JSON string array
+  status       String   @default("open") // open | closed
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  poster       User          @relation(fields: [posterId], references: [id])
+  applications Application[]
+
+  @@index([tenantId, status, createdAt])
+  @@map("opportunities")
+}
+
+model Application {
+  id            String   @id @default(cuid())
+  opportunityId String
+  applicantId   String
+  coverNote     String
+  consentJson   String // snapshot: { profile: true, contact: true, at }
+  state         String   @default("applied") // applied | shortlisted | rejected | withdrawn
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  applicant   User        @relation(fields: [applicantId], references: [id])
+
+  @@unique([opportunityId, applicantId])
+  @@index([applicantId])
+  @@map("applications")
+}
+
+// ── Weekend hackathons (§8, §11): tenant-scoped events, team entries, peer review ──
+
+model Hackathon {
+  id           String    @id @default(cuid())
+  tenantId     String
+  cohortId     String?
+  slug         String
+  title        String
+  briefMd      String    @default("")
+  status       String    @default("draft") // draft | open | building | submit | review | closed
+  buildStartAt DateTime?
+  submitDueAt  DateTime?
+  reviewDueAt  DateTime?
+  rubricCode   String?
+  maxTeamSize  Int       @default(5)
+  resultJson   String? // placements + judge note, set on decide
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant  Tenant           @relation(fields: [tenantId], references: [id])
+  cohort  Cohort?          @relation(fields: [cohortId], references: [id])
+  entries HackathonEntry[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, status])
+  @@map("hackathons")
+}
+
+model HackathonEntry {
+  id           String    @id @default(cuid())
+  hackathonId  String
+  teamId       String    @unique // one entry per team per hackathon
+  title        String    @default("")
+  repoUrl      String?
+  deployedUrl  String?
+  reflectionMd String?
+  state        String    @default("draft") // draft | submitted | reviewed
+  submittedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  hackathon Hackathon    @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  team      Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  peer      PeerReview[]
+
+  @@index([hackathonId, state])
+  @@map("hackathon_entries")
+}
+
+model PeerReview {
+  id         String   @id @default(cuid())
+  entryId    String
+  reviewerId String
+  scores     String // JSON: { problem: 1-5, build: 1-5, teamwork: 1-5 }
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  entry    HackathonEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  reviewer User           @relation(fields: [reviewerId], references: [id])
+
+  @@unique([entryId, reviewerId])
+  @@index([reviewerId])
+  @@map("peer_reviews")
+}
+
+// ── Journey & Levels ──
+
+model Journey {
+  id          String   @id @default(cuid())
+  tenantId    String
+  slug        String
+  title       String
+  description String?
+  isPublished Boolean  @default(false)
+  config      String? // JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  levels      Level[]
+  stages      Stage[]
+  enrollments Enrollment[]
+  tracks      Track[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@map("journeys")
+}
+
+model Stage {
+  id        String   @id @default(cuid())
+  journeyId String
+  code      String // STAGE_IGNITION etc
+  title     String
+  idx       Int
+  createdAt DateTime @default(now())
+
+  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  levels  Level[]
+
+  @@unique([journeyId, idx])
+  @@index([journeyId])
+  @@map("stages")
+}
+
+model Level {
+  id              String   @id @default(cuid())
+  tenantId        String
+  journeyId       String
+  stageId         String?
+  idx             Int // 1..15 CHECK
+  code            String // L01_AWAKENING etc
+  title           String
+  summary         String?
+  description     String?
+  xpReward        Int      @default(100)
+  unlockCondition String? // JSON
+  isPublished     Boolean  @default(true)
+  tags            String? // JSON array
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant        Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  journey       Journey             @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  stage         Stage?              @relation(fields: [stageId], references: [id])
+  contents      Content[]
+  activities    Activity[]
+  progress      Progress[]
+  prerequisites LevelPrerequisite[] @relation("level")
+  requiredFor   LevelPrerequisite[] @relation("prerequisite")
+
+  @@unique([journeyId, idx])
+  @@unique([tenantId, code])
+  @@index([tenantId, journeyId])
+  @@map("levels")
+}
+
+model LevelPrerequisite {
+  levelId             String
+  prerequisiteLevelId String
+
+  level        Level @relation("level", fields: [levelId], references: [id], onDelete: Cascade)
+  prerequisite Level @relation("prerequisite", fields: [prerequisiteLevelId], references: [id], onDelete: Cascade)
+
+  @@id([levelId, prerequisiteLevelId])
+  @@map("level_prerequisites")
+}
+
+model Content {
+  id          String   @id @default(cuid())
+  levelId     String
+  kind        String // video | md | quiz | assignment | live
+  title       String?
+  payload     String // JSON: { url, body, quizQuestions, durationMin, etc }
+  position    Int      @default(0)
+  durationMin Int?
+  embedding   String? // for pgvector; base64 or JSON vector in SQLite
+  createdAt   DateTime @default(now())
+
+  level    Level             @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  progress ContentProgress[]
+
+  @@index([levelId])
+  @@map("contents")
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  tenantId  String
+  levelId   String
+  idx       Int // 1..6 CHECK
+  code      String // MISSION_BRIEFING etc
+  title     String
+  config    String // JSON: { checks, estMinutes, xpSlice, etc }
+  xpReward  Int      @default(10)
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  tenant   Tenant             @relation(fields: [tenantId], references: [id])
+  level    Level              @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  progress ActivityProgress[]
+
+  @@unique([levelId, idx])
+  @@index([tenantId, levelId])
+  @@map("activities")
+}
+
+// ── Enrollments & Progress ──
+
+model Enrollment {
+  id              String    @id @default(cuid())
+  tenantId        String
+  userId          String
+  journeyId       String
+  cohortId        String?
+  currentLevelIdx Int       @default(1)
+  state           String    @default("active") // active | completed | dropped
+  enrolledAt      DateTime  @default(now())
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant   Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  journey  Journey    @relation(fields: [journeyId], references: [id])
+  cohort   Cohort?    @relation(fields: [cohortId], references: [id])
+  progress Progress[]
+
+  @@unique([tenantId, userId, journeyId])
+  @@index([tenantId, userId])
+  @@index([userId, journeyId])
+  @@map("enrollments")
+}
+
+model Progress {
+  id           String    @id @default(cuid())
+  tenantId     String
+  enrollmentId String
+  levelId      String
+  userId       String
+  state        String    @default("locked") // locked | available | in_progress | submitted | needs_review | approved | rejected
+  xpEarned     Int       @default(0)
+  attempts     Int       @default(0)
+  unlockedAt   DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant           Tenant                 @relation(fields: [tenantId], references: [id])
+  enrollment       Enrollment             @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  level            Level                  @relation(fields: [levelId], references: [id])
+  user             User                   @relation(fields: [userId], references: [id])
+  submissions      Submission[]
+  activityProgress ActivityProgress[]
+  bossProgress     BossChallengeProgress?
+
+  @@unique([enrollmentId, levelId])
+  @@index([tenantId, userId])
+  @@index([enrollmentId, state])
+  @@map("progress")
+}
+
+model ActivityProgress {
+  id           String    @id @default(cuid())
+  progressId   String
+  activityId   String
+  userId       String
+  enrollmentId String
+  state        String    @default("pending") // pending | in_progress | completed | skipped
+  xpEarned     Int       @default(0)
+  data         String? // JSON: { watchPct, quizScore, etc }
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  progress Progress @relation(fields: [progressId], references: [id], onDelete: Cascade)
+  activity Activity @relation(fields: [activityId], references: [id])
+
+  @@unique([progressId, activityId])
+  @@index([userId, activityId])
+  @@map("activity_progress")
+}
+
+model ContentProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  contentId   String
+  state       String    @default("pending") // pending | viewed | completed
+  watchPct    Int       @default(0)
+  data        String? // JSON
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentId])
+  @@map("content_progress")
+}
+
+model GithubExploration {
+  id        String   @id @default(cuid())
+  userId    String
+  levelId   String
+  repoUrl   String
+  cloned    Boolean  @default(false)
+  quizScore Int?
+  data      String? // JSON
+  createdAt DateTime @default(now())
+
+  @@index([userId, levelId])
+  @@map("github_explorations")
+}
+
+model BossChallengeProgress {
+  id            String   @id @default(cuid())
+  progressId    String   @unique
+  state         String   @default("locked") // locked | available | in_progress | passed | failed
+  attempts      Int      @default(0)
+  maxAttempts   Int      @default(3)
+  harnessResult String? // JSON: { passed, total, details }
+  passed        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  progress Progress @relation(fields: [progressId], references: [id], onDelete: Cascade)
+
+  @@map("boss_challenge_progress")
+}
+
+// ── Submissions & Reviews ──
+
+model Rubric {
+  id            String   @id @default(cuid())
+  tenantId      String?
+  code          String   @unique // L01_RUBRIC etc
+  title         String
+  dimensions    String // JSON: { correctness: {weight, scale}, ...}
+  passThreshold Float    @default(3.0)
+  createdAt     DateTime @default(now())
+
+  reviews Review[]
+
+  @@map("rubrics")
+}
+
+model Submission {
+  id            String   @id @default(cuid())
+  tenantId      String
+  userId        String
+  progressId    String
+  type          String // link | file | repo | pr | video | doc
+  url           String?
+  repoUrl       String?
+  fileId        String?
+  deployedUrl   String?
+  reflectionMd  String?
+  metadata      String? // JSON: { screenshots, checklist, etc }
+  harnessResult String? // JSON
+  state         String   @default("pending") // pending | in_review | approved | rejected | needs_changes
+  submittedAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+  progress Progress @relation(fields: [progressId], references: [id], onDelete: Cascade)
+  file     File?    @relation(fields: [fileId], references: [id])
+  reviews  Review[]
+
+  @@index([tenantId, state])
+  @@index([progressId])
+  @@index([userId])
+  @@map("submissions")
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  submissionId String
+  reviewerId   String
+  rubricId     String?
+  verdict      String // approved | rejected | needs_changes
+  rubricScores String? // JSON: { correctness: 4, oop: 3, ... weighted_avg: 3.45 }
+  weightedAvg  Float?
+  feedbackMd   String?
+  isAiReview   Boolean  @default(false)
+  appealState  String? // null | open | upheld | overturned
+  appealNote   String?
+  reviewedAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  reviewer   User       @relation(fields: [reviewerId], references: [id])
+  rubric     Rubric?    @relation(fields: [rubricId], references: [id])
+
+  @@index([submissionId])
+  @@index([reviewerId])
+  @@map("reviews")
+}
+
+// ── Gamification ──
+
+model XpLedger {
+  id             String   @id @default(cuid())
+  tenantId       String
+  userId         String
+  amount         Int
+  source         String // level_complete | submission_approved | streak | boss | badge | quest
+  levelId        String?
+  activityId     String?
+  idempotencyKey String   @unique
+  prevHash       String?
+  rowHash        String?
+  metadata       String? // JSON
+  createdAt      DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([tenantId, userId, createdAt])
+  @@index([userId, createdAt])
+  @@map("xp_ledger")
+}
+
+model Streak {
+  id             String   @id @default(cuid())
+  tenantId       String
+  userId         String
+  currentStreak  Int      @default(0)
+  longestStreak  Int      @default(0)
+  lastActiveDate String? // YYYY-MM-DD IST
+  freezeTokens   Int      @default(1)
+  graceUntil     String? // ISO
+  status         String   @default("active") // active | frozen | grace | recovery (non-punitive)
+  prevStreak     Int      @default(0) // value restored by a recovery quest
+  recoveryUntil  String? // YYYY-MM-DD IST — recovery window end
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([tenantId, userId])
+  @@index([userId])
+  @@map("streaks")
+}
+
+model StreakEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  tenantId  String
+  date      String // YYYY-MM-DD
+  type      String // active | freeze_used | grace | recovery
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, date])
+  @@index([tenantId, date])
+  @@map("streak_events")
+}
+
+model Badge {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  code      String   @unique // oop-master, first-proof, streak-7 etc
+  name      String
+  tier      String   @default("bronze") // bronze | silver | gold
+  icon      String?
+  condition String? // JSONLogic
+  xpBonus   Int      @default(0)
+  createdAt DateTime @default(now())
+
+  userBadges UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  badgeId  String
+  earnedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@map("user_badges")
+}
+
+model LeaderboardSnapshot {
+  id        String   @id @default(cuid())
+  tenantId  String
+  cohortId  String?
+  scope     String // tenant | cohort | global
+  period    String // weekly | allTime
+  snapshot  String // JSON array
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, cohortId, period])
+  @@map("leaderboard_snapshots")
+}
+
+model Quest {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  code      String   @unique
+  title     String
+  xpReward  Int
+  condition String? // JSON
+  createdAt DateTime @default(now())
+
+  @@map("quests")
+}
+
+// ── Career Tracks ──
+
+model Track {
+  id            String   @id @default(cuid())
+  code          String   @unique // APP_DEV etc
+  title         String
+  description   String?
+  prerequisites String? // JSON
+  createdAt     DateTime @default(now())
+
+  journey     Journey?          @relation(fields: [journeyId], references: [id])
+  journeyId   String?
+  levels      TrackLevel[]
+  enrollments TrackEnrollment[]
+
+  @@map("tracks")
+}
+
+model TrackLevel {
+  id       String @id @default(cuid())
+  trackId  String
+  levelId  String
+  position Int
+
+  track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([trackId, levelId])
+  @@map("track_levels")
+}
+
+model TrackEnrollment {
+  id         String   @id @default(cuid())
+  userId     String
+  trackId    String
+  state      String   @default("active")
+  enrolledAt DateTime @default(now())
+
+  track Track @relation(fields: [trackId], references: [id])
+
+  @@unique([userId, trackId])
+  @@map("track_enrollments")
+}
+
+// ── AI Assistants ──
+
+model AiAssistant {
+  id             String   @id @default(cuid())
+  code           String   @unique // code-mentor, career-coach etc
+  name           String
+  systemPromptMd String
+  model          String   @default("gpt-4o-mini")
+  tools          String? // JSON
+  ragCollection  String?
+  maxTokens      Int      @default(4000)
+  tenantId       String?
+  createdAt      DateTime @default(now())
+
+  conversations AiConversation[]
+  usage         AiUsageLedger[]
+
+  @@map("ai_assistants")
+}
+
+model AiConversation {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String
+  assistantId String
+  title       String?
+  context     String? // JSON { levelId, submissionId }
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant    Tenant      @relation(fields: [tenantId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+  assistant AiAssistant @relation(fields: [assistantId], references: [id])
+  messages  AiMessage[]
+
+  @@index([tenantId, userId])
+  @@index([assistantId])
+  @@map("ai_conversations")
+}
+
+model AiMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String // user | assistant | tool
+  contentMd      String
+  tokensIn       Int      @default(0)
+  tokensOut      Int      @default(0)
+  costMicros     Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("ai_messages")
+}
+
+model AiToolCall {
+  id        String   @id @default(cuid())
+  messageId String
+  toolName  String
+  args      String? // JSON
+  result    String? // JSON
+  createdAt DateTime @default(now())
+
+  @@index([messageId])
+  @@map("ai_tool_calls")
+}
+
+model AiUsageLedger {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String
+  assistantId String
+  tokensIn    Int      @default(0)
+  tokensOut   Int      @default(0)
+  costMicros  Int      @default(0)
+  billed      Boolean  @default(false)
+  period      String // YYYY-MM
+  createdAt   DateTime @default(now())
+
+  tenant    Tenant      @relation(fields: [tenantId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+  assistant AiAssistant @relation(fields: [assistantId], references: [id])
+
+  @@index([tenantId, period])
+  @@index([userId, period])
+  @@map("ai_usage_ledger")
+}
+
+// ── Projects & GitHub ──
+
+model Project {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String
+  title       String
+  slug        String
+  description String?
+  coverUrl    String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant Tenant        @relation(fields: [tenantId], references: [id])
+  user   User          @relation(fields: [userId], references: [id])
+  repos  ProjectRepo[]
+
+  @@index([tenantId, userId])
+  @@index([isPublic])
+  @@map("projects")
+}
+
+model ProjectRepo {
+  id        String   @id @default(cuid())
+  projectId String
+  repoUrl   String
+  provider  String   @default("github")
+  analysis  String? // JSON
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("project_repos")
+}
+
+// ── Billing (Razorpay India) ──
+
+model Plan {
+  id             String   @id @default(cuid())
+  tenantId       String?
+  razorpayPlanId String?  @unique
+  name           String
+  slug           String   @unique
+  amountPaise    Int
+  currency       String   @default("INR")
+  interval       String   @default("monthly") // monthly | yearly | one_time
+  features       String? // JSON { ai_credits, max_levels }
+  createdAt      DateTime @default(now())
+
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  tenantId        String
+  userId          String
+  razorpayOrderId String   @unique
+  amountPaise     Int
+  currency        String   @default("INR")
+  status          String   @default("created") // created | paid | failed
+  items           String? // JSON
+  createdAt       DateTime @default(now())
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  user     User      @relation(fields: [userId], references: [id])
+  payments Payment[]
+
+  @@index([tenantId, userId])
+  @@map("orders")
+}
+
+model Payment {
+  id                String    @id @default(cuid())
+  orderId           String
+  tenantId          String
+  razorpayPaymentId String    @unique
+  method            String?
+  amountPaise       Int
+  feePaise          Int       @default(0)
+  status            String    @default("captured")
+  capturedAt        DateTime?
+  createdAt         DateTime  @default(now())
+
+  order  Order  @relation(fields: [orderId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@map("payments")
+}
+
+model Subscription {
+  id                     String    @id @default(cuid())
+  tenantId               String
+  userId                 String
+  planId                 String
+  razorpaySubscriptionId String    @unique
+  status                 String    @default("active") // active | halted | cancelled | completed
+  currentEnd             DateTime?
+  cancelAt               DateTime?
+  createdAt              DateTime  @default(now())
+
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@index([tenantId, userId])
+  @@map("subscriptions")
+}
+
+model Entitlement {
+  id        String    @id @default(cuid())
+  userId    String
+  tenantId  String
+  feature   String // ai_credits | level_access | mentor_credits
+  remaining Int       @default(0)
+  resetsAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([userId, tenantId, feature])
+  @@index([tenantId, userId])
+  @@map("entitlements")
+}
+
+model RazorpayEvent {
+  id              String    @id @default(cuid())
+  razorpayEventId String    @unique
+  type            String
+  payload         String // JSON
+  processed       Boolean   @default(false)
+  processedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  Tenant          Tenant?   @relation(fields: [tenantId], references: [id])
+  tenantId        String?
+
+  @@index([processed])
+  @@map("razorpay_events")
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String
+  orderId     String?
+  amountPaise Int
+  gstAmount   Int      @default(0)
+  invoiceNo   String   @unique
+  payload     String? // JSON
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId, userId])
+  @@map("invoices")
+}
+
+// ── Files ──
+
+model File {
+  id         String   @id @default(cuid())
+  tenantId   String
+  ownerId    String
+  s3Key      String   @unique
+  bucket     String   @default("hub-dev")
+  mime       String
+  sizeBytes  Int      @default(0)
+  avStatus   String   @default("pending") // pending | clean | infected
+  entityType String? // submission | project | avatar
+  entityId   String?
+  sha256     String? // images: hash of the bytes, for reuse detection (proof scoring spec §3)
+  width      Int?
+  height     Int?
+  createdAt  DateTime @default(now())
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  owner       User         @relation(fields: [ownerId], references: [id])
+  submissions Submission[]
+
+  @@index([tenantId, ownerId])
+  @@index([tenantId, sha256])
+  @@map("files")
+}
+
+// ── Notifications ──
+
+model Notification {
+  id        String    @id @default(cuid())
+  tenantId  String
+  userId    String
+  channel   String    @default("in_app") // in_app | email | push | sms
+  template  String
+  payload   String? // JSON
+  state     String    @default("pending") // pending | sent | failed | read
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, userId, state])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id        String   @id @default(cuid())
+  userId    String
+  channel   String
+  event     String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, channel, event])
+  @@map("notification_preferences")
+}
+
+// ── Audit & Idempotency ──
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  tenantId     String
+  actorUserId  String?
+  action       String
+  resourceType String
+  resourceId   String?
+  before       String? // JSON
+  after        String? // JSON
+  ip           String?
+  ua           String?
+  createdAt    DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  actor  User?  @relation(fields: [actorUserId], references: [id])
+
+  @@index([tenantId, createdAt])
+  @@index([actorUserId])
+  @@map("audit_logs")
+}
+
+model IdempotencyKey {
+  key       String   @id
+  tenantId  String?
+  scope     String
+  response  String? // JSON
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([expiresAt])
+  @@map("idempotency_keys")
+}
+
+model UnlockEvent {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  levelId   String
+  reason    String? // prerequisite_met | entitlement | fast_track
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, userId])
+  @@map("unlock_events")
+}
+
+// ── Privacy, safety & consent (per user per tenant) ──
+
+model UserSetting {
+  id                    String    @id @default(cuid())
+  tenantId              String
+  userId                String
+  leaderboardVisibility String    @default("cohort") // cohort | private
+  globalOptIn           Boolean   @default(false) // DPDP: explicit consent for cross-tenant visibility
+  quietHours            Boolean   @default(true)
+  ageBand               String    @default("adult") // adult | minor
+  guardianEmail         String?
+  guardianConsent       String    @default("not_required") // not_required | pending | granted
+  deletionRequestedAt   DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([tenantId, userId])
+  @@map("user_settings")
+}
+
+// ── Curated open-source library (§13 research policy) ──
+
+model LibraryResource {
+  id            String   @id @default(cuid())
+  fullName      String   @unique // upstream owner/repo — never a fork
+  url           String
+  category      String // voice_ai | agents | rag | image_gen | video_gen | ai_coding | search | llm_gateway | learning | multimodal | music
+  description   String
+  difficulty    String // beginner | intermediate | advanced
+  prerequisites String
+  licenseSpdx   String? // MIT | Apache-2.0 | AGPL-3.0 | null when none
+  licenseClass  String // permissive | copyleft | mixed | none
+  usageNote     String // what learners may and may not do with it
+  levelIdx      Int? // suggested journey level
+  archived      Boolean  @default(false)
+  lastPushedAt  String?
+  lastVerified  String // YYYY-MM-DD, set only by the verification script
+  verifiedVia   String   @default("github_api")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([category])
+  @@map("library_resources")
+}
+
+// ── Personalised journey (docs/PERSONALISED_JOURNEY_BUSINESS_SPEC.md) ──
+
+/// One onboarding profile per learner per tenant. `persona` is DERIVED server-side from `answers`
+/// by lib/domain/personalise.ts — never accepted from the client.
+model LearnerProfile {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String
+  persona     String // kid_hobbyist | student | software_pro | ai_builder | business_owner
+  answers     String // JSON: validated onboarding answers
+  contextCard String? // learner-written "context card" (PDF Level 1 glossary) — no PII allowed
+  rulesVer    Int      @default(1) // personalisation rules version that produced `persona`
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, userId])
+  @@index([tenantId, persona])
+  @@map("learner_profiles")
+}
+
+/// Agent Lab: set up one AI coding agent, simplify a prompt, get a result, submit screenshot proof.
+/// XP is awarded only after a human reviewer verifies the proof.
+model AgentLabRun {
+  id            String    @id @default(cuid())
+  tenantId      String
+  userId        String
+  agent         String // claude_code | codex_cli | opencode | kilo_code
+  os            String // macos | windows | linux
+  state         String    @default("in_progress") // in_progress | submitted | verified | needs_changes
+  steps         String    @default("{}") // JSON: { [stepId]: { at, data } }
+  versionOutput String?
+  promptBefore  String?
+  promptAfter   String?
+  resultSummary String?
+  screenshotId  String?
+  autoChecks    String? // JSON: deterministic checks run at submit time
+  reviewerId    String?
+  reviewNote    String?
+  verifiedAt    DateTime?
+  xpAwarded     Int       @default(0)
+  attempts      Int       @default(0)
+  proofScore    Int? // 0–100, set at review (proof scoring spec §4)
+  reviewScores  String? // JSON: { agentRunning, matchesResult, noSensitiveData }
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([tenantId, userId, agent])
+  @@index([tenantId, state])
+  @@map("agent_lab_runs")
+}
+
+// ── Agent Lab "Get unstuck": mentor help requests (docs/AGENT_LAB_GET_UNSTUCK_SPEC.md §5) ──
+
+model HelpRequest {
+  id         String    @id @default(cuid())
+  tenantId   String
+  learnerId  String
+  source     String    @default("agent_lab")
+  runId      String?
+  agent      String?
+  os         String?
+  method     String?
+  stepId     String
+  stepTitle  String
+  errorText  String // redacted before storage
+  matchedIds String    @default("[]") // JSON: catalogue ids matched at creation
+  state      String    @default("open") // open | answered | resolved
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  messages HelpMessage[]
+
+  @@index([tenantId, state])
+  @@index([tenantId, learnerId])
+  @@map("help_requests")
+}
+
+model HelpMessage {
+  id         String   @id @default(cuid())
+  requestId  String
+  authorId   String
+  authorRole String // learner | staff
+  body       String // redacted before storage
+  createdAt  DateTime @default(now())
+
+  request HelpRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, createdAt])
+  @@map("help_messages")
+}

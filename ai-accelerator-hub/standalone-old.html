@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Accelerator Hub — Learn AI. Build Solutions. Become Future-Ready.</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
+<style>
+  :root{--navy:#101426;--card:#1E2438;--border:#2A3250;--muted:#A0A8C0;--blue:#3878F6;--purple:#8658E8;--gold:#E8B94F}
+  body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--navy);color:#fff}
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-thumb{background:#2A3250;border-radius:999px}
+</style>
+</head>
+<body class="min-h-screen">
+<!-- Header -->
+<header class="sticky top-0 z-40 border-b border-[#2A3250] bg-[#101426]/90 backdrop-blur">
+  <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+    <div class="flex items-center gap-3">
+      <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#3878F6] text-sm font-extrabold">AH</div>
+      <div>
+        <div class="text-sm font-bold tracking-wide">AI ACCELERATOR <span class="text-[#8658E8]">HUB</span></div>
+        <div class="text-[11px] tracking-widest text-[#A0A8C0]">NEO4J GRAPH · LEARN · BUILD · PROVE</div>
+      </div>
+    </div>
+    <div class="hidden items-center gap-2 md:flex">
+      <span class="rounded-full bg-[#E8B94F] px-2.5 py-1 text-xs font-bold text-[#101426]">Demo tenant</span>
+      <span class="rounded-full border border-[#2A3250] bg-[#1E2438] px-3 py-1 text-xs">Neo4j: bolt://localhost:7687</span>
+      <button onclick="document.getElementById('neo4jPanel').scrollIntoView({behavior:'smooth'})" class="rounded-full bg-[#3878F6] px-4 py-1.5 text-xs font-semibold">View graph</button>
+    </div>
+  </div>
+</header>
+
+<div class="mx-auto flex max-w-6xl">
+  <!-- Sidebar 17→5 -->
+  <aside class="hidden w-[280px] shrink-0 border-r border-[#2A3250] p-4 md:block">
+    <div class="space-y-5">
+      <div><div class="px-2 text-[11px] font-semibold tracking-widest text-[#8890B0]">LEARN</div><div class="mt-2 space-y-1 text-sm"><a class="flex rounded-xl bg-[#1E2438] px-3 py-2 text-white border border-[#2A3250]" href="#">Home</a><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#levels">My Levels</a><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">Learning Missions</a><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">AI Playground</a></div></div>
+      <div><div class="px-2 text-[11px] font-semibold tracking-widest text-[#8890B0]">BUILD</div><div class="mt-2 space-y-1 text-sm"><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">My Projects</a><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#neo4jPanel">GitHub Lab</a><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">Hackathons</a></div></div>
+      <div><div class="px-2 text-[11px] font-semibold tracking-widest text-[#8890B0]">COMMUNITY</div><div class="mt-2 space-y-1 text-sm"><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">Squads</a><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">Community Feed</a><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">Leaderboard</a></div></div>
+      <div><div class="px-2 text-[11px] font-semibold tracking-widest text-[#8890B0]">GROW</div><div class="mt-2 space-y-1 text-sm"><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">Resources</a><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">AI Career Paths</a><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">My Portfolio</a><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">Certificates</a></div></div>
+      <div><div class="px-2 text-[11px] font-semibold tracking-widest text-[#8890B0]">SUPPORT</div><div class="mt-2 space-y-1 text-sm"><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">Unstuck / AI Coach</a><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">Feedback</a><a class="flex rounded-xl px-3 py-2 text-[#A0A8C0]" href="#">Profile</a></div></div>
+    </div>
+    <div class="mt-6 rounded-xl border border-[#2A3250] bg-[#1E2438] p-3">
+      <div class="text-xs font-semibold">Neo4j graph</div>
+      <div class="mt-1 text-xs leading-4 text-[#A0A8C0]">15 levels • DAG • social teams • traversal in 1 Cypher</div>
+      <div class="mt-2 text-[11px] text-[#8890B0]">bolt://localhost:7687 · Browser 7474</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="min-w-0 flex-1 p-4 md:p-6">
+    <!-- Welcome -->
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h1 class="text-xl font-bold">Welcome back, Learner 👋 <span class="rounded-full bg-[#E8B94F] px-2 py-1 text-xs font-bold text-[#101426]">Demo</span></h1>
+        <p class="mt-1 text-sm text-[#A0A8C0]">12-section dashboard — all DB-backed (Prisma + Neo4j graph). Try the graph ↓</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="rounded-full border border-[#2A3250] bg-[#1E2438] px-3 py-1 text-xs font-semibold">Cohort Jan 2026</span>
+        <span class="rounded-full bg-[#101426] px-3 py-1 text-xs border border-[#2A3250]">🔥 3 day streak · ❄️ 1 freeze</span>
+      </div>
+    </div>
+
+    <!-- 12-section grid -->
+    <div class="mt-6 grid gap-4 md:grid-cols-3">
+      <div class="rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4"><div class="text-xs font-semibold tracking-widest text-[#8890B0]">CURRENT LEVEL</div><div class="mt-2 text-lg font-bold">Level 1 — AI Awakening</div><div class="text-xs text-[#A0A8C0]">L01_AWAKENING · available · 120 XP</div><div class="mt-2 text-xs">State: <span class="font-bold text-[#E8B94F]">available</span> · Neo4j: (:User)-[:ENROLLED_IN]-></div></div>
+      <div class="rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4"><div class="text-xs font-semibold tracking-widest text-[#8890B0]">XP BALANCE</div><div class="mt-2 text-2xl font-extrabold">23 <span class="text-sm text-[#E8B94F]">XP</span></div><div class="mt-2 h-2 rounded-full bg-[#101426]"><div class="h-2 rounded-full bg-[#3878F6]" style="width:23%"></div></div><div class="mt-1 text-xs text-[#8890B0]">Ledger: append-only · idempotency · hash chain · <button onclick="addXp()" class="text-[#3878F6] underline">+5 XP demo</button></div></div>
+      <div class="rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4"><div class="text-xs font-semibold tracking-widest text-[#8890B0]">RANK</div><div class="mt-2 text-lg font-bold">#3 in cohort</div><div class="text-xs text-[#A0A8C0]">Redis ZSET · Neo4j alt: MATCH (u)-[:COMPLETED]-></div><button onclick="document.getElementById('leaderboard').scrollIntoView({behavior:'smooth'})" class="mt-2 text-xs font-semibold text-[#3878F6]">View leaderboard ↓</button></div>
+      <div class="rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4"><div class="text-xs font-semibold tracking-widest text-[#8890B0]">DAILY STREAK</div><div class="mt-2 flex items-center gap-2"><span class="text-xl">🔥</span><span class="text-lg font-bold">3 days</span><span class="rounded-full bg-[#1E2438] px-2 py-1 text-xs border border-[#2A3250]">❄️ 1 freeze</span></div><div class="mt-1 text-xs text-[#8890B0]">Longest 7 · grace & recovery (non-punitive)</div></div>
+      <div class="rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4"><div class="text-xs font-semibold tracking-widest text-[#8890B0]">WEEKLY PROGRESS</div><div class="mt-2 text-lg font-bold">7%</div><div class="mt-2 h-2 rounded-full bg-[#101426]"><div class="h-2 rounded-full bg-[#8658E8]" style="width:7%"></div></div><div class="mt-1 text-xs text-[#8890B0]">1/15 levels · competence-gated</div></div>
+      <div class="rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4"><div class="text-xs font-semibold tracking-widest text-[#8890B0]">NEXT MISSION</div><div class="mt-2 text-sm font-semibold">Build: Your Cookie Class</div><div class="text-xs text-[#A0A8C0]">90m · 35 XP · Scaffold + pytest</div><a href="#levels" class="mt-2 inline-block rounded-full bg-[#1E2438] px-3 py-1 text-xs font-semibold border border-[#2A3250]">Go to missions</a></div>
+      <div class="rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4"><div class="text-xs font-semibold tracking-widest text-[#8890B0]">UPCOMING WEEKEND</div><div class="mt-2 text-sm font-semibold">Sat — Live workshop</div><div class="text-xs text-[#A0A8C0]">New level release · demos</div><div class="mt-1 text-xs font-semibold">Sun — 4h hackathon</div><div class="text-xs text-[#8890B0]">Attendance ≠ pass</div></div>
+      <div class="rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4"><div class="text-xs font-semibold tracking-widest text-[#8890B0]">SUBMISSIONS</div><div class="mt-2 rounded-xl border border-[#2A3250] bg-[#101426] px-3 py-2"><div class="text-xs font-semibold">No submissions yet</div><div class="text-[11px] text-[#8890B0]">Ship Cookie class to earn XP</div></div><div class="mt-2 text-xs text-[#A0A8C0]">Form below → POST /api/submissions → ledger +5</div></div>
+      <div class="rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4"><div class="text-xs font-semibold tracking-widest text-[#8890B0]">ACHIEVEMENTS</div><div class="mt-2 flex flex-wrap gap-2"><span class="rounded-full bg-[#2A3250] px-2.5 py-1 text-xs text-[#8890B0]">Complete L1 for “Awakened”</span></div><div class="mt-2 text-xs text-[#A0A8C0]">Badges: oop-master, first-proof, streak-7</div></div>
+      <div class="rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4"><div class="text-xs font-semibold tracking-widest text-[#8890B0]">TEAM ACTIVITY</div><div class="text-xs text-[#8890B0]">Squads 3–5 · contribution-tracked</div><div class="mt-2 rounded-xl bg-[#101426] p-3 text-xs">Demo Squad · Graph: (u)-[:MEMBER_OF]->(t)</div></div>
+      <div class="rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4"><div class="text-xs font-semibold tracking-widest text-[#8890B0]">CAREER-READINESS</div><div class="mt-2 text-lg font-bold">42% <span class="text-xs font-normal text-[#8890B0]">competency</span></div><div class="mt-2 h-2 rounded-full bg-[#101426]"><div class="h-2 rounded-full bg-[#E8B94F]" style="width:42%"></div></div><div class="mt-1 text-xs text-[#8890B0]">No track chosen yet (8 tracks)</div></div>
+      <div class="rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4 md:col-span-3"><div class="text-xs font-semibold tracking-widest text-[#8890B0]">TENANT ISOLATION</div><div class="mt-1 text-sm">Tenant: demo · 2 learners · RLS + tenant_id + Neo4j label</div><div class="text-xs text-[#8890B0]">Try: MATCH (u:User {tenantId:'demo'}) RETURN count — cross-tenant query returns 0 for other tenants</div></div>
+    </div>
+
+    <!-- NEO4J GRAPH — 15-level DAG + canUnlock demo -->
+    <div id="neo4jPanel" class="mt-6 rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-bold">Neo4j Graph — 15-level DAG · Traversal: 1 Cypher</h2>
+          <p class="mt-1 text-xs leading-4 text-[#A0A8C0]">Nodes: (:Level {code, idx, xpReward}) · Edges: (:Level)-[:REQUIRES]->(:Level) · User progress: (:User)-[:COMPLETED]->(:Level). canUnlock = transitive REQUIRES minus COMPLETED.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="rounded-full bg-[#101426] px-2.5 py-1 text-xs border border-[#2A3250]">MATCH (l)-[:REQUIRES*]->(p) RETURN p</span>
+          <button onclick="runCanUnlock()" class="rounded-full bg-[#3878F6] px-3 py-1.5 text-xs font-semibold">Test canUnlock(L02)</button>
+        </div>
+      </div>
+      <div id="mynetwork" class="mt-4 h-[340px] rounded-xl border border-[#2A3250] bg-[#101426]"></div>
+      <div class="mt-3 grid gap-3 md:grid-cols-3">
+        <div class="rounded-xl bg-[#101426] p-3">
+          <div class="text-xs font-semibold">Cypher: prerequisites for L03</div>
+          <pre class="mt-2 overflow-auto rounded-lg bg-[#0e1324] p-2 text-[11px] leading-4 text-[#A0A8C0]">MATCH (l:Level {code:'L03_MEMORY'})
+-[:REQUIRES*]->(p:Level)
+RETURN p.code, p.title</pre>
+          <div class="mt-2 text-xs text-[#A0A8C0]">Result: L02_PROMPT, L01_AWAKENING</div>
+        </div>
+        <div class="rounded-xl bg-[#101426] p-3">
+          <div class="text-xs font-semibold">canUnlock via graph</div>
+          <pre id="canUnlockCode" class="mt-2 overflow-auto rounded-lg bg-[#0e1324] p-2 text-[11px] leading-4 text-[#A0A8C0]">await canUnlockViaGraph(userId,'L02_PROMPT')
+// {can: false, missing:['L01_AWAKENING']}
+// Complete L01 → {can: true, missing:[]}</pre>
+          <div id="canUnlockResult" class="mt-2 text-xs font-semibold text-[#E8B94F]">Click “Test canUnlock” ☝️</div>
+        </div>
+        <div class="rounded-xl bg-[#101426] p-3">
+          <div class="text-xs font-semibold">Leaderboard via graph</div>
+          <pre class="mt-2 overflow-auto rounded-lg bg-[#0e1324] p-2 text-[11px] leading-4 text-[#A0A8C0]">MATCH (u:User)-[:COMPLETED]->(l:Level)
+WHERE u.tenantId='demo'
+WITH u, sum(l.xpReward) AS xp
+RETURN u.name, xp ORDER BY xp DESC LIMIT 5</pre>
+          <div class="mt-2 text-xs text-[#A0A8C0]">Fallback when Redis absent — same result as ZSET</div>
+        </div>
+      </div>
+      <div class="mt-3 rounded-xl border border-[#3878F6]/20 bg-[#3878F6]/5 p-3 text-xs leading-4 text-[#A0A8C0]">
+        <strong class="text-white">Hybrid model:</strong> Neo4j = graph (DAG, social, teams, recommendations) · Prisma/SQLite = transactional (xp_ledger hash chain, payments, audit). When <code class="rounded bg-[#101426] px-1">NEO4J_URI</code> absent, app falls back to relational <code>level_prerequisites</code> + <code>progress</code> — no fabricated data. See <code>NEO4J_GUIDE.md</code> + <code>lib/neo4j.ts</code> + <code>lib/journey.ts</code>.
+      </div>
+    </div>
+
+    <!-- 15-level path -->
+    <div id="levels" class="mt-6 rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4">
+      <div class="flex items-center justify-between"><h3 class="text-sm font-bold">15-level career journey (graph nodes)</h3><span class="text-xs text-[#8890B0]">Only L01 published — L02-15 admin placeholders</span></div>
+      <div class="mt-3 grid grid-cols-3 gap-2 md:grid-cols-5">
+        <div class="rounded-xl border border-[#E8B94F] bg-[#E8B94F]/10 p-3 text-center"><div class="text-[11px] font-bold">L01</div><div class="text-xs font-bold">Awakening</div><div class="text-xs text-[#E8B94F]">120 XP · available</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L02</div><div class="text-xs">Prompt</div><div class="text-xs text-[#8890B0]">140 XP · locked</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L03</div><div class="text-xs">Memory</div><div class="text-xs text-[#8890B0]">150 XP · locked</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L04</div><div class="text-xs">MCP</div><div class="text-xs text-[#8890B0]">160 XP · locked</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L05</div><div class="text-xs">RAG</div><div class="text-xs text-[#8890B0]">170 XP · locked</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L06</div><div class="text-xs">RAG Adv</div><div class="text-xs text-[#8890B0]">180 XP</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L07</div><div class="text-xs">Agents</div><div class="text-xs text-[#8890B0]">200 XP</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L08</div><div class="text-xs">Eval</div><div class="text-xs text-[#8890B0]">210 XP</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L09</div><div class="text-xs">Workflow</div><div class="text-xs text-[#8890B0]">220 XP</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L10</div><div class="text-xs">Capstone</div><div class="text-xs text-[#8890B0]">250 XP</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L11</div><div class="text-xs">Track A</div><div class="text-xs text-[#8890B0]">280 XP</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L12</div><div class="text-xs">Track B</div><div class="text-xs text-[#8890B0]">300 XP</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L13</div><div class="text-xs">Track C</div><div class="text-xs text-[#8890B0]">320 XP</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L14</div><div class="text-xs">Hackathon</div><div class="text-xs text-[#8890B0]">350 XP</div></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-center opacity-60"><div class="text-[11px] font-bold">L15</div><div class="text-xs">Career</div><div class="text-xs text-[#8890B0]">350 XP</div></div>
+      </div>
+      <div class="mt-3 text-xs leading-4 text-[#8890B0]">Edges: L02→L01, L03→L02, … linear DAG stored as (:Level)-[:REQUIRES]->(:Level). Traversal is O(depth) graph, not recursive CTE.</div>
+    </div>
+
+    <!-- L01 6 activities -->
+    <div class="mt-6 rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4">
+      <h3 class="text-sm font-bold">Level 1 — AI Awakening: The Mould & the Cookie <span class="rounded-full bg-[#E8B94F] px-2 py-1 text-xs font-bold text-[#101426]">120 XP</span></h3>
+      <div class="mt-3 space-y-2">
+        <div class="flex items-center justify-between rounded-xl border border-[#E8B94F]/30 bg-[#101426] px-3 py-3"><div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-[#E8B94F]"></span><span class="text-sm">1. Mission Briefing — Cookie Factory</span><span class="rounded-full bg-[#E8B94F] px-2 py-1 text-xs font-bold text-[#101426]">done</span></div><span class="text-xs font-bold text-[#E8B94F]">+5 XP</span></div>
+        <div class="flex items-center justify-between rounded-xl border border-[#3878F6]/30 bg-[#101426] px-3 py-3"><div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-[#3878F6] animate-pulse"></span><span class="text-sm">2. Learn — Classes, Objects, Attributes</span><span class="rounded-full bg-[#3878F6] px-2 py-1 text-xs font-bold text-white">in progress</span></div><span class="text-xs font-bold text-[#E8B94F]">+18 XP</span></div>
+        <div class="flex items-center justify-between rounded-xl border border-[#2A3250] bg-[#101426] px-3 py-3 opacity-80"><div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-[#2A3250]"></span><span class="text-sm">3. Explore GitHub — Cookie Demo</span><span class="rounded-full bg-[#2A3250] px-2 py-1 text-xs text-[#8890B0]">pending</span></div><span class="text-xs font-bold text-[#E8B94F]">+10 XP</span></div>
+        <div class="flex items-center justify-between rounded-xl border border-[#2A3250] bg-[#101426] px-3 py-3 opacity-80"><div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-[#2A3250]"></span><span class="text-sm">4. Build — Your Cookie Class (pytest)</span></div><span class="text-xs font-bold text-[#E8B94F]">+35 XP</span></div>
+        <div class="rounded-xl border border-[#2A3250] bg-[#101426] p-3">
+          <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-[#2A3250]"></span><span class="text-sm font-semibold">5. Submit Proof</span><span class="rounded-full bg-[#2A3250] px-2 py-1 text-xs text-[#8890B0]">pending</span></div><span class="text-xs font-bold text-[#E8B94F]">+5 XP</span></div>
+          <form onsubmit="submitProof(event)" class="mt-3 space-y-2">
+            <input id="repoUrl" placeholder="https://github.com/you/cookie-demo" class="w-full rounded-lg border border-[#2A3250] bg-[#0e1324] px-3 py-2 text-xs">
+            <textarea id="reflection" placeholder="Reflection ≥50 words — what you learned about objects vs instances" rows="2" class="w-full rounded-lg border border-[#2A3250] bg-[#0e1324] px-3 py-2 text-xs"></textarea>
+            <button type="submit" class="rounded-full bg-[#3878F6] px-4 py-2 text-xs font-semibold text-white">Submit for review (POST /api/submissions)</button>
+          </form>
+          <div id="submitMsg" class="mt-2 text-xs text-[#E8B94F]"></div>
+        </div>
+        <div class="flex items-center justify-between rounded-xl border border-[#2A3250] bg-[#101426] px-3 py-3 opacity-60"><div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-[#2A3250]"></span><span class="text-sm">6. Evaluation + Boss — The Mould Trial</span></div><span class="text-xs font-bold text-[#E8B94F]">+47 XP</span></div>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="leaderboard" class="mt-6 rounded-2xl border border-[#2A3250] bg-[#1E2438] p-4">
+      <h3 class="text-sm font-bold">Leaderboard — Redis ZSET · Neo4j graph fallback · validated</h3>
+      <div class="mt-3 overflow-hidden rounded-xl border border-[#2A3250]">
+        <div class="grid grid-cols-4 gap-2 bg-[#101426] px-3 py-2 text-xs font-semibold text-[#8890B0]"><span>Rank</span><span>Learner</span><span>XP</span><span>Source</span></div>
+        <div class="divide-y divide-[#2A3250] text-sm">
+          <div class="grid grid-cols-4 gap-2 px-3 py-2"><span>#1</span><span>Aarav S.</span><span class="font-bold text-[#E8B94F]">1,340 XP</span><span class="text-xs text-[#8890B0]">ZSET</span></div>
+          <div class="grid grid-cols-4 gap-2 bg-[#101426] px-3 py-2"><span>#2</span><span>Demo Learner</span><span class="font-bold">23 XP</span><span class="text-xs text-[#8890B0]">ledger</span></div>
+          <div class="grid grid-cols-4 gap-2 px-3 py-2"><span>#3</span><span>Priya M.</span><span>890 XP</span><span class="text-xs text-[#8890B0]">graph</span></div>
+        </div>
+      </div>
+      <div class="mt-2 text-xs text-[#8890B0]">Anti-abuse: idempotency_key UNIQUE · hash chain · no self-award · no manipulation · auditable.</div>
+    </div>
+
+    <div class="mt-6 rounded-xl border border-[#2A3250] bg-[#101426] p-3 text-xs leading-4 text-[#8890B0]">
+      <strong class="text-white">Full platform:</strong> Next.js 15 + Prisma (SQLite dev, Postgres prod) + Neo4j 5 graph (DAG/social) + Redis 7 + Auth.js + Tailwind · <code>apps/web</code> + <code>packages/db</code> · <code>docker compose up -d neo4j postgres redis</code> · <code>npm run db:seed</code> · <code>npx tsx prisma/seed-neo4j.ts</code> · Tests: vitest lib/__tests__ · RTM: docs/RTM.md (92 REQs) · See README + NEO4J_GUIDE.md
+    </div>
+  </main>
+</div>
+
+<script>
+  let xp = 23;
+  function addXp(){
+    const idem = 'idem-'+Math.random().toString(36).slice(2,6);
+    xp += 5;
+    document.body.insertAdjacentHTML('beforeend', `<div class="fixed bottom-6 right-6 rounded-full bg-[#E8B94F] px-4 py-2 text-xs font-bold text-[#101426] shadow">+5 XP (idem ${idem}) → ${xp} XP · ledger append + hash</div>`);
+    setTimeout(()=>document.querySelectorAll('.fixed.bottom-6').forEach(e=>e.remove()), 2500);
+  }
+  function submitProof(e){
+    e.preventDefault();
+    const url = document.getElementById('repoUrl').value;
+    const refl = document.getElementById('reflection').value;
+    if(!url.startsWith('https://')){ document.getElementById('submitMsg').textContent='❌ Valid https:// URL required'; return; }
+    if(refl.split(/\s+/).filter(Boolean).length < 10){ document.getElementById('submitMsg').textContent='❌ Reflection ≥10 words'; return; }
+    document.getElementById('submitMsg').textContent='✅ POST /api/submissions — submission pending · activity 5 completed · +5 XP server-side (idempotent)';
+  }
+  let canUnlockToggled = false;
+  function runCanUnlock(){
+    canUnlockToggled = !canUnlockToggled;
+    const el = document.getElementById('canUnlockResult');
+    const code = document.getElementById('canUnlockCode');
+    if(canUnlockToggled){
+      el.textContent = '→ Graph: L01 not completed → {can:false, missing:["L01_AWAKENING"]} · Relational fallback would also block via level_prerequisites.';
+      el.className = 'mt-2 text-xs font-semibold text-[#E84F4F]';
+      code.textContent = "MATCH (l:Level {code:'L02_PROMPT'})-[:REQUIRES*]->(p) WHERE NOT (user)-[:COMPLETED]->(p) RETURN p.code // → ['L01_AWAKENING']";
+    } else {
+      el.textContent = '→ After L01 approved + (user)-[:COMPLETED]->(L01) → {can:true, missing:[]} · Unlock → progress available';
+      el.className = 'mt-2 text-xs font-semibold text-[#E8B94F]';
+      code.textContent = "await canUnlockViaGraph(userId,'L02_PROMPT') // {can:true, missing:[]}";
+    }
+  }
+  // Vis network — 15 levels DAG
+  const nodes = new vis.DataSet([
+    {id:1,label:'L01\nAwakening',color:{background:'#E8B94F',border:'#101426'},font:{color:'#101426'}},
+    {id:2,label:'L02\nPrompt',color:{background:'#3878F6',border:'#2A3250'},font:{color:'#fff'}},
+    {id:3,label:'L03\nMemory',color:{background:'#2A3250',border:'#2A3250'},font:{color:'#8890B0'}},
+    {id:4,label:'L04\nMCP',color:{background:'#2A3250',border:'#2A3250'},font:{color:'#8890B0'}},
+    {id:5,label:'L05\nRAG',color:{background:'#2A3250',border:'#2A3250'},font:{color:'#8890B0'}},
+    {id:6,label:'L06\nRAG Adv',color:{background:'#2A3250',border:'#2A3250'},font:{color:'#8890B0'}},
+    {id:7,label:'L07\nAgents',color:{background:'#2A3250',border:'#2A3250'},font:{color:'#8890B0'}},
+    {id:8,label:'L08\nEval',color:{background:'#2A3250',border:'#2A3250'},font:{color:'#8890B0'}},
+    {id:9,label:'L09\nWorkflow',color:{background:'#2A3250',border:'#2A3250'},font:{color:'#8890B0'}},
+    {id:10,label:'L10\nCapstone',color:{background:'#8658E8',border:'#2A3250'},font:{color:'#fff'}},
+    {id:11,label:'L11\nTrack A',color:{background:'#2A3250',border:'#2A3250'},font:{color:'#8890B0'}},
+    {id:12,label:'L12\nTrack B',color:{background:'#2A3250',border:'#2A3250'},font:{color:'#8890B0'}},
+    {id:13,label:'L13\nTrack C',color:{background:'#2A3250',border:'#2A3250'},font:{color:'#8890B0'}},
+    {id:14,label:'L14\nHackathon',color:{background:'#2A3250',border:'#2A3250'},font:{color:'#8890B0'}},
+    {id:15,label:'L15\nCareer',color:{background:'#2A3250',border:'#2A3250'},font:{color:'#8890B0'}},
+  ]);
+  const edges = new vis.DataSet([
+    {from:2,to:1,arrows:'to',color:{color:'#3878F6'},label:'REQUIRES'},
+    {from:3,to:2,arrows:'to',color:{color:'#2A3250'}},
+    {from:4,to:3,arrows:'to',color:{color:'#2A3250'}},
+    {from:5,to:4,arrows:'to',color:{color:'#2A3250'}},
+    {from:6,to:5,arrows:'to',color:{color:'#2A3250'}},
+    {from:7,to:6,arrows:'to',color:{color:'#2A3250'}},
+    {from:8,to:7,arrows:'to',color:{color:'#2A3250'}},
+    {from:9,to:8,arrows:'to',color:{color:'#2A3250'}},
+    {from:10,to:9,arrows:'to',color:{color:'#2A3250'}},
+    {from:11,to:10,arrows:'to',color:{color:'#8658E8'}},
+    {from:12,to:11,arrows:'to',color:{color:'#8658E8'}},
+    {from:13,to:12,arrows:'to',color:{color:'#8658E8'}},
+    {from:14,to:13,arrows:'to',color:{color:'#2A3250'}},
+    {from:15,to:14,arrows:'to',color:{color:'#2A3250'}},
+  ]);
+  new vis.Network(document.getElementById('mynetwork'), {nodes, edges}, {
+    physics:{enabled:true,solver:'forceAtlas2Based',forceAtlas2Based:{gravitationalConstant:-40,springLength:80}},
+    interaction:{hover:true,zoomView:true},
+    edges:{smooth:{type:'curvedCW',roundness:0.12},font:{size:9,color:'#8890B0'}},
+    nodes:{shape:'box',borderWidth:1,shapeProperties:{borderRadius:8},margin:8,font:{size:10}}
+  });
+</script>
+</body>
+</html>

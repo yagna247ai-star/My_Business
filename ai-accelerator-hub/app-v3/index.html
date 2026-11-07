@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="AI Accelerator Hub — competence-gated GenAI career journey: learn, build, prove, get reviewed.">
+<meta name="theme-color" content="#081830">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>AI Accelerator Hub</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 4 4 21h8z' fill='%233878F6'/%3E%3Cpath d='M12 4l8 17h-8z' fill='%238658E8'/%3E%3Ccircle cx='12' cy='3.6' r='2.2' fill='%23E8B94F'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+  /* Resolve theme before first paint to avoid a flash */
+  (function () { var t = 'system'; try { t = JSON.parse(localStorage.getItem('ah3_theme')) || 'system'; } catch (e) {}
+    var d = t === 'dark' || (t === 'system' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.setAttribute('data-theme', d ? 'dark' : 'light'); })();
+</script>
+<link rel="stylesheet" href="css/core.css?v=3.0.3">
+<link rel="stylesheet" href="css/features.css?v=3.0.3">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<noscript><p style="padding:24px;font-family:sans-serif">AI Accelerator Hub needs JavaScript enabled.</p></noscript>
+
+<div class="app" id="app">
+  <aside class="sidebar" id="sidebar" aria-label="Primary">
+    <div class="brand-row">
+      <a class="brand" href="#/" aria-label="AI Accelerator Hub home">
+        <span class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 4 4 21h8z" fill="#3878F6"/><path d="M12 4l8 17h-8z" fill="#8658E8"/><circle cx="12" cy="3.6" r="2.2" fill="#E8B94F"/></svg></span>
+        <span class="brand-txt"><b>AI Accelerator</b><small>HUB</small></span>
+      </a>
+      <button class="rail-btn desk" id="railBtn" type="button" aria-label="Collapse sidebar" aria-expanded="true"></button>
+      <button class="rail-btn only-mobile" id="sideClose" type="button" aria-label="Close menu"></button>
+    </div>
+    <nav class="nav" id="sideNav" aria-label="Main"></nav>
+    <div class="side-foot" id="sideFoot"></div>
+  </aside>
+  <div class="overlay" id="overlay" hidden></div>
+
+  <div class="main-col">
+    <header class="topbar">
+      <button class="icon-btn only-mobile" id="menuBtn" type="button" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false"></button>
+      <nav class="crumb" aria-label="Breadcrumb"><span class="crumb-pre" id="crumbPre"></span><span class="crumb-cur" id="crumbCur" aria-current="page"></span><span id="crumbChev" aria-hidden="true"></span></nav>
+      <button class="search-btn" id="searchBtn" type="button" aria-label="Open command palette"></button>
+      <div class="top-right">
+        <button class="pill pill-streak" id="streakPill" type="button"></button>
+        <span class="pill pill-rank" id="rankPill"></span>
+        <label class="sr-only" for="langSel">Language</label><select class="lang-select" id="langSel"></select>
+        <button class="icon-btn" id="themeBtn" type="button"></button>
+        <button class="icon-btn sound" id="soundBtn" type="button" aria-label="Sound effects"></button>
+        <div class="user-wrap bell-wrap" style="position:relative">
+          <button class="icon-btn" id="bellBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="notifPop"></button>
+          <div class="popover" id="notifPop" hidden role="region" aria-label="Notifications"></div>
+        </div>
+        <div class="user-wrap">
+          <button class="user-chip" id="userBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userMenu"></button>
+          <div class="menu" id="userMenu" role="menu" hidden style="min-width:280px"></div>
+        </div>
+      </div>
+    </header>
+    <main id="main" tabindex="-1"></main>
+  </div>
+</div>
+
+<button class="fab" id="fab" type="button" aria-label="Ask a coach"></button>
+<div id="drawerRoot"></div>
+<div id="modalRoot"></div>
+<div id="paletteRoot"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="js/core/util.js?v=3.0.3"></script>
+<script src="js/core/seed.js?v=3.0.3"></script>
+<script src="js/core/engine.js?v=3.0.3"></script>
+<script src="js/core/i18n.js"></script>
+<script src="js/ui/components.js?v=3.0.3"></script>
+<script src="js/ui/shell.js?v=3.0.3"></script>
+<script src="js/pages/learner.js?v=3.0.3"></script>
+<script src="js/pages/community.js?v=3.0.3"></script>
+<script src="js/pages/staff.js?v=3.0.3"></script>
+<script src="js/pages/settings.js?v=3.0.3"></script>
+<script src="js/main.js?v=3.0.3"></script>
+</body>
+</html>

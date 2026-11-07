@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@import './styles/core.css';
+@import './styles/features.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 228 36% 8%;
+    --foreground: 0 0% 100%;
+    --card: 225 28% 16%;
+    --card-foreground: 0 0% 100%;
+    --popover: 225 28% 16%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 220 91% 62%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 262 72% 64%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 225 28% 24%;
+    --muted-foreground: 224 18% 68%;
+    --accent: 42 76% 68%;
+    --accent-foreground: 228 36% 8%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 225 28% 24%;
+    --input: 225 28% 24%;
+    --ring: 220 91% 62%;
+    --radius: 1rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-[hsl(var(--background))] text-foreground font-sans antialiased;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+  code, pre {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-[hsl(var(--background))];
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-[hsl(var(--muted))] rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-[hsl(var(--muted-foreground))];
+}
+
+/* Focus ring — WCAG 2.4.11 double ring */
+*:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px hsla(42, 76%, 68%, 0.3);
+}
+
+/* Animations */
+@keyframes float-up {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-32px) scale(1.05); opacity: 0; }
+}
+@keyframes confetti {
+  0% { transform: translateY(0) rotate(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-120px) rotate(720deg) scale(0); opacity: 0; }
+}
+@keyframes pulse-scale {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
