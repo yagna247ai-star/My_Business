@@ -1,0 +1,307 @@
+Yagna — Hyderabad Manufacturer Engine 
+7-Day Launch Plan 
+Oct 9, 2026  ·  Prepared by Prabhuraj 
+One market, one niche: Hyderabad manufacturers, Telugu only. Two tracks run in parallel — a new 
+Telugu ad campaign on a ₹2,500 festive trial, and a WhatsApp reactivation of every old solar and 
+coach lead with the same festive offer. Every other ad (solar, wellness) is shut off. Weekly review 
+every Friday 10 AM for four weeks. 30-day target: 5 manufacturers on trial, 3 retained and paying 
+monthly. 
+Niche finalised 
+Hyderabad manufacturers, Telugu only. No English creatives. Small and mid-size MSME units in and 
+around the Hyderabad outskirts whose WhatsApp, IndiaMART and JustDial enquiries sit unanswered 
+because staff are on the floor. The offer is software only, sold on a low-ticket festive trial that 
+converts to monthly. 
+Two tracks, one market. 
+Track 1 brings in new manufacturers through Telugu Meta ads on a ₹2,500 trial. Track 2 reactivates 
+every old lead already in the account (solar, coaches) with the same festive offer over bulk 
+WhatsApp — free money from a list already paid for. Every other campaign (solar, wellness) is 
+switched off so there is one thing to win. 
+Why manufacturers are the gold mine. 
+They already pay ₹30k to ₹2L a year to IndiaMART and JustDial for enquiries, then let those enquiries 
+rot. They think in crores, not in ₹5k software line items. They do not want five vendors — they want 
+one person who runs everything and stays. An experienced technical person like Yagna reads to 
+them as a peer, same age and mindset, so trust is faster. Three retained manufacturers = ₹24k–
+₹30k/month recurring that renews without a new sale. 
+The 30–35% rule — read this before blaming lead quality. 
+Meta is an impulse audience, not an intent audience: a manufacturer is watching reels and our ad 
+interrupts. So 60–65% of every 100 enquiries will always recycle — irrelevant or future-only — for us, 
+for SaaS Universe, for anyone running Meta. That is not a targeting failure; it is how the platform 
+works. The money is hidden in the 30–35% who actually book and show for the call. At ₹10k spend 
+→ ~100 enquiries → even 2 closing at ₹15k = ₹30k = 3x. So the entire job from here is converting the 
+ones who book, not chasing lead volume. Which makes this a sales-call problem, not an ads problem 
+— and the sales-call training below is the real lever. 
+Qualifier. 
+Real business owners only. Manufacturers already paying for IndiaMART / JustDial, or already 
+running enquiries. Random “I'm into a different business” clickers are disqualified on the call, not 
+sold to. 
+Offer sheet 
+Software only. We are not running Meta ads for the manufacturer — we are installing and running 
+their automation. The trial is capped at 5 founding slots in Hyderabad; after slot 5 the price rises and 
+does not come back. This must be true in practice — slot 6 pays more. 
+Item Detail 
+Festive trial ₹2,500 for 14 days, full system running 
+Condition Founding price; only 5 manufacturers in Hyderabad 
+After trial ₹8,000–₹10,000/month, software + implementation + maintenance 
+support 
+What is included CRM, WhatsApp automation, calendar automation, task management, file 
+vault, website + form management 
+What is NOT included We do not run their Meta ads. Website revamp is via Cloud, not a hand-
+built custom site 
+Slots 5 manufacturers in Hyderabad. Manufacturer 6 pays the higher monthly 
+Setup Installed and live during the 14-day trial 
+30-day target 5 on trial, 3 retained = ₹24k–₹30k/month recurring 
+6-month vision ~25 manufacturers = ₹1.5L–₹2L/month recurring 
+ 
+The entry is deliberately painless — ₹2,500 is one dinner. Any manufacturer will try AI at that price 
+during festive season. The retention happens in the 14 days: if the system visibly works and Yagna is 
+present, they stay at ₹8k–₹10k because they want the relationship, not just the software. That is the 
+whole game. 
+What Yagna says on the call 
+Said in Telugu, after the demo, soft and unforced. Run the 4-compartment framework first; this is 
+the close that sits at the end of it. 
+I'm not here to force you into anything. This is exactly what I'll build and run for your manufacturing 
+unit — your enquiries from IndiaMART, JustDial and WhatsApp answered in seconds, followed up 
+automatically, every buyer tracked in one place, nothing forgotten. The real price of running all of t his 
+is ₹8,000 to ₹10,000 a month. This festive season I'm installing the full system for just 5 manufacturers 
+in Hyderabad at ₹2,500 for 14 days — everything live, so you don't trust my words, you test the system. 
+If it works for you, we continue at ₹8,000 a month and I stay with you as your technical person. If it 
+doesn't, you've lost one dinner. I want a long-term relationship, not a one-time sale. If you're ready, 
+you're one of the 5. 
+ 
+The reframe that makes it land:  
+“I'm not asking you to trust me, I'm asking you to test me.” Manufacturers are experienced and 
+sceptical — a test at ₹2,500 beats a pitch at any price. And always close on the long-term 
+relationship, because that is the one thing the ₹5k “software only” vendors cannot offer. 
+Delivery scope 
+Read this before any sales call. Promise only what is on the “we build” list. The ₹2,500 is a trial of a 
+running system, not a custom software project. 
+What we build in the 14 days 
+• Instant automated WhatsApp reply on every enquiry (IndiaMART, JustDial, WhatsApp) 
+• Automated follow-up and reminder sequences so no buyer is forgotten 
+• CRM pipeline + dashboard showing every enquiry and where it stopped 
+• Calendar automation for appointments and callbacks 
+• Task management and a file vault 
+• A manufacturer website / form, revamped via Cloud (not hand-coded) 
+What we do NOT promise 
+• We do not run their Meta ads. The ₹2,500 is software and automation only. 
+• No bespoke custom-built website. The revamp is Cloud / Astra generated — fast and clean, but 
+not a hand-built dev project. Say “revamp”, never “custom build”. 
+• No AI conversation agent qualifying buyers in chat. The WhatsApp reply is an automated flow; a 
+human follows up. 
+Consequence for the sales call. 
+The ad promises a reply in 5 seconds — WhatsApp automation delivers that and it is true. It does not 
+promise us running their ads, or a from-scratch website. On the call, when a manufacturer asks “can 
+you revamp my old website?” the answer is yes — via Cloud, inside the system — not yes to an 
+unpaid custom build. Keep the fence, or the ₹2,500 trial becomes free consulting. 
+The 5-second claim is only real if a human is fast. 
+Every booked lead gets a callback within 5 minutes of landing, inside calling hours. The automation 
+buys the first reply; Yagna wins the deal on the follow-up. 
+The live demo — Yagna's edge 
+This is the one thing the ₹5k “software only” vendors cannot do. They sell a login. Yagna walks in and 
+shows a working manufacturer system already built. Built before any ad goes live — not after a lead 
+books. 
+1. Prabhuraj sends a reference manufacturer system (sample website + the full automation set) as 
+the model. 
+2. Yagna rebuilds his own sample on the Cloud subscription: a sample manufacturer website, a 
+WhatsApp follow-up flow, calendar automation, email automation, and task management — all 
+populated so it looks real. 
+3. On every sales call, Yagna screen-shares the sample and says “this is what I'll build for your unit,” 
+then walks the enquiry-to-order journey through it. 
+4. Any build help needed → message the group; Prabhuraj and team support same day. 
+On the tools. 
+Use Cloud, not ChatGPT, for the builds. Cloud's credits last through long building sessions; GPT's 
+credits vanish fast and drop you back to the free tier mid-work, which stalls development. Buy only 
+the Cloud subscription for now. ChatGPT / Astra can be tried, but Cloud is the workhorse while we 
+are in the building stage. (Confirm Yagna's Cloud subscription is active — see Open decisions.) 
+Ad scripts — Track 1 (new manufacturers) 
+Two angles, both ~45 seconds, both recorded in Telugu by Yagna, to camera — coat, strong lighting 
+on the face, clean background, spoken with confidence. The English master is the controlling version; 
+Yagna delivers it in his own natural Telugu. Script A runs cold. Script B retargets anyone who watched 
+50% of Script A and did not book. 
+Script A — “Test us, don't trust us” (English master) 
+Hyderabad manufacturers — one question. 
+How many enquiries came to your WhatsApp, IndiaMART and JustDial last month that nobody replied 
+to? 
+Your staff is on the floor. The phone rings. The message sits. By evening it's forgotten — and that buyer 
+has already ordered from someone else. 
+We install complete automation for your business. Every enquiry gets an instant reply. Every buyer gets 
+a follow-up. Nothing is forgotten, nothing is missed. 
+Now here's the real thing. We are new in the Hyderabad manufacturing market. So I'm not asking you 
+to trust us — I'm asking you to test us. 
+This festive season, we are giving a full 14-day trial for just ₹2,500 — only for 5 manufacturers in 
+Hyderabad. After these 5, the price goes up. This ₹2,500 will not come back.  
+If you want to be one of those 5, click the link below and book your appointment now.  
+On-screen: HYDERABAD ONLY · 14 DAYS · ₹2,500 · ONLY 5 MANUFACTURERS  
+ 
+Script A — Telugu 
+హైదరాబాద్ మాన్యు ఫాక్చ రర్స్  — ఒక్ ప్రశ్న . 
+గత నెలలో మీ WhatsApp, IndiaMART, JustDial కి వచ్చచ న  ఎన్‌క్వై రీలోో  ఎన్న ింటికి  ఎవరూ రిప్ల ో 
+ఇవై లేదు ? 
+మీ ్‌ాఫ ్ ్‌ోో ర్స్‌లో ఉింటారు. ోన మోగుతింది. మె సేజ్ అలాగే ఉిండిపోతింది. ాయింప్ాన్కి 
+మరిచ పోారు  — ఆ బయు ర్స  అరప టికే వేరే వారి దగ గర ఆర డర్స చేసేాా డు. 
+మేము మీ బిజినెస్‌కి పూరి ా ఆటోమేషన ఇన్‌్‌ాఫ ్ చేాా ిం. ప్రతీ ఎన్‌క్వై రీకి  వింటనే రిప్ల ో. ప్రతీ 
+బయు ర్స్‌కి ఫాలో-అప్. ఏదీ మరిచ పోరు , ఏదీ మిస కాదు. 
+ఇప్పప డు  అసలు విషయిం. మేము హైదరాబాద్ మాన్యు ఫాక్చ రిింగ్  మార్కె ట్‌ లో కొతా. అిందుకే 
+మిమమ ల్నన  నమమ మన్  అడగట్లోదు — టెసఫ చేయమన్ అడుగుతన్న ిం . 
+ఈ రిండగ సీజన్‌లో, పూరి ా 14 రోజుల ప్టయ్ కేవలిం ₹2,500 కి ఇస్తాన్న ిం — హైదరాబాద్్‌లో 
+కేవలిం 5 మాన్యు ఫాక్చ రర ోకు మాప్తమే. ఈ 5 తరాై త , ధర ప్రుగుతింది. ఈ ₹2,500్‌మళ్ళీ  రాదు. 
+ఆ 5 మిందిలో ఒక్రు కావాలింట్ల, ఇప్పప డే  కిింద ల్నింక్ ్‌కి ోక్ చేసి అపాయింట్‌మెింట బుక్ చేస్తకిండి. 
+ 
+Script B — “You already paid for these leads” (English master) 
+Hyderabad manufacturers — one honest question. 
+Your last 100 enquiries from IndiaMART and JustDial. How many turned into order s? 
+You pay ₹50,000, sometimes ₹1 lakh a year for those enquiries. They come in — and most get no reply, 
+or a reply the next day. You already paid for that buyer, and you handed him to your competitor for 
+free. 
+You don't need more enquiries. You need to stop losing the ones you've already paid for. 
+We install complete automation for your business. Every enquiry answered in 5 seconds. Every buyer 
+followed up. Nothing missed, nothing forgotten. 
+We are new in the Hyderabad manufacturing market. So I'm not askin g you to trust us — I'm asking you 
+to test us. 
+This festive season, we are giving a full 14-day trial for just ₹2,500 — only for 5 manufacturers in 
+Hyderabad. After these 5, the price goes up. This ₹2,500 will not come back.  
+If you want to be one of those 5, click the link below and book your appointment now. 
+On-screen: HYDERABAD ONLY · You paid lakhs — stop losing the leads · 14 DAYS · ₹2,500 · 5 
+MANUFACTURERS 
+ 
+Script B — Telugu 
+హైదరాబాద్ మాన్యు ఫాక్చ రర్స్  — ఒక్ న్జాయతీ ప్రశ్న . 
+మీ చ్చవరి 100 IndiaMART, JustDial ఎన్‌క్వై రీలు . అిందులో ఎన్న  ఆర డరుోగా మారాయ? 
+ఆ ఎన్‌క్వై రీల  కసిం మీరు సింవత్ రాన్కి  ₹50,000, కొన్న ారుో ₹1 లక్ష చెల్నోాా రు. అవి వాా య — 
+కానీ చాలా వరకు రిప్ల ో రాదు, లేదా మరుసటి రోజు వస్తాింది. ఆ బయు ర్స  కసిం మీరు అరప టికే  
+డబుు  క్టాఫ రు, కానీ ఉచ్చతింగా మీ పోటీదారుకి ఇచేచ స్తాన్న రు. 
+మీకు కొతా ఎన్‌క్వై రీలు  అవసరిం లేదు. ఇరప టికే  డబుు  క్టిఫన వాటిన్ కలో ప వడిం ఆపాల్న. 
+మేము మీ బిజినెస్‌కి పూరి ా ఆటోమేషన ఇన్‌్‌ాఫ ్ చేాా ిం. ప్రతీ ఎన్‌క్వై రీకి  5 సెక్నోలో రిప్ల ో. ప్రతీ 
+బయు ర్స్‌కి ఫాలో-అప్. ఏదీ మిస కాదు, ఏదీ మరిచ పోరు . 
+మేము హైదరాబాద్ మాన్యు ఫాక్చ రిింగ్  మార్కె ట్‌ లో కొతా. అిందుకే మిమమ ల్నన  నమమ మన్  అడగట్లోదు 
+— టెసఫ చేయమన్ అడుగుతన్న ిం . 
+ఈ రిండగ సీజన్‌లో, పూరి ా 14 రోజుల ప్టయ్ కేవలిం ₹2,500 కి ఇస్తాన్న ిం — హైదరాబాద్్‌లో 
+కేవలిం 5 మాన్యు ఫాక్చ రర ోకు. ఈ 5 తరాై త , ధర ప్రుగుతింది. ఈ ₹2,500్‌మళ్ళీ  రాదు. 
+కిింద ల్నింక్ ్‌కి ోక్ చేసి మీ కా్ బుక్ చేస్తకిండి. 
+ 
+Old-lead reactivation — Track 2 
+Every old lead already in the account (solar, coaches) is a list you've already paid for. We send them 
+the same festive offer over bulk WhatsApp. This runs in parallel with the ads and needs zero ad 
+spend. 
+The 4 steps 
+• Consolidate. Yagna creates one single contact group of all old leads in the CRM (Vimana / 
+Salesforce). This one task blocks everything else in this track. 
+• Template. Use the Meta-approved WhatsApp template below. It must be outcome-oriented and 
+festive, not spammy, or Meta rejects it. 
+• Approval. Submit the template in WhatsApp automation; approval is usually within 24 hours. 
+• Broadcast. Once approved, send to the contact group in batches — up to ~5,200 per day. SaaS 
+Universe has a bulk-messaging video and will support setup. 
+WhatsApp broadcast template (English master) 
+Namaste 👋 This festive season we're giving business owners a complete automation system — every 
+enquiry answered in 5 seconds, every lead followed up automatically, nothing missed. Full 14 -day trial 
+for just ₹2,500, only for the first 10 business owners. Want to be one of them? Reply YES and I'll share 
+the details. 
+ 
+Telugu draft 
+నమసేా 👋 ఈ రిండగ సీజన్‌లో బిజినెస ఓనర ోకు పూరి ా ఆటోమేషన సిసఫమ్ — ప్రతీ ఎన్‌క్వై రీకి  5 
+సెక్నోలో రిప్ల ో, ప్రతీ లీడ్ కి ఆటోమేటిక్ ఫాలో-అప్, ఏదీ మిస కాదు. పూరి ా 14 రోజుల ప్టయ్ 
+కేవలిం ₹2,500్‌కి, కేవలిం మొదటి 10 బిజినెస ఓనర ోకు మాప్తమే. ఆ 10 మిందిలో ఒక్రు 
+కావాలన్యకుింటున్న రా ? YES అన్ రిప్ల ో ఇవై ిండి , వివరాలు రింప్పాన్య. 
+ 
+Note: the old leads are mostly not manufacturers, so this template keeps the offer generic (“business owners”) 
+rather than manufacturer-specific. Replies get the same demo + 4-compartment call. Confirm with Meta's 
+policy before sending — if the copy reads as spam, Meta blocks the broadcast. 
+7-day plan — Oct 9 to Oct 16 
+Week target: 2 manufacturers on the ₹2,500 trial · old-lead broadcast sent to the full list · every 
+call scored above 17/26 · 100% of calls recorded · 7 of 7 days documented in the group. 
+Team: Prabhuraj (offers, scoring, decisions) · Yagna (ads, Telugu, calls, build) · ProfitSoul team 
+(automation build, editing, template support). 
+Calling window: 10 AM – 7 PM, all 7 days. Callback within 5 minutes of any lead landing. 
+Day 1 — Friday Oct 9  ·  Everything on the table 
+☐  Prabhuraj: send this document, the sample manufacturer system, and the sales-training link to the 
+group by 2 PM 
+☐  Yagna: shut down every other ad — solar, wellness, all of it. One campaign only from here 
+☐  Yagna: watch the sales training once, end to end 
+☐  Yagna: record Script A and Script B in Telugu today — coat, strong lighting, confident. Raw footage 
+to the group by 9 PM 
+☐  Yagna: start consolidating all old leads into one contact group in the CRM 
+☐  9 PM: one line in the group — ads off, recorded / not, watched / not 
+Day 2 — Saturday Oct 10  ·  Assets finished, framework memorised 
+☐  Yagna: watch the sales training a second time 
+☐  Yagna: write the 4 compartments of the sales call from memory on paper, photograph it, post to 
+the group — this is the proof, not a verbal yes 
+☐  Yagna: rebuild the sample manufacturer system on Cloud (website, WhatsApp flow, calendar, 
+email, task management) 
+☐  Team: both ad videos edited and approved by 6 PM 
+☐  Team: Meta instant lead form built for Hyderabad manufacturers; submit one test lead and 
+confirm the WhatsApp reply fires and the calendar slot books 
+☐  Team: payment link ready and tested so Yagna can send it mid-call from his phone 
+☐  Yagna: submit the WhatsApp reactivation template to Meta for approval 
+☐  9 PM: group post — videos approved, automation tested, compartment sheet posted, demo built  
+Day 3 — Sunday Oct 11  ·  Live, and no call until cleared 
+☐  Team: Hyderabad manufacturer campaign live by 12 PM — Script A + Script B 
+☐  Prabhuraj, 4 PM: role-play with Yagna, one full 4-compartment run, scored on the 26 points 
+☐  Gate: Yagna takes no live call until he clears 17/26 in role-play. Not cleared = rewatch tonight, re-
+run Monday morning 
+☐  9 PM: group post — campaign live, role-play score, cleared or not 
+Day 4 — Monday Oct 12  ·  First calls, first scores 
+☐  Yagna: call every lead within 5 minutes of it landing; present the demo on every call  
+☐  Yagna: every call recorded and uploaded the same day; self-score on the 26 points before 
+Prabhuraj posts his 
+☐  Yagna: if the WhatsApp template is approved, start the broadcast in batches 
+☐  Team: report cost per booked appointment — not CTR, not CPM 
+☐  9 PM: daily report 
+Day 5 — Tuesday Oct 13  ·  Fix the one thing 
+☐  Yagna: before the first call, rewatch only the compartment you lost points on yesterday  
+☐  Yagna: same 5-minute rule, same recording rule, self-score first 
+☐  Yagna: continue the broadcast; reply to every YES with the demo + call 
+☐  9 PM: daily report 
+Day 6 — Wednesday Oct 14  ·  Close the week 
+☐  Yagna: full calling day; follow up every appointment that did not close — a no-show is not a no 
+☐  Yagna: push for on-call confirmation; say plainly the founding ₹2,500 is only for the 5, and the 
+price rises after 
+☐  9 PM: daily report 
+Day 7 — Thursday Oct 15  ·  Pull the numbers 
+☐  Yagna: pull the week's numbers — leads, appointments, calls, average score, trials closed, money 
+collected 
+☐  9 PM: final daily report before review 
+Review — Friday Oct 16, 10 AM  ·  the standing weekly meeting (45 min) 
+Judged on: 2 manufacturers on the ₹2,500 trial · average call score above 17/26 · 100% of calls 
+recorded · broadcast sent · 7 of 7 days documented. 
+Decided on the call: which ad angle survives · how many of the 5 founding slots are gone · whether 
+Yagna is cleared to keep calling unsupervised · go / no-go on adding a landing page in week 2 (only if 
+week 1 numbers hit). 
+Non-negotiables and daily report 
+Yagna already named the real problem: “I'm not salesy.” That is fixed by reps and feedback, not by 
+willpower. These four rules replace “yes G” with a system that actually tracks whether he's 
+improving. 
+5. Every call recorded. No recording, the call did not happen. 
+6. Below 17/26 — rewatch the failed compartment before the next call. Not the whole training. 
+The one compartment. 
+7. Three calls below 17 in a row — no live calls until a role-play clears 17+. This protects the leads 
+we paid for from being burned while he's still learning. 
+8. One line in the group every single day, from Yagna. Silence counts as not done. 
+Daily report format — copy these seven lines into the group every night. 
+DATE: 
+Leads received: 
+Calls made: 
+Appointments booked: 
+Trials closed / money collected: 
+My self-score (out of 26): 
+Compartment I lost most points on: 
+ 
+The self-score going in before Prabhuraj's score is the point: Yagna learns to see his own call 
+honestly. That skill is what closes the 30–35%. 
+Open decisions 
+Close these before Day 1 ends. Each one gets asked on a live call, and a rep guessing on a call is how 
+deals get lost. 
+Decision Status 
+Monthly rate after the trial — Lock one number. “8k to 10k” on a call sounds unsure 
+₹8,000 or ₹10,000 
+Price after founding slot 5 Not decided. Must be a real, higher number 
+Daily ad budget (Track 1) Not set 
+Yagna's Cloud subscription active Confirm before the Day 2 demo build 
+Fulfilment cap If the team can onboard 2 setups in 14 days and not 5, lower the slot cap 
+now so the scarcity is true 
+WhatsApp broadcast daily 
+volume 
+Confirm the safe send rate with Meta policy before Day 4 
+ 
+Slot honesty. 
+The 5-slot founding cap is only persuasive if it's real. Track the slots in the group so nobody sells slot 
+6 at the founding price by accident. 

@@ -1,0 +1,61 @@
+# Bangi v0.4 — Hermes-Powered Config (no rebuild needed)
+app:
+  name: Bangi
+  version: 0.4.0-hermes
+  env: dev  # dev|prod
+  locale: en-IN
+  theme: antigravity  # antigravity|light
+
+# ──────────────────────────────────────────────
+# Hermes integration — hybrid routing (ADR-003)
+# ──────────────────────────────────────────────
+hermes:
+  mode: hybrid  # direct_api | computer_use | hybrid
+  # Hermes-RealEstate (10 domain skills)
+  realestate_path: ../RealEstate/hermes_automation
+  # Hermes-Agent (70+ tools + conversation_loop)
+  agent_path: ../Hermes-agent/hermes-agent
+  # Routing: prefer direct API when available, fallback to SOM
+  routing:
+    prefer_direct: [tracker_sync, lead_qualifier, cadence, sales_call_coach, lead_converter, emi_matcher, market_intel]
+    fallback_som: [browser, file_ops, job_apply, generic_desktop]
+  # Durability
+  events_jsonl: ~/.bangi/events.jsonl
+  poll_minutes: 30
+
+features:
+  jobs:
+    enabled: true
+    providers: [naukri, linkedin, indeed]
+    daily_limit: 20
+    resume_path: ~/Documents/Resume.pdf
+    selectors: ./config/jobs.selectors.yaml  # CSS/XPath per site, hot-swappable
+  crm:
+    enabled: true
+    provider: hermes  # hermes|hubspot|sheets
+    path: ../RealEstate/hermes_automation
+    poll_minutes: 30
+    auto_followup: true
+  coaching:
+    enabled: true
+    framework: 4-pillar  # Rapport, Diagnosis, Automation System, Responsibilities
+    agents: [Yagna, Prabhuraj]
+  tasks:
+    allow_generic: true
+    approval_required: [bank, email_send]
+
+computer_use:
+  backend: hybrid  # mock|cua|hybrid — mock for demo, cua for real desktop
+  som_scale: 1024
+  stealth: true  # pid-scoped, no cursor steal (cua-driver)
+  capture_fps: 2
+
+storage:
+  local: sqlite://~/.bangi/bangi.db
+  sync: false  # set true + S3 creds for durable cloud backup
+  events_jsonl: ~/.bangi/events.jsonl
+
+cross_platform:
+  web: {pwa: true, offline: true}
+  desktop: {tauri: true, auto_update: true}
+  mobile: {capacitor: true, push: true}

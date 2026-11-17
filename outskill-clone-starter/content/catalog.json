@@ -1,0 +1,56 @@
+[
+  {
+    "id": "model-vs-app",
+    "kind": "lesson",
+    "title": "A model is not the app",
+    "summary": "Separate the engine, the interface and the tools before choosing where to work.",
+    "level": 1,
+    "tool": "Model science",
+    "roles": ["all"],
+    "minutes": 12,
+    "difficulty": "beginner"
+  },
+  {
+    "id": "ask-with-a-brief",
+    "kind": "lesson",
+    "title": "Ask with a brief, not a compliment",
+    "summary": "Replace impressive-sounding role prompts with four lines you can check.",
+    "level": 1,
+    "tool": "Any chat app",
+    "roles": ["all"],
+    "minutes": 12,
+    "difficulty": "beginner"
+  },
+  {
+    "id": "inbox-triage",
+    "kind": "workbook",
+    "title": "Turn a messy inbox into a triage table",
+    "summary": "Classify eight fictional messages, check the counts, then write a short brief.",
+    "level": 2,
+    "tool": "Any chat app",
+    "roles": ["all", "leadership-operations", "marketing-sales", "education-consulting"],
+    "minutes": 30,
+    "difficulty": "beginner"
+  },
+  {
+    "id": "support-reply",
+    "kind": "project",
+    "title": "Draft a support reply that keeps the facts",
+    "summary": "Build a reply from a ticket and a policy page without inventing promises.",
+    "level": 3,
+    "tool": "ChatGPT",
+    "roles": ["marketing-sales", "education-consulting", "leadership-operations"],
+    "minutes": 60,
+    "difficulty": "intermediate"
+  },
+  {
+    "id": "context-window",
+    "kind": "glossary",
+    "title": "Context window",
+    "summary": "The maximum amount of information a model can consider in a single request.",
+    "level": 1,
+    "tool": "Model science",
+    "roles": ["all"],
+    "minutes": 3
+  }
+]

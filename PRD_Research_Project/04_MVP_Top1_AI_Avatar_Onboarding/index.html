@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Avatar Client Onboarding Portal — MVP 1.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,system-ui,sans-serif;background:#040e22;color:#fff}
+header{background:#061a33;border-bottom:2px solid #ffb700;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+header img{width:36px;height:36px;border-radius:50%;border:2px solid #ffb700;object-fit:cover}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;padding:24px;max-width:1200px;margin:auto}
+@media(max-width:900px){.hero{grid-template-columns:1fr}}
+.card{background:#0c2448;border:1px solid #1a3a68;border-radius:16px;padding:18px}
+.avatar-card{position:relative;overflow:hidden}
+.avatar-card img{width:100%;height:420px;object-fit:cover;border-radius:12px;object-position:top}
+.live-dot{position:absolute;top:22px;left:22px;background:#ff2a2a;color:#fff;font-size:11px;font-weight:900;padding:6px 10px;border-radius:999px}
+.avatar-overlay{position:absolute;bottom:18px;left:18px;right:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);border-radius:12px;padding:12px;display:flex;gap:10px;align-items:center}
+.avatar-overlay audio{width:140px;height:30px}
+.steps{display:flex;gap:8px;margin:16px 0}
+.step{flex:1;text-align:center;padding:8px;border-radius:999px;background:#112f5c;font-size:11px;font-weight:800;opacity:.6}
+.step.on{background:#ffb700;color:#061a33;opacity:1}
+input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #1a3a68;background:#040e22;color:#fff;margin-top:6px}
+label{font-size:12px;font-weight:700;opacity:.9;margin-top:12px;display:block}
+.btn{border:none;padding:12px 18px;border-radius:999px;font-weight:900;cursor:pointer}
+.btn-primary{background:#ffb700;color:#061a33}
+.btn-ghost{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.score{border:1px solid #1a3a68;border-radius:12px;padding:14px;text-align:center;background:#061a33}
+.score b{font-size:22px;color:#ffb700}
+.progress{height:6px;background:#112f5c;border-radius:999px;overflow:hidden;margin-top:6px}
+.progress i{display:block;height:100%;background:#25D366;width:0;transition:.4s}
+.timeline{border-left:2px solid #1a3a68;margin-left:8px;padding-left:16px}
+.timeline div{margin-bottom:12px;position:relative}
+.timeline div::before{content:'';width:10px;height:10px;background:#ffb700;border-radius:50%;position:absolute;left:-22px;top:4px}
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;gap:10px;align-items:center"><img src="../../Solar_Shorts_Studio_4K/live_photo.jpg" alt="you"><b>AI AVATAR ONBOARDING • MVP 1.0 • 4K</b></div>
+  <span style="font-size:11px;background:#ffb700;color:#061a33;padding:6px 12px;border-radius:999px;font-weight:900">PRD #1 • TOP 1 • 85/100</span>
+</header>
+
+<div class="hero">
+  <!-- LEFT: Avatar -->
+  <div class="card avatar-card">
+    <div class="live-dot">● LIVE • TELUGU + ENGLISH</div>
+    <img src="../../Solar_Shorts_Studio_4K/live_photo.jpg" alt="avatar">
+    <div class="avatar-overlay">
+      <img src="../../Solar_Shorts_Studio_4K/live_photo.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #ffb700">
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:800">Namaste, nenu mee AI Avatar ni</div>
+        <div style="font-size:11px;opacity:.7">5-min lo mee details teesukunta • Telugu/English</div>
+      </div>
+      <button class="btn btn-primary" style="padding:8px 12px;font-size:12px" onclick="speak()">🔊 Play</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Wizard -->
+  <div class="card" id="wizard">
+    <div class="steps"><div class="step on" id="s1">1. KYC</div><div class="step" id="s2">2. SCORE</div><div class="step" id="s3">3. BOOK</div><div class="step" id="s4">4. WHATSAPP</div></div>
+
+    <!-- Step 1 -->
+    <div id="p1">
+      <h3>Step 1 — Client KYC (Telugu-friendly)</h3>
+      <label>Full Name <input id="name" placeholder="Ramesh Kumar"></label>
+      <label>Phone (WhatsApp) <input id="phone" placeholder="9XXXXXXXXX"></label>
+      <label>District (AP/TS) <select id="dist"><option>Hyderabad</option><option>Vijayawada</option><option>Warangal</option><option>Visakhapatnam</option><option>Guntur</option></select></label>
+      <label>Business Type <select id="biz"><option>Small Dealership / Retail</option><option>Medium Installer</option><option>Full EPC Startup</option><option>Large Distribution</option></select></label>
+      <label>Monthly EB Bill (₹) <input id="bill" type="number" placeholder="15000"></label>
+      <div style="margin-top:14px;display:flex;gap:10px"><button class="btn btn-primary" onclick="go(2)">Next → Score →</button><button class="btn btn-ghost" onclick="fillDemo()">Fill Demo</button></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="p2" style="display:none">
+      <h3>Step 2 — 13+ Year Lead Scoring (auto)</h3>
+      <p style="opacity:.7;font-size:12px">Same model from your Blueprint: 20+25+10+20 = 75 max</p>
+      <div class="score-grid">
+        <div class="score"><div style="font-size:11px">Business Tenure (20)</div><b id="sc1">0</b><div class="progress"><i id="b1"></i></div></div>
+        <div class="score"><div style="font-size:11px">Profit Volume (25)</div><b id="sc2">0</b><div class="progress"><i id="b2"></i></div></div>
+        <div class="score"><div style="font-size:11px">Digital Readiness (10)</div><b id="sc3">0</b><div class="progress"><i id="b3"></i></div></div>
+        <div class="score"><div style="font-size:11px">Deceney (20)</div><b id="sc4">0</b><div class="progress"><i id="b4"></i></div></div>
+      </div>
+      <div style="margin-top:12px;background:#061a33;border:1px solid #ffb700;border-radius:12px;padding:12px;text-align:center"><div style="font-size:11px;opacity:.7">PRIORITY LEAD SCORE</div><div style="font-size:32px;font-weight:900;color:#ffb700" id="total">0 / 75</div><div id="verdict" style="font-size:12px;font-weight:800"></div></div>
+      <div style="margin-top:12px;display:flex;gap:10px"><button class="btn btn-ghost" onclick="go(1)">← Back</button><button class="btn btn-primary" onclick="go(3)">Book Survey →</button></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="p3" style="display:none">
+      <h3>Step 3 — Book Free Site Survey</h3>
+      <label>Date <input type="date" id="date"></label>
+      <label>Slot <select id="slot"><option>10:00 AM — Telugu</option><option>2:00 PM — English</option><option>4:00 PM — Telugu</option></select></label>
+      <label>Address <textarea id="addr" rows="2" placeholder="Full site address"></textarea></label>
+      <div style="margin-top:12px;display:flex;gap:10px"><button class="btn btn-ghost" onclick="go(2)">← Back</button><button class="btn btn-primary" onclick="book()">Confirm & Trigger WhatsApp →</button></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div id="p4" style="display:none">
+      <h3>Step 4 — WhatsApp SLA + 7-Day Nurture</h3>
+      <div style="background:#25D366;color:#fff;border-radius:12px;padding:12px;font-size:12px">✅ 5-Min WhatsApp sent to <b id="wphone"></b> — Telugu/English auto. Lead locked, won't go to competitor.</div>
+      <div style="margin-top:12px;background:#040e22;border:1px solid #1a3a68;border-radius:12px;padding:12px">
+        <div style="font-weight:800;font-size:12px">7-Day Nurture Preview</div>
+        <div class="timeline" style="margin-top:10px;font-size:12px">
+          <div><b>Day 1:</b> Happy customer — ₹4,200 bill saving (Warangal EPC)</div>
+          <div><b>Day 3:</b> 25-year AMC profit math</div>
+          <div><b>Day 5:</b> IoT audit video — factory leakage</div>
+          <div><b>Day 7:</b> Offer — ₹50k Standard vs ₹55k Special (crown)</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" onclick="downloadCSV()">Download Lead CSV</button><button class="btn btn-ghost" onclick="go(1)">+ New Lead</button><a href="../../Solar_Shorts_Studio_4K/02_ENGINE_4K_poster.jpg" target="_blank" class="btn btn-ghost" style="text-decoration:none;display:inline-flex;align-items:center">View Blueprint</a></div>
+    </div>
+  </div>
+</div>
+
+<div style="max-width:1200px;margin:0 auto;padding:0 24px 24px">
+  <div class="card" style="display:flex;gap:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:260px"><b style="color:#ffb700">MVP Tech</b><div style="opacity:.7;font-size:12px;line-height:1.6">Pure HTML/CSS/JS, no backend. localStorage → CSV. Your live_photo.jpg + live_voice.mp4 embedded. Deploy to Vercel/Netlify in 1 click. Next: add Supabase + WhatsApp Cloud API.</div></div>
+    <div style="flex:1;min-width:260px"><b style="color:#ffb700">What to sell tomorrow</b><div style="opacity:.7;font-size:12px;line-height:1.6">EPCs pay ₹9,999 onboarding setup (this portal white-labeled) + ₹4,999/mo. Give them your 4K videos as lead magnet. Close 3 EPCs = ₹30k immediate.</div></div>
+  </div>
+</div>
+
+<script>
+function speak(){
+  const t='Namaste! Nenu mee AI avatar ni. Mee details 5 nimishallo teesukuni, mee lead score chusi, free site survey book chestanu. Telugu lo kooda matladutanu.';
+  const u=new SpeechSynthesisUtterance(t); u.lang='te-IN'; u.rate=.95;
+  const vs=speechSynthesis.getVoices(); const te=vs.find(v=>v.lang.includes('te'))||vs[0]; if(te) u.voice=te;
+  speechSynthesis.speak(u);
+}
+function fillDemo(){ name.value='Demo EPC Owner'; phone.value='9876543210'; bill.value='25000'; dist.value='Hyderabad'; biz.value='Medium Installer'; }
+function calc(){
+  const b=parseInt(bill.value||0), bizv=biz.value;
+  let s1 = bizv.includes('Large')?18: bizv.includes('Full')?16: bizv.includes('Medium')?12:8;
+  let s2 = b>30000?25: b>15000?18: b>8000?12:6;
+  let s3 = Math.floor(Math.random()*4)+6; // demo
+  let s4 = Math.floor(Math.random()*6)+12;
+  sc1.textContent=s1; sc2.textContent=s2; sc3.textContent=s3; sc4.textContent=s4;
+  b1.style.width=s1/20*100+'%'; b2.style.width=s2/25*100+'%'; b3.style.width=s3/10*100+'%'; b4.style.width=s4/20*100+'%';
+  const t=s1+s2+s3+s4; total.textContent=t+' / 75';
+  verdict.textContent = t>55?'🔥 PRIORITY LEAD — Call in 5 mins': t>35?'⚡ WARM — Nurture 7 days':'❄️ COLD — Long nurture';
+  verdict.style.color= t>55?'#25D366': t>35?'#ffb700':'#ff6b6b';
+  localStorage.setItem('lead', JSON.stringify({name:name.value,phone:phone.value,dist:dist.value,biz:biz.value,bill:b,score:t,date:date.value,slot:slot.value,addr:addr.value}));
+}
+function go(n){
+  if(n===2){ if(!name.value||!phone.value){alert('Name + Phone required'); return;} calc(); }
+  if(n===4) wphone.textContent=phone.value;
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('p'+i).style.display=i===n?'block':'none';
+    document.getElementById('s'+i).classList.toggle('on', i===n);
+  });
+}
+function book(){
+  if(!date.value){alert('Pick a date'); return;}
+  calc();
+  const lead=JSON.parse(localStorage.getItem('lead')||'{}');
+  lead.date=date.value; lead.slot=slot.value; lead.addr=addr.value;
+  localStorage.setItem('lead', JSON.stringify(lead));
+  // store in leads list
+  let list=JSON.parse(localStorage.getItem('leads')||'[]'); list.push(lead); localStorage.setItem('leads', JSON.stringify(list));
+  go(4);
+}
+function downloadCSV(){
+  const list=JSON.parse(localStorage.getItem('leads')||'[]');
+  let csv='name,phone,district,business,bill,score,date,slot,address\n';
+  list.forEach(r=>{ csv+=`"${r.name}","${r.phone}","${r.dist}","${r.biz}",${r.bill||''},${r.score||''},"${r.date||''}","${r.slot||''}","${(r.addr||'').replace(/"/g,'""')}"\n`; });
+  const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='leads_'+Date.now()+'.csv'; a.click();
+}
+if('speechSynthesis' in window) speechSynthesis.getVoices();
+date.valueAsDate=new Date(Date.now()+86400000);
+</script>
+</body>
+</html>

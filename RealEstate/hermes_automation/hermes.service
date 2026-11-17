@@ -1,0 +1,16 @@
+[Unit]
+Description=Hermes Agent — Abhinandhana Avenues Real Estate Automation
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/opc/hermes_automation
+Environment=PATH=/home/opc/hermes_automation/.venv/bin:/home/opc/.cargo/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/opc/hermes_automation/.venv/bin/python /home/opc/hermes_automation/main.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

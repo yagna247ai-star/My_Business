@@ -1,0 +1,108 @@
+{
+  "skill_id": "chatflow-lead-enrichment-v1",
+  "name": "Chat Flow Lead Enrichment",
+  "version": "1.0.0",
+  "description": "On Chat Flow ping, captures phone, enriches FB/IG (search links), scores 0-100 (13yr model), creates CRM record with notes, checks lead capability, decides human handover — drag-drop for Admin My Apps Chat Flow",
+  "trigger": {
+    "workflow": "Chat Flow",
+    "event": "inbound_message",
+    "condition": "contact.phone != ''"
+  },
+  "autonomy_level": "suggest",
+  "communication_tone": "Professional",
+  "primary_goal": "Enrich every Chat Flow ping within 5 min, create CRM + notes + score + capability, escalate HOT leads to human",
+  "guided_prompt": "Handle Chat Flow pings: capture phone, enrich FB/IG, analyze user, score lead 0-100, create CRM record with all details in notes, check Facebook/Instagram and lead capability before human call, get full info",
+  "knowledge_brains": [
+    "Solar buisness",
+    "Sales Brain",
+    "Marketing Brain",
+    "Finance Brain",
+    "Module: Email Marketing",
+    "Module: WhatsApp",
+    "Module: Workflows & Chatflows",
+    "Module: Inbox",
+    "Module: Prospecting",
+    "Module: Chat Widget"
+  ],
+  "actions": [
+    {
+      "id": "capture_phone",
+      "type": "read_query",
+      "label": "Capture phone + message",
+      "runs": "always",
+      "inputs": ["contact.phone", "contact.name", "message.text"],
+      "outputs": ["phone_e164", "name_normalized"]
+    },
+    {
+      "id": "fb_ig_search",
+      "type": "read_query",
+      "label": "FB/IG profile search links",
+      "runs": "always",
+      "outputs": ["fb_search_url", "ig_search_url", "google_search_url"],
+      "template": {
+        "fb": "https://www.facebook.com/search/top/?q={{name}}",
+        "ig": "https://www.instagram.com/explore/search/keyword/?q={{name}}",
+        "google": "https://www.google.com/search?q={{name}}+{{phone}}"
+      }
+    },
+    {
+      "id": "analyze_profile",
+      "type": "read_query",
+      "label": "Analyze user (tenure/profit/intent)",
+      "runs": "always",
+      "outputs": ["business_tenure", "profit_volume", "intent_signal", "digital_readiness"]
+    },
+    {
+      "id": "create_crm_record",
+      "type": "write_update",
+      "label": "Create CRM record + Notes",
+      "requires": "approval",
+      "when": "autonomy=suggest",
+      "fields": ["phone", "name", "email", "location", "fb_search_url", "ig_search_url", "notes"],
+      "notes_template": "[{{timestamp}}] Chat Flow ping — phone {{phone}}\nMessage: {{message}}\nFB: {{fb_search_url}}\nIG: {{ig_search_url}}\nAnalysis: tenure={{business_tenure}}, profit={{profit_volume}}\nScore: {{lead_score}}/100 ({{tier}})"
+    },
+    {
+      "id": "score_lead_0_100",
+      "type": "write_update",
+      "label": "Lead Score 0-100 (13yr Solar model)",
+      "runs": "always",
+      "model": "solar_13yr",
+      "weights": {
+        "tenure_25": "more_than_1_year=25, 1_year=18, 6_months=10",
+        "profit_25": "more_than_5_lakh=25, 1_lakh_2_lakh=18, 50k=10",
+        "intent_15": "whatsapp=15, facebook=15, instagram=12",
+        "digital_15": "custom_domain=15, business_gmail=12, standard_gmail=8",
+        "recency_20": "5min=20, 60min=18, 24h=12"
+      },
+      "outputs": ["lead_score", "lead_tier"]
+    },
+    {
+      "id": "check_capability",
+      "type": "write_update",
+      "label": "Lead capability (budget/capacity)",
+      "runs": "always",
+      "outputs": ["lead_capability", "max_proposal"],
+      "logic": "if profit>5L → capability=high → propose ₹3000 7-day test / ₹500 per survey; if tenure<6m → nurture"
+    },
+    {
+      "id": "human_handover",
+      "type": "outbound_message",
+      "label": "Human call decision",
+      "requires": "approval",
+      "condition": "lead_score >= 75 OR lead_capability == 'high' OR message contains 'custom'",
+      "actions": ["create_task: Human call Telugu within 5 min", "notify_approvals", "attach packet: profile+FB/IG+score+capability"]
+    },
+    {
+      "id": "nurture",
+      "type": "outbound_message",
+      "label": "Nurture 90-day cadence",
+      "runs": "when_not_handover",
+      "when": "lead_score < 75"
+    }
+  ],
+  "destructive_requires_approval": true,
+  "sla": "5 min median / 60 min max",
+  "handover_triggers": ["score>=75", "capability=high", "custom negotiation"],
+  "crm_notes_field": "notes",
+  "events_log": "~/.bangi/events.jsonl"
+}

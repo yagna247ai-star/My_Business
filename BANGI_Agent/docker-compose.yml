@@ -1,0 +1,52 @@
+services:
+  backend:
+    build: .
+    command: uv run bangi
+    ports: ["8000:8000"]
+    environment:
+      - PYTHONPATH=/app:/app/backend
+      - BANGI_BACKEND_URL=http://backend:8000
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - bangi-data:/app/.bangi
+      - ../RealEstate/hermes_automation:/app/RealEstate/hermes_automation:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  gateway:
+    build: .
+    command: uv run gateway
+    ports: ["8001:8001"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      - BANGI_BACKEND_URL=http://backend:8000
+      - GATEWAY_PORT=8001
+      # - BANGI_API_KEY=your-secret
+    volumes:
+      - bangi-data:/app/.bangi
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  web:
+    build: .
+    command: npm --prefix apps/web start
+    ports: ["3000:3000"]
+    depends_on:
+      gateway:
+        condition: service_healthy
+    environment:
+      - NEXT_PUBLIC_GATEWAY_URL=http://localhost:8001
+    restart: unless-stopped
+
+volumes:
+  bangi-data:

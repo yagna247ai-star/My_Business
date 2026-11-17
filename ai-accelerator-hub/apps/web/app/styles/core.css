@@ -95,7 +95,7 @@ img{max-width:100%;display:block}
    3. APP SHELL
    ========================================================= */
 .app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);min-height:100vh}
-.app.is-rail{grid-template-columns:var(--side-rail) minmax(0,1fr)}
+[data-sidebar="rail"] .app{grid-template-columns:var(--side-rail) minmax(0,1fr)}
 @media (prefers-reduced-motion:no-preference){.app{transition:grid-template-columns .25s ease}}
 
 /* ---------- Sidebar (G-02) ---------- */
@@ -132,13 +132,16 @@ img{max-width:100%;display:block}
 .side-foot .bar i{display:block;height:100%;background:var(--gold-fill);border-radius:99px}
 
 /* Rail mode */
-.app.is-rail .sidebar{padding-left:10px;padding-right:10px}
-.app.is-rail .brand-txt,.app.is-rail .nav-item .lbl,.app.is-rail .tier-btn .lbl,.app.is-rail .tier-btn .chev,.app.is-rail .side-foot,.app.is-rail .nav-item .lock{display:none}
-.app.is-rail .brand-row{flex-direction:column;gap:10px}
-.app.is-rail .nav-item,.app.is-rail .tier-btn{justify-content:center;padding:11px}
-.app.is-rail .tier-panel{display:flex!important;margin-left:0;padding-left:0}
-.app.is-rail .tier-panel::before{display:none}
-.app.is-rail .nav-item .dot{right:6px;top:8px;margin:0}
+[data-sidebar="rail"] .app .sidebar{padding-left:10px;padding-right:10px}
+[data-sidebar="rail"] .app .brand-txt,[data-sidebar="rail"] .app .nav-item .lbl,[data-sidebar="rail"] .app .tier-btn .lbl,[data-sidebar="rail"] .app .tier-btn .chev,[data-sidebar="rail"] .app .side-foot,[data-sidebar="rail"] .app .nav-item .lock{display:none}
+[data-sidebar="rail"] .app .brand-row{flex-direction:column;gap:10px}
+[data-sidebar="rail"] .app .nav-item,[data-sidebar="rail"] .app .tier-btn{justify-content:center;padding:11px}
+[data-sidebar="rail"] .app .tier-panel{display:flex!important;margin-left:0;padding-left:0}
+[data-sidebar="rail"] .app .tier-panel::before{display:none}
+[data-sidebar="rail"] .app .nav-item .dot{right:6px;top:8px;margin:0}
+[data-sidebar="rail"] .app .side-foot-rail{display:grid}
+.side-foot-rail{display:none;margin-top:auto;place-items:center;width:40px;height:40px;align-self:center;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--side-line);color:#fff;font-size:12px;font-weight:800}
+.rail-btn.desk:focus-visible{outline:2px solid #9DB8FF;outline-offset:2px}
 
 /* ---------- Main column ---------- */
 .main-col{min-width:0;display:flex;flex-direction:column}
@@ -168,14 +171,21 @@ main:focus{outline:none}
 
 /* Mobile shell */
 @media (max-width:1023px){
-  .app,.app.is-rail{grid-template-columns:minmax(0,1fr)}
+  .app,[data-sidebar="rail"] .app{grid-template-columns:minmax(0,1fr)}
   .sidebar{position:fixed;inset:0 auto 0 0;width:286px;z-index:60;transform:translateX(-102%);visibility:hidden;box-shadow:var(--shadow-lg)}
   .sidebar.is-open{transform:none;visibility:visible}
   @media (prefers-reduced-motion:no-preference){.sidebar{transition:transform .25s ease,visibility .25s}}
-  .app.is-rail .brand-txt,.app.is-rail .nav-item .lbl,.app.is-rail .tier-btn .lbl,.app.is-rail .tier-btn .chev,.app.is-rail .side-foot{display:revert}
-  .app.is-rail .nav-item,.app.is-rail .tier-btn{justify-content:flex-start;padding:10px 12px}
-  .app.is-rail .brand-row{flex-direction:row}
+  [data-sidebar="rail"] .app .brand-txt{display:flex}
+  [data-sidebar="rail"] .app .nav-item .lbl,[data-sidebar="rail"] .app .tier-btn .lbl,[data-sidebar="rail"] .app .tier-btn .chev{display:inline}
+  [data-sidebar="rail"] .app .side-foot{display:block}
+  [data-sidebar="rail"] .app .nav-item,[data-sidebar="rail"] .app .tier-btn{justify-content:flex-start;padding:10px 12px}
+  [data-sidebar="rail"] .app .brand-row{flex-direction:row}
   .rail-btn.desk{display:none}
+  /* The mobile drawer always shows the full menu, whatever the desktop collapse setting is. */
+  [data-sidebar="rail"] .app .sidebar{padding-left:14px;padding-right:14px}
+  [data-sidebar="rail"] .app .nav-item .lock{display:inline-flex}
+  [data-sidebar="rail"] .app .side-foot-rail{display:none}
+  [data-sidebar="rail"] .app .nav-item .badge-count{position:static;min-width:22px;height:22px;font-size:12px;padding:0 7px}
   .only-mobile{display:grid}
   .overlay{position:fixed;inset:0;background:rgba(5,10,25,.5);z-index:55}
   .overlay[hidden]{display:none}

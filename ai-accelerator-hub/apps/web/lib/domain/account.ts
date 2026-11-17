@@ -10,14 +10,15 @@ import { badRequest, conflict } from '@/lib/server/errors';
 import { audit, notify } from '@/lib/server/audit';
 
 export const registerSchema = z.object({
-  name: z.string().trim().min(2, 'Enter your name.').max(100),
-  email: z.string().trim().toLowerCase().email('Enter a valid email.').max(254),
-  password: z.string().min(10, 'Use at least 10 characters.').max(200).regex(/[A-Za-z]/, 'Include a letter.').regex(/[0-9]/, 'Include a number.'),
-  birthYear: z.coerce.number().int().min(1920).max(new Date().getFullYear()),
-  inviteCode: z.string().trim().max(40).optional().or(z.literal('')),
-  guardianEmail: z.string().trim().toLowerCase().email().optional().or(z.literal('')),
+  name: z.string({ error: 'Enter your name.' }).trim().min(2, 'Enter your full name.').max(100, 'Keep your name under 100 characters.'),
+  email: z.string({ error: 'Enter your email.' }).trim().toLowerCase().email('Enter a valid email address.').max(254, 'That email is too long.'),
+  password: z.string({ error: 'Choose a password.' }).min(10, 'Use at least 10 characters.').max(200, 'Use at most 200 characters.').regex(/[A-Za-z]/, 'Include at least one letter.').regex(/[0-9]/, 'Include at least one number.'),
+  // Read the current year per request (a module-level value would go stale across New Year on a long-running server).
+  birthYear: z.coerce.number({ error: 'Enter your year of birth.' }).int('Enter a whole year, e.g. 2001.').refine(y => y >= 1920 && y <= new Date().getFullYear(), { error: 'Enter a valid year of birth.' }),
+  inviteCode: z.string().trim().max(40, 'That invite code is too long.').optional().or(z.literal('')),
+  guardianEmail: z.string().trim().toLowerCase().email('Enter a valid parent or guardian email.').optional().or(z.literal('')),
   acceptTerms: z.literal(true, { error: 'Accept the terms and privacy notice to continue.' }),
-});
+}).refine(v => !v.guardianEmail || v.guardianEmail !== v.email, { path: ['guardianEmail'], error: 'Use your parent or guardian’s email, not your own.' });
 
 export async function register(input: z.infer<typeof registerSchema>) {
   // Only the birth year is collected (data minimisation), so use the youngest age the learner could be:
@@ -56,6 +57,10 @@ export async function register(input: z.infer<typeof registerSchema>) {
     await audit(tx, { tenantId, actorUserId: user.id, action: 'user.registered', resourceType: 'User', resourceId: user.id, after: { viaInvite: !!cohortId, minor } });
     await notify(tx, tenantId, user.id, 'welcome', { title: 'Welcome to AI Accelerator Hub', body: minor ? 'Guardian consent is pending. Learning is open now; community features unlock once your guardian approves.' : 'Start with Level 1 — AI Explorer.', href: '/levels/L01_AI_EXPLORER', tone: 'gold' });
     return { userId: user.id, minor, guardianConsent: minor ? 'pending' : 'not_required' };
+  }, { maxWait: 10_000, timeout: 15_000 }).catch((e: unknown) => {
+    // Two submits racing past the findUnique check above: the unique index on email decides.
+    if ((e as { code?: string })?.code === 'P2002') throw conflict('An account with this email already exists. Try signing in.');
+    throw e;
   });
 }
 

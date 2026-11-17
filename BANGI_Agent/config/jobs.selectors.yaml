@@ -1,0 +1,13 @@
+# Hot-swappable selectors — add a site without code change
+naukri:
+  login: {username: 'input[name="email"]', password: 'input[type="password"]', submit: 'button[type="submit"]'}
+  search: {input: 'input[placeholder*="skills"]', button: 'button:has-text("Search")'}
+  apply: {button: 'button:has-text("Apply")', index: 1, confirm: 'button:has-text("Confirm")'}
+  card: '.jobTuple'
+linkedin:
+  login: {username: 'input[name="session_key"]', password: 'input[name="session_password"]', submit: 'button[type="submit"]'}
+  search: {input: 'input[aria-label*="Search"]', button: 'button[aria-label*="Search"]'}
+  apply: {button: 'button:has-text("Easy Apply")', index: 1, next: 'button:has-text("Next")', submit: 'button:has-text("Submit application")'}
+  card: '.job-card-container'
+indeed:
+  apply: {button: 'button:has-text("Apply now")', index: 1}

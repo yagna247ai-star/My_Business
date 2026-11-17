@@ -1,0 +1,6 @@
+fastapi>=0.110
+uvicorn>=0.29
+pydantic>=2.0
+requests>=2.31
+# Meta computer-use: cua-driver MCP client (from Hermes-agent)
+# pip install -e ../../Hermes-agent/hermes-agent  # provides tools.computer_use

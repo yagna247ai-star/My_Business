@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXA Letter Hub — by Yagna Akkisetty | Staying Ahead</title>
+<meta name="description" content="AXA Letter Hub by Yagna Akkisetty — Staying Ahead in an AI-first world. Weekly letters, vault, cinema & resources. Personal brand distilled from Vaibhav Sisinty, Sandeep Chaudhary & Staying Ahead.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+tailwind.config={theme:{extend:{fontFamily:{display:['"Bebas Neue"'], serif:['"Instrument Serif"'], sans:['Inter'], mono:['JetBrains Mono']},colors:{ink:'#0A0A0E', gold:'#C9A86A', gold2:'#E8D5B5', sage:'#8A9A8F', terracotta:'#B87A5A', paper:'#F8F6F0'}}}}
+</script>
+<style>
+*{scroll-behavior:smooth}
+body{background:#09090B;color:#F5F5F3}
+.grain{position:relative}
+.grain::after{content:"";position:absolute;inset:0;opacity:.04;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.staying-menu{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.nav-link{position:relative}
+.nav-link::after{content:"";position:absolute;left:0;right:0;bottom:-10px;height:2px;background:#C9A86A;transform:scaleX(0);transition:transform .25s}
+.nav-link.active::after,.nav-link:hover::after{transform:scaleX(1)}
+.mix-ink{background:#0A0A0E;color:#F5F5F3}
+.mix-paper{background:#F8F6F0;color:#0A0A0E}
+.mix-terracotta{background:#FFF6F0;color:#0A0A0E}
+.mix-sage{background:#EEF2ED;color:#0A0A0E}
+.mix-night{background:#0B1220;color:#F5F5F3}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#2A2A2E;border-radius:999px}
+</style>
+</head>
+<body class="font-sans antialiased selection:bg-gold selection:text-ink">
+
+<!-- Staying Ahead Menu — synced, cinematic -->
+<div class="fixed top-0 inset-x-0 z-50 staying-menu bg-[#08080A]/80 border-b border-white/[0.07]">
+  <div class="max-w-[1320px] mx-auto px-6 h-[68px] flex items-center justify-between gap-6">
+    <a href="#" class="flex items-center gap-3 shrink-0">
+      <div class="w-10 h-10 rounded-xl bg-gold grid place-items-center text-ink font-display tracking-[0.12em] text-[18px]">AXA</div>
+      <div class="leading-none hidden sm:block">
+        <div class="font-display tracking-[0.14em] text-[18px] text-white">AXA LETTER HUB <span class="text-gold">• YAGNA</span></div>
+        <div class="font-mono text-[10px] tracking-[0.18em] text-white/50 -mt-1">STAYING AHEAD • EST. 2026</div>
+      </div>
+      <div class="leading-none sm:hidden"><div class="font-display tracking-[0.14em] text-white">AXA • YAGNA</div></div>
+    </a>
+
+    <!-- Desktop Staying Ahead Menu -->
+    <nav class="hidden lg:flex items-center gap-7 font-mono text-[11px] tracking-[0.18em] text-white/60">
+      <a href="#letters" class="nav-link active text-white">LETTERS</a>
+      <a href="#vault" class="nav-link">VAULT</a>
+      <a href="#cinema" class="nav-link">CINEMA</a>
+      <a href="#about" class="nav-link">YAGNA</a>
+      <a href="#connect" class="nav-link">CONNECT</a>
+      <span class="w-px h-4 bg-white/15"></span>
+      <span class="hidden xl:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/10 text-white/70">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> STAYING AHEAD
+      </span>
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <a href="https://www.youtube.com/channel/UC7tChjvKFisAP_ioyksP4ng" target="_blank" class="hidden md:inline-flex bg-white text-ink px-4 py-2.5 rounded-full font-mono text-[11px] tracking-[0.12em] font-semibold hover:bg-paper transition">YOUTUBE →</a>
+      <a href="#letters" class="bg-gold text-ink px-5 py-2.5 rounded-full font-semibold text-[13px] hover:bg-gold2 transition hidden sm:inline-flex">READ LETTER</a>
+      <button id="menuBtn" class="lg:hidden w-9 h-9 rounded-full bg-white/10 grid place-items-center"><i data-lucide="menu" class="w-5 h-5"></i></button>
+    </div>
+  </div>
+  <!-- Mobile menu -->
+  <div id="mobileNav" class="hidden lg:hidden border-t border-white/10 bg-[#08080A] px-6 py-4 space-y-3 font-mono text-[12px] tracking-[0.16em] text-white/70">
+    <a href="#letters" class="block">LETTERS</a><a href="#vault" class="block">VAULT</a><a href="#cinema" class="block">CINEMA</a><a href="#about" class="block">YAGNA AKKISETTY</a><a href="#connect" class="block">CONNECT</a>
+  </div>
+  <!-- Staying Ahead sub-bar -->
+  <div class="hidden md:flex h-[36px] items-center border-t border-white/[0.06] bg-white/[0.02] overflow-x-auto">
+    <div class="max-w-[1320px] mx-auto px-6 w-full flex items-center gap-6 font-mono text-[10px] tracking-[0.16em] text-white/45 whitespace-nowrap">
+      <span class="text-gold">RESEARCH DISTILLED:</span>
+      <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-white/30"></span> Vaibhav Sisinty — Staying Ahead in AI • Minimal / Bold / Gold</span>
+      <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-terracotta"></span> Sandeep Chaudhary — Authentic • Documentary • Trust</span>
+      <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-sage"></span> Terra Aura — Sustainable Luxury • Warm • Cinematic</span>
+      <span class="ml-auto hidden xl:inline text-white/30">MIXED COLORINGS PER SECTION ↓</span>
+    </div>
+  </div>
+</div>
+
+<!-- HERO — cinematic with your enhanced sunset terrace -->
+<section class="relative min-h-[92vh] flex items-end pt-[104px] grain overflow-hidden">
+  <div class="absolute inset-0">
+    <img src="AXA_Letter_Hub_Kit/enhanced_images/hero_sunset_terrace.jpg" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2400&auto=format&fit=crop'" alt="AXA Hero" class="w-full h-full object-cover">
+    <div class="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/60 to-[#09090B]/25"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-[#09090B]/70 via-transparent to-[#09090B]/20"></div>
+    <div class="absolute top-[104px] inset-x-0 h-[8vh] bg-black/55"></div>
+    <div class="absolute bottom-0 inset-x-0 h-[8vh] bg-black/55"></div>
+  </div>
+
+  <div class="relative z-10 max-w-[1320px] mx-auto w-full px-6 pb-12 pt-10">
+    <div class="grid lg:grid-cols-[1.2fr_0.8fr] gap-10 items-end">
+      <div>
+        <div class="inline-flex flex-wrap items-center gap-3 mb-6">
+          <span class="font-mono text-[11px] tracking-[0.2em] text-gold border border-gold/30 px-3 py-1 rounded-full bg-gold/10">AXA LETTER HUB • VOL. 01 — PERSONAL BRAND</span>
+          <span class="font-mono text-[11px] tracking-[0.16em] text-white/60 hidden sm:inline">by Yagna Akkisetty • Staying Ahead</span>
+        </div>
+        <h1 class="font-display leading-[0.85] text-[52px] sm:text-[72px] lg:text-[92px] tracking-[-0.02em]">
+          <span class="text-white block">STAYING</span>
+          <span class="text-white block">AHEAD —</span>
+          <span class="text-gold block">IN PUBLIC.</span>
+        </h1>
+        <p class="mt-6 max-w-[580px] font-serif text-[19px] leading-[1.5] text-white/80 italic">
+          Weekly letters from Yagna Akkisetty. The vault, the cinema, and the work — distilled from Vaibhav Sisinty & Sandeep Chaudhary, built cinematic for AXA.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="#letters" class="inline-flex items-center gap-2 bg-white text-ink px-7 py-3.5 rounded-full font-semibold text-[14px] hover:bg-paper transition"><i data-lucide="mail" class="w-4 h-4"></i> READ LATEST LETTER</a>
+          <a href="#vault" class="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white px-7 py-3.5 rounded-full font-semibold text-[14px] backdrop-blur hover:bg-white/15"><i data-lucide="layers" class="w-4 h-4"></i> OPEN VAULT</a>
+          <button onclick="navigator.clipboard.writeText(location.href);toast('AXA Letter Hub link copied')" class="inline-flex items-center gap-2 border border-white/15 text-white/80 px-6 py-3.5 rounded-full font-mono text-[11px] tracking-[0.12em] hover:bg-white/10"><i data-lucide="share-2" class="w-4 h-4"></i> SHARE</button>
+        </div>
+        <div class="mt-10 grid grid-cols-3 gap-6 max-w-[520px] border-t border-white/10 pt-6">
+          <div><div class="font-display text-[28px] text-white leading-none">52</div><div class="font-mono text-[10px] tracking-[0.15em] text-white/50">LETTERS / YEAR</div></div>
+          <div><div class="font-display text-[28px] text-gold leading-none">47+</div><div class="font-mono text-[10px] tracking-[0.15em] text-white/50">RESOURCES</div></div>
+          <div><div class="font-display text-[28px] text-white leading-none">CINEMA</div><div class="font-mono text-[10px] tracking-[0.15em] text-white/50">GRADED 4K</div></div>
+        </div>
+      </div>
+
+      <!-- Yagna card + latest letter -->
+      <div class="space-y-4">
+        <div class="rounded-[24px] overflow-hidden bg-[#141416] border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,.6)]">
+          <div class="aspect-[16/10] relative overflow-hidden bg-black group cursor-pointer" onclick="document.getElementById('letters').scrollIntoView({behavior:'smooth'})">
+            <img src="AXA_Letter_Hub_Kit/enhanced_images/yoga_meditation_space.jpg" onerror="this.src='https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1200&auto=format&fit=crop'" class="w-full h-full object-cover opacity-85 group-hover:scale-[1.02] transition duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+            <div class="absolute top-4 left-4 flex gap-2">
+              <span class="bg-gold text-ink font-mono text-[10px] tracking-[0.14em] px-3 py-1 rounded-full font-semibold">LATEST LETTER #12</span>
+              <span class="bg-black/60 border border-white/15 backdrop-blur text-white font-mono text-[10px] px-2.5 py-1 rounded-full">AUG 10 • 4 MIN</span>
+            </div>
+            <div class="absolute bottom-0 p-6">
+              <div class="font-mono text-[11px] tracking-[0.14em] text-gold">AXA LETTER — STAYING AHEAD</div>
+              <div class="font-semibold text-white text-[17px] leading-tight mt-1">The Cinematic System: How I Stay Ahead Without Burnout</div>
+              <div class="font-mono text-[11px] text-white/60 mt-1">By Yagna Akkisetty • 1.4k reads • Vault inside</div>
+            </div>
+          </div>
+          <div class="p-4 flex items-center justify-between bg-[#0F0F11]">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-gold grid place-items-center font-display text-ink">YA</div>
+              <div class="leading-tight"><div class="text-white text-[13px] font-medium">Yagna Akkisetty</div><div class="font-mono text-[10px] tracking-[0.12em] text-white/40">AXA Letter Hub • Personal Brand</div></div>
+            </div>
+            <a href="mailto:aiachub247@gmail.com" class="w-9 h-9 rounded-full bg-white/10 grid place-items-center hover:bg-white/15"><i data-lucide="mail" class="w-4 h-4 text-white/80"></i></a>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 font-mono text-[11px] tracking-[0.12em] text-white/40">
+          <span class="w-8 h-px bg-white/20"></span> RESEARCH: Vaibhav Sisinty × Sandeep Chaudhary → AXA
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Letters — MIX INK+GOLD (Staying Ahead style) -->
+<section id="letters" class="mix-ink border-y border-white/10">
+  <div class="max-w-[1320px] mx-auto px-6 py-16 lg:py-20">
+    <div class="flex flex-wrap items-end justify-between gap-6 mb-10">
+      <div>
+        <div class="font-mono text-[11px] tracking-[0.22em] text-gold">— 01 / LETTERS • INK + GOLD</div>
+        <h2 class="font-display text-[44px] lg:text-[56px] leading-[0.9]">WEEKLY <span class="font-serif italic font-normal text-gold">LETTERS</span></h2>
+        <p class="font-serif italic text-[16px] text-white/55 mt-2 max-w-[540px]">Staying Ahead, written. One idea, one system, one vault drop — every Monday.</p>
+      </div>
+      <div class="flex bg-white/[0.06] border border-white/10 rounded-full p-1">
+        <button class="px-4 py-1.5 rounded-full bg-white text-ink text-[12px] font-medium">All</button>
+        <button class="px-4 py-1.5 rounded-full text-white/60 text-[12px]">AI</button>
+        <button class="px-4 py-1.5 rounded-full text-white/60 text-[12px]">System</button>
+        <button class="px-4 py-1.5 rounded-full text-white/60 text-[12px]">Brand</button>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-12 gap-6">
+      <article class="lg:col-span-7 rounded-[20px] overflow-hidden bg-[#141416] border border-white/10 group relative">
+        <span class="absolute top-4 left-4 z-10 bg-gold text-ink font-mono text-[10px] tracking-[0.14em] px-3 py-1 rounded-full font-semibold">FEATURED • AUG 10</span>
+        <img src="AXA_Letter_Hub_Kit/enhanced_images/interior_living.jpg" onerror="this.src='https://images.unsplash.com/photo-1497366811353-26cc3d057fa7?q=80&w=1400&auto=format&fit=crop'" class="h-[340px] w-full object-cover opacity-70 group-hover:opacity-80 transition">
+        <div class="absolute inset-0 bg-gradient-to-t from-[#141416] via-[#141416]/30 to-transparent"></div>
+        <div class="absolute bottom-0 p-7">
+          <div class="font-mono text-[11px] tracking-[0.16em] text-gold">AXA LETTER #12 — STAYING AHEAD</div>
+          <h3 class="font-display text-[28px] leading-none text-white mt-2">Rebuilt the Vault for Public Sharing — 6x Faster, Cinematic.</h3>
+          <p class="text-white/65 text-[14px] mt-3 max-w-[560px]">Migrated 47 resources, re-graded every visual with your enhanced business images. Like Vaibhav — minimal. Like Sandeep — trusted.</p>
+          <div class="mt-5 flex gap-2 font-mono text-[11px]"><span class="bg-white text-ink px-3 py-1.5 rounded-full">READ LETTER →</span><span class="border border-white/20 text-white px-3 py-1.5 rounded-full">4 MIN • 1.4K READS</span></div>
+        </div>
+      </article>
+      <div class="lg:col-span-5 grid gap-4">
+        <article class="flex gap-4 p-4 rounded-[16px] bg-white/[0.06] border border-white/10 hover:border-white/20 transition">
+          <img src="AXA_Letter_Hub_Kit/enhanced_images/detail_craft.jpg" onerror="this.src='https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=300&auto=format&fit=crop'" class="w-[112px] h-[84px] rounded-[10px] object-cover flex-shrink-0">
+          <div><div class="font-mono text-[10px] tracking-[0.14em] text-gold">LETTER #11 • AUG 03</div><h4 class="text-white font-medium text-[14px] leading-tight mt-1">The Staying Ahead Menu — Why Navigation Is Strategy</h4><div class="font-mono text-[11px] text-white/40 mt-2">3 min • Yagna</div></div>
+        </article>
+        <article class="flex gap-4 p-4 rounded-[16px] bg-white/[0.06] border border-white/10">
+          <img src="AXA_Letter_Hub_Kit/enhanced_images/workspace_detail.jpg" onerror="this.src='https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=300&auto=format&fit=crop'" class="w-[112px] h-[84px] rounded-[10px] object-cover">
+          <div><div class="font-mono text-[10px] tracking-[0.14em] text-gold">LETTER #10 • JUL 27</div><h4 class="text-white font-medium text-[14px] leading-tight mt-1">Mixing Colorings: How Each Section Feels Different</h4><div class="font-mono text-[11px] text-white/40 mt-2">4 min</div></div>
+        </article>
+        <article class="flex gap-4 p-4 rounded-[16px] bg-white/[0.06] border border-white/10">
+          <div class="w-[112px] h-[84px] rounded-[10px] bg-gold/20 border border-gold/20 grid place-items-center flex-shrink-0"><i data-lucide="sparkles" class="w-6 h-6 text-gold"></i></div>
+          <div><div class="font-mono text-[10px] tracking-[0.14em] text-emerald-300">VAULT DROP • JUL 20</div><h4 class="text-white font-medium text-[14px] leading-tight mt-1">From Vaibhav to AXA: Distilling the Brand Kit</h4><div class="font-mono text-[11px] text-white/40 mt-2">Letter + brand sheet</div></div>
+        </article>
+        <a href="#vault" class="flex items-center justify-center gap-2 py-3 rounded-full border border-white/15 text-white font-mono text-[11px] tracking-[0.14em] hover:bg-white/5">VIEW ALL LETTERS <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VAULT — MIX TERRACOTTA / PAPER -->
+<section id="vault" class="mix-terracotta">
+  <div class="max-w-[1320px] mx-auto px-6 py-16 lg:py-20">
+    <div class="flex flex-wrap items-start justify-between gap-6">
+      <div>
+        <div class="font-mono text-[11px] tracking-[0.22em] text-terracotta">— 02 / THE VAULT • PAPER + TERRACOTTA</div>
+        <h2 class="font-display text-[44px] lg:text-[56px] leading-[0.9]">EVERYTHING <span class="font-serif italic font-normal text-terracotta">I USE</span></h2>
+        <p class="font-serif italic text-[16px] text-black/60 mt-2 max-w-[540px]">Enhanced with your business visuals — cinematic, warm, and public by default.</p>
+      </div>
+      <div class="inline-flex items-center gap-2 bg-ink text-white px-4 py-2 rounded-full font-mono text-[11px] tracking-[0.14em]"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> 47 RESOURCES • YAGNA'S STACK</div>
+    </div>
+
+    <div class="mt-8 flex flex-wrap gap-2">
+      <button class="vaultFilter active px-4 py-2 rounded-full bg-ink text-white font-mono text-[11px] tracking-[0.14em]" data-vault="all">ALL</button>
+      <button class="vaultFilter px-4 py-2 rounded-full bg-white border border-black/10 font-mono text-[11px] tracking-[0.14em]" data-vault="notion">NOTION</button>
+      <button class="vaultFilter px-4 py-2 rounded-full bg-white border border-black/10 font-mono text-[11px] tracking-[0.14em]" data-vault="video">VIDEO</button>
+      <button class="vaultFilter px-4 py-2 rounded-full bg-white border border-black/10 font-mono text-[11px] tracking-[0.14em]" data-vault="playbook">PLAYBOOK</button>
+    </div>
+
+    <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div data-vaultcat="video" class="vaultCard group rounded-[18px] overflow-hidden bg-white border border-black/10 shadow-[0_8px_30px_rgba(0,0,0,.06)] hover:shadow-[0_16px_40px_rgba(0,0,0,.1)] transition">
+        <div class="relative h-[168px] overflow-hidden bg-black">
+          <img src="AXA_Letter_Hub_Kit/enhanced_images/hero_sunset_terrace.jpg" class="w-full h-full object-cover opacity-90 group-hover:scale-[1.03] transition duration-500">
+          <span class="absolute top-3 left-3 bg-white/90 backdrop-blur font-mono text-[10px] tracking-[0.14em] px-2.5 py-1 rounded-full">VIDEO • 18:42</span>
+          <span class="absolute top-3 right-3 bg-gold text-ink font-mono text-[10px] px-2 py-1 rounded-full font-semibold">FREE</span>
+        </div>
+        <div class="p-5">
+          <div class="font-mono text-[10px] tracking-[0.14em] text-black/40">AXA CINEMA • EP 01</div>
+          <h3 class="font-semibold text-[15px] leading-tight mt-1">The AXA Operating System — End-to-End</h3>
+          <p class="text-[13px] text-black/60 mt-2">From Vaibhav's AI-first workflow → Yagna's cinematic cut.</p>
+          <div class="mt-4 flex gap-2"><a href="#cinema" class="flex-1 bg-ink text-white text-center py-2.5 rounded-full font-mono text-[11px] tracking-[0.12em]">WATCH NOW</a></div>
+        </div>
+      </div>
+
+      <div data-vaultcat="notion" class="vaultCard rounded-[18px] overflow-hidden bg-white border border-black/10 shadow-[0_8px_30px_rgba(0,0,0,.06)]">
+        <div class="h-[168px] bg-gradient-to-br from-[#1A1A1E] to-[#2A2420] p-6 flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-terracotta/20 blur-2xl"></div>
+          <span class="bg-white text-ink font-mono text-[10px] px-2.5 py-1 rounded-full">NOTION • DUPLICATE</span>
+          <div><div class="text-white font-display text-[22px] leading-none">AXA CONTENT OS</div><div class="font-mono text-[11px] text-white/60 mt-1">LETTER • VAULT • CALENDAR</div></div>
+        </div>
+        <div class="p-5">
+          <h3 class="font-semibold text-[15px]">Notion — AXA Content OS</h3>
+          <p class="text-[13px] text-black/60 mt-1">Plan 30 days in 90 mins — Staying Ahead style.</p>
+          <div class="mt-4 flex gap-2"><a href="#" onclick="toast('Duplicate link ready');return false" class="flex-1 bg-terracotta text-white text-center py-2.5 rounded-full font-semibold text-[12px]">DUPLICATE FREE</a><span class="font-mono text-[11px] text-black/40 grid place-items-center">2.1k • ★4.9</span></div>
+        </div>
+      </div>
+
+      <div data-vaultcat="playbook" class="vaultCard rounded-[18px] overflow-hidden bg-white border border-black/10">
+        <div class="h-[168px] bg-[#FFFEF8] p-6 flex flex-col border-b border-black/5">
+          <div class="font-mono text-[10px] tracking-[0.16em] text-black/40 flex items-center gap-2"><i data-lucide="book-open" class="w-4 h-4"></i> PLAYBOOK • PDF • 24 PAGES</div>
+          <div class="mt-4 font-serif text-[20px] leading-tight">The AXA Story<br><span class="italic text-terracotta">Engine Playbook</span></div>
+          <div class="mt-auto flex gap-1.5"><span class="h-1.5 flex-1 rounded-full bg-ink"></span><span class="h-1.5 flex-1 rounded-full bg-terracotta"></span><span class="h-1.5 flex-1 rounded-full bg-sage"></span></div>
+        </div>
+        <div class="p-5">
+          <h3 class="font-semibold text-[15px]">Story Engine — Hook → Payoff</h3>
+          <p class="text-[13px] text-black/60 mt-2">Research distilled: Vaibhav's hook • Sandeep's trust.</p>
+          <div class="mt-4 flex gap-2"><a href="#" class="flex-1 border border-ink text-ink text-center py-2.5 rounded-full font-mono text-[11px]">DOWNLOAD PDF</a></div>
+        </div>
+      </div>
+
+      <div data-vaultcat="notion" class="vaultCard rounded-[18px] overflow-hidden bg-white border border-black/10">
+        <div class="h-[168px] p-0 flex">
+          <div class="flex-1 p-5"><div class="font-mono text-[10px] text-black/40">TEMPLATE • FIGMA</div><div class="font-semibold text-[17px] leading-tight mt-2">Cinematic<br>Thumbnail Kit</div><div class="mt-3 inline-flex font-mono text-[10px] bg-ink text-white px-2.5 py-1 rounded-full">12 LAYOUTS</div></div>
+          <div class="w-[46%] bg-[#EEEDE8] border-l border-black/10 p-3 grid grid-cols-2 gap-2"><div class="rounded-lg bg-ink h-[48px]"></div><div class="rounded-lg bg-terracotta h-[48px]"></div><div class="rounded-lg bg-white border border-black/10 h-[48px]"></div><div class="rounded-lg bg-sage h-[48px]"></div></div>
+        </div>
+        <div class="p-5 pt-0 mt-3"><a href="#" onclick="toast('Figma link copied');return false" class="block bg-ink text-white text-center py-2.5 rounded-full font-mono text-[11px] tracking-[0.12em]">GET FIGMA FILE</a></div>
+      </div>
+
+      <div data-vaultcat="video" class="vaultCard rounded-[18px] overflow-hidden bg-white border border-black/10">
+        <div class="relative h-[168px] overflow-hidden"><img src="AXA_Letter_Hub_Kit/enhanced_images/yoga_meditation_space.jpg" class="w-full h-full object-cover"><span class="absolute top-3 left-3 bg-white/90 font-mono text-[10px] px-2.5 py-1 rounded-full">VIDEO • 09:12</span></div>
+        <div class="p-5"><h3 class="font-semibold text-[15px] leading-tight">Editing Like a Film — Cut Rules</h3><p class="text-[13px] text-black/60 mt-2">Cuts, sound, Staying Ahead pacing.</p><div class="mt-4 flex gap-2"><a href="#cinema" class="flex-1 border border-black/15 text-center py-2.5 rounded-full font-mono text-[11px]">WATCH</a><span class="px-3 grid place-items-center font-mono text-[11px] text-black/40">8.7k</span></div></div>
+      </div>
+
+      <div class="vaultCard rounded-[18px] overflow-hidden bg-gradient-to-br from-terracotta to-[#8A4A2B] p-6 text-white flex flex-col justify-between">
+        <div class="font-mono text-[10px] tracking-[0.16em] opacity-80">CHECKLIST • NOTION + PDF</div>
+        <div class="font-display text-[26px] leading-none">AXA LAUNCH<br>CHECKLIST</div>
+        <div class="font-mono text-[11px] opacity-80">47 STEPS • PRINTABLE</div>
+        <a href="#" onclick="toast('Checklist downloaded');return false" class="mt-4 bg-white text-terracotta text-center py-2.5 rounded-full font-semibold text-[12px]">DOWNLOAD</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CINEMA — MIX NIGHT (deep cinematic) -->
+<section id="cinema" class="mix-night border-y border-white/10">
+  <div class="max-w-[1320px] mx-auto px-6 py-16 lg:py-20">
+    <div class="flex flex-wrap items-end justify-between gap-6 mb-8">
+      <div>
+        <div class="font-mono text-[11px] tracking-[0.22em] text-gold">— 03 / CINEMA • NIGHT + GOLD</div>
+        <h2 class="font-display text-[44px] lg:text-[56px] leading-[0.9]">THE <span class="font-serif italic font-normal text-gold">SCREENING ROOM</span></h2>
+        <p class="font-serif italic text-[16px] text-white/50 mt-2">Every video graded with your enhanced visuals. Staying Ahead cinema.</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="https://www.youtube.com/channel/UC7tChjvKFisAP_ioyksP4ng" target="_blank" class="bg-white text-ink px-5 py-2.5 rounded-full font-semibold text-[13px] flex items-center gap-2"><i data-lucide="youtube" class="w-4 h-4"></i> YOUTUBE</a>
+        <button onclick="toast('Subscribed')" class="border border-white/15 text-white px-5 py-2.5 rounded-full font-mono text-[11px] tracking-[0.12em]">SUBSCRIBE</button>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-[1.7fr_0.9fr] gap-6">
+      <div class="rounded-[20px] overflow-hidden bg-black border border-white/10">
+        <div class="aspect-video relative bg-[#111113] group cursor-pointer" onclick="openVideo()">
+          <img id="mainThumb" src="AXA_Letter_Hub_Kit/enhanced_images/hero_sunset_terrace.jpg" onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1600&auto=format&fit=crop'" class="w-full h-full object-cover opacity-90">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+          <div class="absolute inset-0 grid place-items-center"><div class="w-[84px] h-[84px] rounded-full bg-white/95 grid place-items-center shadow-[0_20px_60px_rgba(0,0,0,.5)] group-hover:scale-105 transition"><i data-lucide="play" class="w-8 h-8 fill-ink text-ink ml-1"></i></div></div>
+          <div class="absolute bottom-0 inset-x-0 h-1 bg-white/20"><div class="h-full w-[32%] bg-gold"></div></div>
+          <div class="absolute top-4 left-4 bg-red-600 text-white font-mono text-[10px] px-3 py-1 rounded-full">NOW PLAYING</div>
+          <div class="absolute top-4 right-4 bg-black/60 backdrop-blur border border-white/15 text-white font-mono text-[11px] px-3 py-1 rounded-full">12:42 / 18:20</div>
+        </div>
+        <div class="p-6 bg-[#0F1419]">
+          <div class="font-mono text-[11px] tracking-[0.16em] text-gold">S01E12 • AXA LETTER CINEMA • 4K</div>
+          <h3 class="font-semibold text-white text-[20px] leading-tight mt-1">The Staying Ahead System — How Yagna Ships Weekly</h3>
+          <p class="text-white/60 text-[14px] mt-2">Full teardown: Vaibhav's AI-first engine × Sandeep's trust layer × AXA cinematic grade.</p>
+          <div class="mt-4 flex flex-wrap gap-2 font-mono text-[11px]"><span class="px-3 py-1.5 rounded-full bg-white text-ink">CHAPTERS: 06</span><span class="px-3 py-1.5 rounded-full border border-white/15 text-white/60">TRANSCRIPT</span><span class="px-3 py-1.5 rounded-full border border-white/15 text-white/60">VAULT LINKED</span></div>
+        </div>
+      </div>
+      <div class="space-y-3">
+        <div class="font-mono text-[11px] tracking-[0.16em] text-white/40">UP NEXT • AUTOPLAY</div>
+        <div id="playlist" class="space-y-3"></div>
+        <a href="#" class="flex items-center justify-center gap-2 py-3 rounded-full bg-white text-ink font-mono text-[11px] tracking-[0.14em] font-semibold">BROWSE FULL CINEMA <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT YAGNA — MIX SAGE -->
+<section id="about" class="mix-sage">
+  <div class="max-w-[1320px] mx-auto px-6 py-16 lg:py-20 grid lg:grid-cols-12 gap-10 items-center">
+    <div class="lg:col-span-5">
+      <div class="relative rounded-[20px] overflow-hidden border border-black/10 shadow-[0_20px_60px_rgba(0,0,0,.12)]">
+        <img src="AXA_Letter_Hub_Kit/enhanced_images/interior_living.jpg" onerror="this.src='https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop'" class="w-full h-[440px] object-cover">
+        <div class="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+          <div class="font-display text-[28px] leading-none text-white">YAGNA AKKISETTY</div>
+          <div class="font-mono text-[11px] tracking-[0.14em] text-white/70">FOUNDER • AXA LETTER HUB • STAYING AHEAD</div>
+        </div>
+      </div>
+      <div class="mt-4 grid grid-cols-3 gap-3">
+        <img src="AXA_Letter_Hub_Kit/enhanced_images/detail_craft.jpg" class="h-[80px] w-full object-cover rounded-xl border border-black/10">
+        <img src="AXA_Letter_Hub_Kit/enhanced_images/workspace_detail.jpg" class="h-[80px] w-full object-cover rounded-xl border border-black/10">
+        <img src="AXA_Letter_Hub_Kit/enhanced_images/yoga_meditation_space.jpg" class="h-[80px] w-full object-cover rounded-xl border border-black/10">
+      </div>
+    </div>
+    <div class="lg:col-span-7">
+      <div class="font-mono text-[11px] tracking-[0.22em] text-sage">— 04 / YAGNA • SAGE + PAPER</div>
+      <h2 class="font-display text-[40px] lg:text-[52px] leading-[0.9] text-ink mt-2">WHY <span class="font-serif italic font-normal text-[#5A6B5E]">AXA LETTER HUB?</span></h2>
+      <div class="mt-6 space-y-4 font-serif text-[17px] leading-[1.6] text-black/70">
+        <p>AXA Letter Hub is my personal brand — <span class="text-ink font-medium not-italic">distilled from Vaibhav Sisinty (Staying Ahead in AI), Sandeep Chaudhary (authentic storytelling), and Terra Aura's sustainable luxury visuals.</span></p>
+        <p class="italic text-black/60">Vaibhav taught minimal bold systems. Sandeep teaches trust through real moments. I mix both — cinematic letters, warm vaults, night cinema, sage about.</p>
+        <p class="font-sans not-italic text-[15px] text-black/60">Each section has its own coloring — ink for letters (authority), terracotta for vault (warmth), night for cinema (focus), sage for about (calm). Staying Ahead menu syncs them all.</p>
+      </div>
+      <div class="mt-8 p-5 rounded-[16px] bg-white border border-black/10">
+        <div class="font-mono text-[11px] tracking-[0.14em] text-terracotta">BRAND RESEARCH DISTILLED</div>
+        <div class="mt-3 grid grid-cols-3 gap-4 text-[12px] leading-relaxed">
+          <div><div class="font-semibold text-ink">Vaibhav Sisinty</div><div class="text-black/60">Black • Gold • Bebas • Mono • AI-first</div></div>
+          <div><div class="font-semibold text-ink">Sandeep Chaudhary</div><div class="text-black/60">Documentary • Warm • Credibility</div></div>
+          <div><div class="font-semibold text-ink">AXA Letter Hub</div><div class="text-black/60">Cinematic • Mixed palettes • Yagna</div></div>
+        </div>
+      </div>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a href="#letters" class="bg-ink text-white px-6 py-3 rounded-full font-semibold text-[13px]">READ LETTERS</a>
+        <a href="mailto:aiachub247@gmail.com" class="border border-black/15 px-6 py-3 rounded-full font-mono text-[11px] tracking-[0.14em]">aiachub247@gmail.com →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONNECT — MIX INK -->
+<section id="connect" class="mix-ink">
+  <div class="max-w-[1320px] mx-auto px-6 py-12">
+    <div class="rounded-[24px] bg-gradient-to-br from-gold via-[#D8B98C] to-[#9A7B4A] p-[1px]">
+      <div class="rounded-[23px] bg-[#0A0A0E] p-8 lg:p-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+        <div>
+          <div class="font-mono text-[11px] tracking-[0.2em] text-gold">— STAYING AHEAD LETTER</div>
+          <h3 class="font-display text-[30px] lg:text-[36px] leading-none text-white mt-2">GET THE <span class="text-gold">AXA LETTER</span> EVERY MONDAY</h3>
+          <p class="text-white/60 text-[14px] mt-2 max-w-[520px]">One letter. One vault drop. One cinema cut. Staying Ahead, in your inbox.</p>
+        </div>
+        <form onsubmit="event.preventDefault();toast('Welcome to AXA — check aiachub247@gmail.com');this.reset()" class="flex w-full lg:w-auto gap-2">
+          <input required type="email" placeholder="your@email.com" class="flex-1 lg:w-[320px] bg-white/10 border border-white/15 rounded-full px-5 py-3.5 text-white placeholder:text-white/40 focus:outline-none focus:border-gold/50">
+          <button class="bg-gold text-ink px-7 py-3.5 rounded-full font-semibold text-[13px] whitespace-nowrap hover:bg-gold2">JOIN 4.2K+</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="mix-ink border-t border-white/10">
+  <div class="max-w-[1320px] mx-auto px-6 py-10">
+    <div class="flex flex-col lg:flex-row justify-between gap-8">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gold grid place-items-center text-ink font-display">AXA</div>
+          <span class="font-display tracking-[0.14em] text-white">AXA LETTER HUB — YAGNA AKKISETTY</span>
+        </div>
+        <p class="text-white/50 text-[13px] mt-3 max-w-[480px]">Staying Ahead menu • Mixed colorings per section • Enhanced with your business visuals. Built cinematic. Shared publicly.</p>
+        <div class="mt-4 flex gap-2">
+          <a href="https://www.youtube.com/channel/UC7tChjvKFisAP_ioyksP4ng" target="_blank" class="w-9 h-9 rounded-full bg-white/10 grid place-items-center hover:bg-white/15"><i data-lucide="youtube" class="w-4 h-4 text-white/70"></i></a>
+          <a href="mailto:aiachub247@gmail.com" class="w-9 h-9 rounded-full bg-white/10 grid place-items-center hover:bg-white/15"><i data-lucide="mail" class="w-4 h-4 text-white/70"></i></a>
+          <a href="#" class="w-9 h-9 rounded-full bg-white/10 grid place-items-center hover:bg-white/15"><i data-lucide="instagram" class="w-4 h-4 text-white/70"></i></a>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-8 font-mono text-[11px] tracking-[0.14em]">
+        <div><div class="text-white mb-3">STAYING AHEAD MENU</div><div class="space-y-2 text-white/50"><a href="#letters" class="block hover:text-white">Letters</a><a href="#vault" class="block hover:text-white">Vault</a><a href="#cinema" class="block hover:text-white">Cinema</a><a href="#about" class="block hover:text-white">Yagna</a></div></div>
+        <div><div class="text-white mb-3">RESEARCH</div><div class="space-y-2 text-white/50"><a href="#" class="block">Vaibhav Sisinty</a><a href="#" class="block">Sandeep Chaudhary</a><a href="#" class="block">Terra Aura Visuals</a></div></div>
+        <div><div class="text-white mb-3">CONNECT</div><div class="space-y-2 text-white/50"><a href="mailto:aiachub247@gmail.com" class="block">aiachub247@gmail.com</a><a href="https://www.youtube.com/channel/UC7tChjvKFisAP_ioyksP4ng" target="_blank" class="block">YouTube • AXA</a></div></div>
+      </div>
+    </div>
+    <div class="mt-10 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-3 font-mono text-[11px] tracking-[0.12em] text-white/30">
+      <span>© 2026 AXA LETTER HUB • YAGNA AKKISETTY — STAYING AHEAD, CINEMATIC.</span>
+      <span>ENHANCED BUSINESS IMAGES • MIXED COLORINGS • RESEARCH-BASED BRAND KIT</span>
+    </div>
+  </div>
+</footer>
+
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-ink border border-white/15 text-white px-5 py-3 rounded-full font-mono text-[12px] shadow-[0_20px_60px_rgba(0,0,0,.5)] opacity-0 pointer-events-none transition z-50 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i> <span id="toastMsg">Copied</span></div>
+<div id="videoModal" class="fixed inset-0 z-50 hidden"><div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeVideo()"></div><div class="relative max-w-[960px] mx-auto mt-[5vh] p-4"><div class="rounded-[16px] overflow-hidden bg-black border border-white/10"><div class="aspect-video bg-[#111113] grid place-items-center relative"><img id="modalThumb" src="" class="absolute inset-0 w-full h-full object-cover opacity-60"><div class="relative text-center p-8"><div class="w-16 h-16 rounded-full bg-white grid place-items-center mx-auto"><i data-lucide="play" class="w-7 h-7 fill-ink ml-1"></i></div><div class="text-white font-semibold mt-4">AXA Cinema Player</div><div class="text-white/60 text-[13px] mt-1">Replace with youtube.com/embed/YOUR_ID</div></div><button onclick="closeVideo()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 border border-white/20 grid place-items-center"><i data-lucide="x" class="w-5 h-5 text-white"></i></button></div></div></div></div>
+
+<script>
+lucide.createIcons();
+const toastEl=document.getElementById('toast'), toastMsg=document.getElementById('toastMsg');
+function toast(m){toastMsg.textContent=m;toastEl.style.opacity='1';setTimeout(()=>toastEl.style.opacity='0',2200)}
+document.getElementById('menuBtn')?.addEventListener('click',()=>document.getElementById('mobileNav').classList.toggle('hidden'))
+// staying ahead active nav
+const navLinks=document.querySelectorAll('.nav-link');
+const sections=['letters','vault','cinema','about','connect'];
+window.addEventListener('scroll',()=>{
+  let cur='letters';
+  sections.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && window.scrollY >= el.offsetTop - 140) cur=id;
+  });
+  navLinks.forEach(a=>a.classList.toggle('active', a.getAttribute('href')==='#'+cur));
+});
+// vault filter
+document.querySelectorAll('.vaultFilter').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.vaultFilter').forEach(x=>{x.classList.remove('active','bg-ink','text-white');x.classList.add('bg-white','border','border-black/10')});
+    b.classList.add('active','bg-ink','text-white');b.classList.remove('bg-white','border','border-black/10');
+    const f=b.dataset.vault;
+    document.querySelectorAll('.vaultCard').forEach(c=>c.style.display=(f==='all'||c.dataset.vaultcat===f)?'':'none');
+  });
+});
+const playlist=[
+ {title:"The 90-Minute Staying Ahead System", dur:"09:12", views:"8.7k", img:"AXA_Letter_Hub_Kit/enhanced_images/yoga_meditation_space.jpg"},
+ {title:"Mixing Colorings — Why Each Section Feels Different", dur:"07:44", views:"12.1k", img:"AXA_Letter_Hub_Kit/enhanced_images/interior_living.jpg"},
+ {title:"Vault Tour — Every Resource Explained", dur:"11:03", views:"6.3k", img:"AXA_Letter_Hub_Kit/enhanced_images/hero_sunset_terrace.jpg"},
+];
+const plEl=document.getElementById('playlist');
+playlist.forEach(p=>{
+  const d=document.createElement('button');
+  d.className="w-full flex gap-3 p-3 rounded-[14px] bg-white/[0.06] border border-white/10 hover:border-white/20 text-left transition";
+  d.innerHTML=`<img src="${p.img}" onerror="this.src='https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=400&auto=format&fit=crop'" class="w-[96px] h-[64px] rounded-[10px] object-cover flex-shrink-0"><div class="min-w-0"><div class="font-mono text-[10px] tracking-[0.12em] text-white/50">${p.dur} • ${p.views}</div><div class="text-white text-[13px] font-medium leading-tight mt-1 line-clamp-2">${p.title}</div></div>`;
+  d.onclick=()=>{document.getElementById('mainThumb').src=p.img;toast('Now playing: '+p.title)};
+  plEl.appendChild(d);
+});
+function openVideo(){document.getElementById('videoModal').classList.remove('hidden');document.body.style.overflow='hidden';lucide.createIcons()}
+function closeVideo(){document.getElementById('videoModal').classList.add('hidden');document.body.style.overflow=''}
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Sprout Kingdom — Seedling Knight Adventure</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:#5c94fc;overflow:hidden;font-family:monospace}
+  #gameWrap{display:flex;justify-content:center;align-items:center;height:100%;background:#5c94fc}
+  canvas{image-rendering:pixelated;image-rendering:crisp-edges;background:#5c94fc;display:block;box-shadow:0 0 0 4px #000}
+  #touchControls{position:fixed;bottom:0;left:0;right:0;display:none;justify-content:space-between;padding:12px;pointer-events:none}
+  #touchControls div{display:flex;gap:8px;pointer-events:auto}
+  #touchControls button{width:56px;height:56px;border-radius:12px;border:3px solid #000;background:rgba(255,255,255,0.85);font-size:20px;font-weight:bold;touch-action:none;user-select:none}
+  #touchControls button:active{background:#fff}
+  @media(max-width:900px),(pointer:coarse){#touchControls{display:flex}}
+  #muteBtn{position:fixed;top:12px;right:12px;z-index:10;background:#000;color:#fff;border:2px solid #fff;padding:6px 12px;font-family:monospace;font-size:12px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="gameWrap"><canvas id="game" width="432" height="240"></canvas></div>
+<div id="touchControls">
+  <div><button data-btn="left">◀</button><button data-btn="right">▶</button></div>
+  <div><button data-btn="run">B</button><button data-btn="jump">A</button></div>
+</div>
+<button id="muteBtn">🔊</button>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

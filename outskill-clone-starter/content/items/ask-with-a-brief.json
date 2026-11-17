@@ -1,0 +1,38 @@
+{
+  "id": "ask-with-a-brief",
+  "kind": "lesson",
+  "title": "Ask with a brief, not a compliment",
+  "summary": "Replace impressive-sounding role prompts with four lines you can check.",
+  "level": 1,
+  "tool": "Any chat app",
+  "roles": ["all"],
+  "minutes": 12,
+  "difficulty": "beginner",
+  "outcome": "Write a four-line brief that another person could evaluate without guessing.",
+  "sections": [
+    {
+      "title": "Why “act like an expert” adds nothing",
+      "body": "A role instruction changes tone, not access. It does not give the model your policy, your data or your standard. If the task fails, a role prompt gives you nothing to repair.\n\nA brief gives you four things you can check: the task, the source, the audience and the shape of the output."
+    },
+    {
+      "title": "The four-line brief",
+      "body": "```text\nTask: Turn the eight messages below into a triage table.\nSource: Use only the messages in this chat. Do not add outside facts.\nAudience: A shift supervisor who has 30 seconds.\nOutput: A table with id, category, urgency and reason. Then three bullets of what needs a human.\nRule: If a message is unclear, write NEEDS REVIEW instead of guessing.\n```\n\nThe last line matters most. It tells the model what to do when the input is incomplete, which is where confident invention usually starts."
+    },
+    {
+      "title": "Test it before you trust it",
+      "body": "Run the brief on one easy case and one deliberately incomplete case. If the incomplete case produces a confident category, the rule failed.\n\nRepair the brief, not the answer. A prompt that needs three corrections after every run is not a prompt, it is a conversation you keep repeating."
+    }
+  ],
+  "checks": [
+    "My brief names a task, a source, an audience and an output shape.",
+    "It says what to do when information is missing.",
+    "I tested it on an incomplete input."
+  ],
+  "sources": [
+    {
+      "title": "ChatGPT capabilities overview",
+      "url": "https://help.openai.com/en/articles/9260256-chatgpt-capabilities-overview",
+      "provider": "OpenAI"
+    }
+  ]
+}

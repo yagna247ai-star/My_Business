@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4K #4 — Recurring Revenue | Telugu</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}html,body{height:100%;background:#000;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.stage{width:100vw;height:100vh;display:grid;place-items:center;background:#000}
+.phone{width:min(1080px,100vw);height:min(1920px,100vh);background:#061a33;position:relative;overflow:hidden;border:6px solid #111}
+@media(min-width:1200px){.phone{width:420px;height:740px;border-radius:22px}}
+.topbar{position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10;background:linear-gradient(to bottom,rgba(0,0,0,.85),transparent);color:#fff;font-size:11px;font-weight:800}
+.live-photo{position:absolute;top:62px;right:14px;width:118px;height:148px;border-radius:16px;overflow:hidden;border:3px solid #ffb700;z-index:8;background:#000}
+.live-photo img{width:100%;height:100%;object-fit:cover;object-position:top}
+.viewport{position:absolute;inset:0;overflow:hidden;background:#061a33}
+.infographic{position:absolute;inset:-4%;will-change:transform}
+.infographic img{width:100%;height:100%;object-fit:cover;object-position:center 78%}
+.ken{animation:ken 30s linear forwards}
+@keyframes ken{0%{transform:scale(1)}20%{transform:scale(1.55) translate(-3%,6%)}55%{transform:scale(1.45) translate(0,16%)}100%{transform:scale(1.05)}}
+.overlay{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;justify-content:space-between;padding:62px 16px 16px;pointer-events:none}
+.pill{display:inline-flex;align-items:center;gap:6px;background:#ffb700;color:#061a33;font-weight:900;font-size:12px;padding:7px 14px;border-radius:999px}
+.hook h1{margin-top:12px;font-size:30px;line-height:1.08;font-weight:900;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.7);max-width:76%}
+.hook h1 em{color:#ffb700;font-style:normal}
+.hook p{margin-top:10px;color:#fff;opacity:.95;font-size:14px;line-height:1.5;max-width:76%;background:rgba(0,0,0,.5);padding:10px 14px;border-radius:12px;border-left:4px solid #25D366}
+.captions .subline{background:rgba(0,0,0,.82);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;min-height:64px}
+.subline .ava{width:32px;height:32px;border-radius:50%;background:#ffb700;display:grid;place-items:center;font-size:15px;flex-shrink:0}
+.subline .txt{font-size:13px;line-height:1.5;color:#fff;font-weight:600}
+.progress{position:absolute;bottom:0;left:0;height:6px;background:#ffb700;z-index:10;width:0}
+.controls{position:absolute;bottom:74px;left:50%;transform:translateX(-50%);z-index:12;display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn{pointer-events:auto;border:none;padding:12px 18px;border-radius:999px;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.btn-play{background:#ffb700;color:#061a33}
+.btn-telugu{background:#25D366;color:#fff}
+.btn-upload{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.countdown{position:absolute;inset:0;display:grid;place-items:center;z-index:20;background:rgba(2,10,26,.96);color:#fff}
+.countdown h2{font-size:84px;font-weight:900;color:#ffb700}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone">
+    <div class="topbar"><span id="timer">● 4K 2160×3840 • TELUGU</span><span>₹50L+ SCALE</span></div>
+    <div class="live-photo"><div style="position:absolute;top:8px;left:8px;background:#ffb700;color:#061a33;font-size:9px;font-weight:900;padding:4px 7px;border-radius:6px">● LIVE</div><img src="live_photo.jpg"><div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.9));color:#fff;font-size:9px;padding:8px 6px 6px;text-align:center;font-weight:800">YOUR LIVE PHOTO</div></div>
+    <div class="viewport"><div class="infographic" id="infographic"><img src="blueprint.png"></div></div>
+    <div class="overlay">
+      <div class="hook">
+        <div class="pill">♻️ VIDEO 4/4 • రికరింగ్ రెవెన్యూ</div>
+        <h1>ఒకసారి ఇన్ స్టాల్? <em>25 ఏళ్లు ఆదాయం!</em> 💸</h1>
+        <p>AMC + IoT ఆడిటింగ్ = ప్రతి ఏడాది జీతం</p>
+      </div>
+      <div class="captions">
+        <div class="subline"><div class="ava">♻️</div><div class="txt" id="subtxt">Tap <b>PLAY 4K</b> — Telugu money model</div></div>
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+          <span style="background:#ffb700;color:#061a33;font-weight:900;font-size:11px;padding:6px 10px;border-radius:999px">BOOK FREE SITE SURVEY</span>
+          <span style="background:#25D366;color:#fff;font-weight:900;font-size:11px;padding:6px 10px;border-radius:999px">GET CERTIFIED</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress" id="progress"></div>
+    <div class="controls">
+      <button class="btn btn-play" id="playBtn">▶ PLAY 4K — 30s</button>
+      <button class="btn btn-telugu" id="teluguBtn">🔊 తెలుగు TTS</button>
+      <label class="btn btn-upload"><input type="file" id="audioUpload" accept="audio/*" style="display:none">📤 Upload Audio</label>
+    </div>
+    <div class="countdown" id="countdown" style="display:none"><div style="text-align:center"><h2 id="cdNum">3</h2><div style="opacity:.7;margin-top:8px;font-size:12px;font-weight:800">4K MONEY MODEL</div></div></div>
+  </div>
+</div>
+<script>
+const teluguScript=`మీకు సోలార్ బిజినెస్ లేదు, ఒకసారి చేసే పని మాత్రమే ఉంది. దాన్ని మార్చండి. ఇన్ స్టాల్ తో పాటు AMC + క్లీనింగ్ యాడ్ చేయండి — 20 నుండి 25 ఏళ్లు ప్రతి ఏడాది ఆదాయం. అదే కస్టమర్ ప్రతి ఏడాది డబ్బు ఇస్తాడు. ఇంకా IoT ఆడిటింగ్ — AI తో ఫ్యాక్టరీల్లో ఎనర్జీ లీకేజ్ కనిపెట్టి రీ-పవరింగ్ అమ్మండి. చిన్న డీలర్ 2-5 లక్షలు, మీడియం 5-10, ఫుల్ EPC 10-58, లార్జ్ 50 లక్షలు+. ఈ బ్లూప్రింట్ తో 30 కి పైగా ఇన్ స్టాలర్లు లాభాల్లో ఉన్నారు.`;
+const subs=[
+  {t:0, text:`మీకు <b>ఒకసారి చేసే పని</b> మాత్రమే ఉంది — బిజినెస్ కాదు.`},
+  {t:4, text:`<b>AMC + క్లీనింగ్</b> — <b>20-25 ఏళ్లు</b> ఆదాయం.`},
+  {t:11, text:`<b>IoT ఆడిటింగ్:</b> ఫ్యాక్టరీల్లో లీకేజ్ కనిపెట్టండి.`},
+  {t:17, text:`ఇన్వెస్ట్ మెంట్: <b>2-5L → 5-10L → 10-58L → 50L+</b>`},
+  {t:25, text:`కామెంట్ <b>“బ్లూప్రింట్”</b> + <b>BOOK FREE SURVEY</b> 👇`},
+];
+let playing=false, elapsed=0, dur=30, tm, useTTS=false, customAudio=null;
+const elSub=document.getElementById('subtxt'), elProg=document.getElementById('progress'), elInf=document.getElementById('infographic'), playBtn=document.getElementById('playBtn'), countdown=document.getElementById('countdown'), cdNum=document.getElementById('cdNum'), timer=document.getElementById('timer');
+function speak(){ if('speechSynthesis' in window){ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(teluguScript); u.lang='te-IN'; u.rate=0.95; const vs=speechSynthesis.getVoices(); const te=vs.find(v=>v.lang.includes('te'))||vs[0]; if(te) u.voice=te; speechSynthesis.speak(u);} }
+function tick(){ elapsed+=0.05; elProg.style.width=Math.min(100,(elapsed/dur)*100)+'%'; timer.textContent=`● 4K • 0:${String(Math.floor(elapsed)).padStart(2,'0')} / 0:30 • తెలుగు`; let cur=subs[0]; for(let s of subs) if(elapsed>=s.t) cur=s; if(cur && cur.text!==elSub._last){ elSub.innerHTML=cur.text; elSub._last=cur.text; } if(elapsed>=dur){ playing=false; clearInterval(tm); if(useTTS) speechSynthesis.cancel(); playBtn.textContent='↻ REPLAY 4K'; } }
+function start(){ countdown.style.display='grid'; let c=3; cdNum.textContent=c; let ci=setInterval(()=>{c--; if(c>0) cdNum.textContent=c; else{clearInterval(ci); countdown.style.display='none'; actuallyStart();}},600);}
+function actuallyStart(){ playing=true; elapsed=0; elSub._last=''; elProg.style.width='0%'; playBtn.textContent='⏸ PLAYING 4K...'; elInf.classList.remove('ken'); void elInf.offsetWidth; elInf.classList.add('ken'); if(tm) clearInterval(tm); tm=setInterval(tick,50); if(customAudio){customAudio.currentTime=0; customAudio.play();} else if(useTTS) speak(); }
+playBtn.addEventListener('click', ()=>{if(!playing) start();});
+document.getElementById('teluguBtn').addEventListener('click', ()=>{ useTTS=!useTTS; document.getElementById('teluguBtn').textContent=useTTS?'🔊 TTS ON ✓':'🔊 తెలుగు TTS'; if(useTTS&&!playing){speak(); alert('Telugu TTS ready — hit PLAY to sync'); speechSynthesis.cancel();} if(!useTTS) speechSynthesis.cancel();});
+document.getElementById('audioUpload').addEventListener('change', e=>{ const f=e.target.files[0]; if(!f) return; customAudio=new Audio(URL.createObjectURL(f)); alert('Custom Telugu audio loaded! Hit PLAY.');});
+if('speechSynthesis' in window) speechSynthesis.getVoices();
+</script>
+</body>
+</html>

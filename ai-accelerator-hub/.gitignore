@@ -57,3 +57,10 @@ packages/db/prisma/*.db-journal
 
 # TypeScript build cache
 *.tsbuildinfo
+
+# SQLite WAL side files (created at runtime)
+*.db-wal
+*.db-shm
+*.db-journal
+# Browser-automation output
+.playwright-mcp/

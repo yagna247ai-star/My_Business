@@ -1,0 +1,80 @@
+{
+  "id": "inbox-triage",
+  "kind": "workbook",
+  "title": "Turn a messy inbox into a triage table",
+  "summary": "Classify eight fictional messages, check the counts, then write a short brief.",
+  "level": 2,
+  "tool": "Any chat app",
+  "roles": ["all", "leadership-operations", "marketing-sales", "education-consulting"],
+  "minutes": 30,
+  "difficulty": "beginner",
+  "outcome": "A correct eight-row table, accurate counts and a three-bullet handover brief.",
+  "body": "You support a fictional service desk. Eight messages arrived overnight and the shift supervisor needs to know what to handle first. You will build the table with an AI assistant, then verify every row against the source messages.",
+  "notice": "Use the fictional messages supplied here. Do not paste real customer data into a chat app for this exercise.",
+  "prerequisites": [
+    "A chat app open in a second tab (ChatGPT, Claude, Gemini, Grok or DeepSeek).",
+    "A place to keep the final table, such as a document or spreadsheet."
+  ],
+  "samples": [
+    {
+      "name": "Eight overnight messages",
+      "content": "M1: My invoice shows two charges for the same month. Please fix today.\nM2: Do you have a student discount?\nM3: I cannot log in. The reset email never arrives.\nM4: Thanks, the replacement arrived.\nM5: We need 40 seats before Friday — can you confirm pricing?\nM6: The export file is empty every time I try it.\nM7: Someone called me twice about a renewal I never agreed to.\nM8: Is there a way to change the account owner?"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Set the rules before the task",
+      "actions": [
+        "Paste the eight messages into a new chat.",
+        "Ask the assistant to classify each row as Billing, Access, Sales, Complaint or Other.",
+        "Require NEEDS REVIEW when a message does not fit one category."
+      ],
+      "expected": "The assistant restates the categories and the fallback rule before producing a table."
+    },
+    {
+      "title": "Build the table",
+      "actions": [
+        "Ask for columns: id, category, urgency (1–3), reason.",
+        "Require one row per message, in id order.",
+        "Require the reason to quote at most eight words from the message."
+      ],
+      "expected": "Eight rows, ids M1–M8, no invented ids and no merged rows."
+    },
+    {
+      "title": "Check the counts",
+      "actions": [
+        "Count the rows yourself.",
+        "Ask the assistant to state counts per category.",
+        "Compare the two counts and fix any mismatch before continuing."
+      ],
+      "expected": "Row count is 8 and per-category counts add up to 8."
+    },
+    {
+      "title": "Write the handover brief",
+      "actions": [
+        "Ask for three bullets: what is urgent, what needs a human decision, what can wait.",
+        "Remove any claim that is not supported by a row in the table.",
+        "Keep the brief under 80 words."
+      ],
+      "expected": "Every bullet points back to at least one message id."
+    }
+  ],
+  "variants": {
+    "beginner": "Show every action and paste the full prompt each time.",
+    "intermediate": "Hide the prompts until you have tried the step yourself.",
+    "advanced": "Write the brief first, then compare it with the assistant's version."
+  },
+  "checks": [
+    "All eight messages appear exactly once.",
+    "Counts per category add up to eight.",
+    "Every brief bullet cites a message id.",
+    "No fact appears that is not in the source messages."
+  ],
+  "sources": [
+    {
+      "title": "ChatGPT capabilities overview",
+      "url": "https://help.openai.com/en/articles/9260256-chatgpt-capabilities-overview",
+      "provider": "OpenAI"
+    }
+  ]
+}

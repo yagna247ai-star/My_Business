@@ -1,0 +1,43 @@
+{
+  "id": "model-vs-app",
+  "kind": "lesson",
+  "title": "A model is not the app",
+  "summary": "Separate the engine, the interface and the tools before choosing where to work.",
+  "level": 1,
+  "tool": "Model science",
+  "roles": ["all"],
+  "minutes": 12,
+  "difficulty": "beginner",
+  "outcome": "Explain why the same model can behave differently in two different apps.",
+  "sections": [
+    {
+      "title": "Three things people call “the AI”",
+      "body": "A **model** maps an input to an output. An **app** is everything around it: the message box, file uploads, search, memory and saved conversations. An **API** lets other software ask the model for an output.\n\nThe same model can sit inside several apps, and each app can send it different instructions, files and tool results. That is why behaviour changes between products even when the underlying model is the same."
+    },
+    {
+      "title": "What actually arrives in the request",
+      "body": "The answer depends on what the app puts into the request: the system instructions, the visible conversation, the files you attached and any tool results.\n\n- A file stored in your account is not automatically in the request.\n- A search tool can fetch something the model never saw in training.\n- Fluent wording is not evidence that a tool ran.\n\nAsk the app to quote the passage it used, then check that passage yourself."
+    },
+    {
+      "title": "Choose the workspace for the work",
+      "body": "| Task | Start here |\n|---|---|\n| First draft | An ordinary chat |\n| Evidence from a document | A source-based workflow with the file attached |\n| Current external facts | A search feature, then inspect the sources |\n| An action with consequences | A workflow with a human approval step |\n\nTry the same small task in two apps. Compare correctness and the repair work, not the length of the answer."
+    }
+  ],
+  "checks": [
+    "I can explain the difference between a model, an app and an API.",
+    "I can name one thing the app adds to a request.",
+    "I checked one answer against a source instead of trusting the tone."
+  ],
+  "sources": [
+    {
+      "title": "ChatGPT capabilities overview",
+      "url": "https://help.openai.com/en/articles/9260256-chatgpt-capabilities-overview",
+      "provider": "OpenAI"
+    },
+    {
+      "title": "Hugging Face LLM course, chapter 1",
+      "url": "https://huggingface.co/learn/llm-course/chapter1/1",
+      "provider": "Hugging Face"
+    }
+  ]
+}

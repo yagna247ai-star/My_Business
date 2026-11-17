@@ -1,0 +1,52 @@
+{
+  "personas": [
+    {
+      "id": "gulf_nri",
+      "name": "The Gulf NRI (Kurnool-kuwaiti)",
+      "target_districts": ["Kurnool", "Anantapur", "Kadapa", "Chittoor", "Nellore"],
+      "budget_range_lakhs": [5.0, 25.0],
+      "preferred_channel": "WhatsApp",
+      "primary_motivation": "Savings vehicle abroad + family security + return to India",
+      "key_concerns": ["Dharani/Encumbrance title verification", "Approval status (DTCP/KUDA)", "Gulf job insecurity"],
+      "buying_triggers": ["Eid bonus", "Pre-Eid remittance", "Sankranti home visit"],
+      "emi_suitability": "High (10-20% down + ₹10,000-20,000/mo EMI)",
+      "language_preference": "Telugu + English"
+    },
+    {
+      "id": "us_uk_nri",
+      "name": "The US/UK NRI (Coastal AP Professional)",
+      "target_districts": ["Vijayawada", "Guntur", "Vizag", "Tirupati", "Hyderabad outskirts"],
+      "budget_range_lakhs": [15.0, 60.0],
+      "preferred_channel": "Email + WhatsApp",
+      "primary_motivation": "Retirement planning + emotional roots + investment",
+      "key_concerns": ["Title perfection", "FEMA compliance", "Property management & encroachment protection"],
+      "buying_triggers": ["Year-end bonus", "Sankranti/Dec trip to India"],
+      "emi_suitability": "Medium (often prefers lower down payment or full lump-sum via wire)",
+      "language_preference": "English + Telugu"
+    },
+    {
+      "id": "salaried_pro",
+      "name": "The Salaried Professional (Hometown Buyer)",
+      "target_districts": ["Hyderabad periphery", "Chevella", "Sangareddy", "District HQs"],
+      "budget_range_lakhs": [6.0, 30.0],
+      "preferred_channel": "Phone + WhatsApp",
+      "primary_motivation": "Low-risk asset + retirement home + building for parents",
+      "key_concerns": ["EMI vs existing home loan", "Location growth", "Online doc verification"],
+      "buying_triggers": ["Appraisal/bonus", "Ugadi/Sankranti", "Parent push"],
+      "emi_suitability": "Very High (Core EMI scheme target audience)",
+      "language_preference": "Telugu + English"
+    },
+    {
+      "id": "small_investor",
+      "name": "Small Investor & Farmer-Reinvestor",
+      "target_districts": ["Amaravati", "Vizag/Bhogapuram", "Regional Ring Road (RRR) arc", "Pharma City"],
+      "budget_range_lakhs": [10.0, 60.0],
+      "preferred_channel": "Phone + Direct Visit",
+      "primary_motivation": "Pure capital appreciation & fast flip",
+      "key_concerns": ["Guidance rate vs market price", "Liquidity", "Infra timeline credibility"],
+      "buying_triggers": ["Agri harvest cash", "Infra news announcements"],
+      "emi_suitability": "Low/Medium (prefers bulk plots or short 12-month tenure)",
+      "language_preference": "Telugu"
+    }
+  ]
+}

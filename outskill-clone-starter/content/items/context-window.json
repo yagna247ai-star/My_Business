@@ -1,0 +1,25 @@
+{
+  "id": "context-window",
+  "kind": "glossary",
+  "title": "Context window",
+  "summary": "The maximum amount of information a model can consider in a single request.",
+  "level": 1,
+  "tool": "Model science",
+  "roles": ["all"],
+  "minutes": 3,
+  "sections": [
+    {
+      "title": "Why it matters",
+      "body": "Everything the model can use in one turn must fit in the context window: instructions, conversation history, attached text and tool results. When the window fills, apps drop or summarise older material.\n\nLong documents can therefore be present in your account but absent from the request. Ask the app to quote the passage it used before trusting a summary."
+    },
+    {
+      "title": "Common mistake",
+      "body": "Treating a large context window as a memory guarantee. It is a limit, not a promise that every relevant line survived the trim."
+    }
+  ],
+  "checks": [
+    "I can explain why a long document may not reach the model.",
+    "I ask for quoted passages instead of assuming the file was read."
+  ],
+  "sources": []
+}

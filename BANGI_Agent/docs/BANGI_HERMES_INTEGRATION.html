@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BANGI × HERMES — Hermes-Powered Computer-Use Agent • v0.4 Integration Docs</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{--ink:#070A12;--gold:#C9A86A;--gold-soft:rgba(201,168,106,0.12);--emerald:#10B981}
+  html{scroll-behavior:smooth}
+  body{font-family:Inter,sans-serif;background:var(--ink);color:#F8FAFC}
+  .mono{font-family:JetBrains Mono,monospace}
+  .display{font-family:Bebas Neue,sans-serif;letter-spacing:0.02em;line-height:0.86}
+  .glass{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+  .card{background:#0F172A;border:1px solid rgba(255,255,255,0.08)}
+  .gold-card{background:linear-gradient(135deg, #C9A86A 0%, #E8D5B5 100%);color:var(--ink)}
+  .emerald-card{background:#0B1A14;border:1px solid rgba(16,185,129,0.22)}
+  .hero-grid{background-image:radial-gradient(rgba(201,168,106,0.10) 1px, transparent 1px);background-size:22px 22px}
+  pre{white-space:pre-wrap;word-break:break-word}
+  .toc a{color:rgba(248,250,252,0.62)} .toc a.active{color:#C9A86A}
+  .pill{border:1px solid rgba(201,168,106,0.24);background:rgba(201,168,106,0.10);color:#C9A86A}
+  .kicker{letter-spacing:0.16em;font-size:10px}
+</style>
+</head>
+<body class="antialiased overflow-x-hidden">
+
+<!-- NAV -->
+<nav class="sticky top-0 z-50 glass" style="background:rgba(7,10,18,0.82);border-bottom:1px solid rgba(255,255,255,0.07)">
+  <div class="max-w-[1480px] mx-auto px-6 h-[64px] flex items-center justify-between gap-6">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl grid place-items-center font-black text-[15px]" style="background:var(--gold);color:var(--ink)">B</div>
+      <div>
+        <div class="display text-[20px] tracking-[0.08em]">BANGI × HERMES</div>
+        <div class="mono kicker -mt-1" style="color:rgba(248,250,252,0.45)">v0.4 — HERMES-POWERED • HYBRID ROUTER</div>
+      </div>
+      <span class="hidden md:inline-flex ml-3 items-center gap-2 mono text-[10px] tracking-[0.12em] px-3 py-1 rounded-full" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.22);color:#6EE7B7">● LIVE — 11 ENDPOINTS • 10 SKILLS • 70+ TOOLS</span>
+    </div>
+    <div class="hidden lg:flex items-center gap-5 mono text-[11px] tracking-[0.10em]" style="color:rgba(248,250,252,0.55)">
+      <a href="#router" class="hover:text-white">ROUTER</a><a href="#architecture" class="hover:text-white">ARCH</a><a href="#skills" class="hover:text-white">SKILLS</a><a href="#api" class="hover:text-white">API</a><a href="#linkedin" class="hover:text-white">LINKEDIN</a>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="#quickstart" class="hidden sm:inline-flex mono text-[11px] tracking-[0.10em] px-4 py-2 rounded-full" style="border:1px solid rgba(255,255,255,0.14);color:rgba(248,250,252,0.75)">QUICKSTART</a>
+      <a href="/docs" class="inline-flex items-center gap-2 px-5 py-2 rounded-full text-[13px] font-semibold" style="background:var(--gold);color:var(--ink)">Swagger /docs →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="relative hero-grid overflow-hidden" style="border-bottom:1px solid rgba(255,255,255,0.06)">
+  <div class="absolute inset-0 pointer-events-none" style="background:radial-gradient(900px 520px at 18% 10%, rgba(201,168,106,0.14), transparent 60%), radial-gradient(700px 460px at 92% 30%, rgba(16,185,129,0.10), transparent 60%)"></div>
+  <div class="relative max-w-[1480px] mx-auto px-6 py-10 lg:py-14 grid lg:grid-cols-[1.05fr_0.95fr] gap-8 items-start">
+    <div>
+      <div class="inline-flex items-center gap-2 mono kicker px-3 py-1.5 rounded-full pill">● Meta Computer-Use • SOM + AX Tree • pid-scoped • no cursor steal</div>
+      <h1 class="display mt-4 text-[52px] lg:text-[74px]">BANGI IS<br><span style="color:var(--gold)">HERMES-POWERED.</span></h1>
+      <p class="mt-4 text-[15px] leading-relaxed max-w-[560px]" style="color:rgba(248,250,252,0.68)">Bangi was a thin <span class="mono text-[12px] px-1.5 py-0.5 rounded" style="background:rgba(255,255,255,0.06)">computer_use</span> demo with 2 Hermes calls. Now: <b style="color:#F8FAFC">10 RealEstate skills + 70 Hermes-Agent tools</b> — routed via <b style="color:#C9A86A">hybrid</b> (direct API → SOM fallback), event-sourced, hot-swappable in <span class="mono text-[11px]">config.yaml</span>.</p>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a href="#router" class="px-6 py-3 rounded-full font-semibold text-[14px]" style="background:#F8FAFC;color:var(--ink)">See hybrid router →</a>
+        <a href="#api" class="px-6 py-3 rounded-full font-semibold text-[14px] glass" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#F8FAFC">11 endpoints</a>
+        <button onclick="document.getElementById('quickstart').scrollIntoView({behavior:'smooth'})" class="mono kicker px-5 py-3 rounded-full" style="border:1px solid rgba(255,255,255,0.10);color:rgba(248,250,252,0.65)">uv run bangi</button>
+      </div>
+      <div class="mt-7 grid grid-cols-3 gap-3 max-w-[560px]">
+        <div class="card rounded-2xl p-4"><div class="mono kicker" style="color:var(--gold)">SKILLS</div><div class="text-[26px] font-extrabold leading-none mt-1">10</div><div class="mono text-[10px] mt-1" style="color:rgba(248,250,252,0.50)">Mama Hermes → Converter</div></div>
+        <div class="card rounded-2xl p-4"><div class="mono kicker" style="color:#6EE7B7">TOOLS</div><div class="text-[26px] font-extrabold leading-none mt-1">70+</div><div class="mono text-[10px] mt-1" style="color:rgba(248,250,252,0.50)">via Hermes-Agent registry</div></div>
+        <div class="gold-card rounded-2xl p-4"><div class="mono kicker" style="color:rgba(7,10,18,0.60)">TOKEN SAVING</div><div class="text-[26px] font-extrabold leading-none mt-1">70%</div><div class="mono text-[10px] mt-1" style="color:rgba(7,10,18,0.60)">direct path (no SOM)</div></div>
+      </div>
+      <div class="mt-6 card rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-2 h-2 rounded-full" style="background:#10B981;box-shadow:0 0 10px rgba(16,185,129,0.6)"></div>
+        <div class="mono text-[11px]" style="color:rgba(248,250,252,0.65)">Health:</div>
+        <code class="mono text-[11px] px-2 py-1 rounded" style="background:rgba(255,255,255,0.06)">GET /health</code>
+        <span class="mono text-[11px]" style="color:rgba(248,250,252,0.45)">→ hermes_realestate: true • hermes_agent: true • cua: hybrid</span>
+        <a href="/health" class="ml-auto mono text-[10px] tracking-[0.10em] px-3 py-1 rounded-full" style="background:var(--gold);color:var(--ink)">CHECK →</a>
+      </div>
+    </div>
+
+    <!-- Live desktop + hybrid preview -->
+    <div class="space-y-4">
+      <div class="rounded-[20px] overflow-hidden card">
+        <div class="h-9 flex items-center gap-2 px-3" style="background:#0F172A;border-bottom:1px solid rgba(255,255,255,0.07)">
+          <span class="w-3 h-3 rounded-full" style="background:#EF4444"></span><span class="w-3 h-3 rounded-full" style="background:#F59E0B"></span><span class="w-3 h-3 rounded-full" style="background:#10B981"></span>
+          <span class="ml-3 mono kicker" style="color:rgba(248,250,252,0.55)">BANGI DESKTOP — SOM OVERLAY [numbered] • AX TREE</span>
+          <span class="ml-auto mono text-[10px] tracking-[0.10em] px-2 py-0.5 rounded-full" style="background:var(--gold);color:var(--ink)">LIVE</span>
+        </div>
+        <div class="aspect-[16/10] relative overflow-hidden" style="background:#020617">
+          <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1200&auto=format&fit=crop" alt="Desktop" class="w-full h-full object-cover opacity-55">
+          <span class="absolute w-7 h-7 rounded-full grid place-items-center mono text-[12px] font-bold" style="top:32%;left:28%;background:var(--gold);color:var(--ink)">1</span>
+          <span class="absolute w-7 h-7 rounded-full grid place-items-center mono text-[12px] font-bold" style="top:48%;left:54%;background:#F8FAFC;color:var(--ink)">2</span>
+          <span class="absolute w-7 h-7 rounded-full grid place-items-center mono text-[12px] font-bold" style="top:62%;left:38%;background:#F8FAFC;color:var(--ink)">3</span>
+          <div class="absolute bottom-3 inset-x-3 rounded-2xl p-3 flex items-center justify-between glass" style="background:rgba(7,10,18,0.78);border:1px solid rgba(255,255,255,0.09)">
+            <div class="mono text-[11px]" style="color:rgba(248,250,252,0.72)"><span style="color:var(--gold)">●</span> Bangi views your screen — click by <b>element_index</b>, not pixels</div>
+            <span class="mono text-[11px] px-3 py-1 rounded-full" style="background:#F8FAFC;color:var(--ink)">Capture</span>
+          </div>
+        </div>
+        <div class="px-3 py-2 flex justify-between mono kicker" style="background:#0F172A;border-top:1px solid rgba(255,255,255,0.07);color:rgba(248,250,252,0.45)">
+          <span>BACKEND: cua-driver MCP • pid-scoped • stealth</span><span id="liveStatus" style="color:var(--gold)">HYBRID</span>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="emerald-card rounded-2xl p-4">
+          <div class="mono kicker" style="color:#6EE7B7">FAST PATH — DIRECT API</div>
+          <div class="mono text-[11px] mt-2 leading-relaxed" style="color:rgba(248,250,252,0.75)">crm, campaign, coach, convert,<br>emi, market, nri, cadence</div>
+          <div class="mono text-[10px] mt-2" style="color:rgba(110,231,183,0.7)">~0.5s • ~200 tokens • deterministic</div>
+        </div>
+        <div class="card rounded-2xl p-4" style="border-color:rgba(201,168,106,0.18)">
+          <div class="mono kicker" style="color:var(--gold)">FALLBACK — SOM</div>
+          <div class="mono text-[11px] mt-2 leading-relaxed" style="color:rgba(248,250,252,0.75)">jobs (Naukri/LinkedIn),<br>generic desktop task</div>
+          <div class="mono text-[10px] mt-2" style="color:rgba(201,168,106,0.75)">capture → click [index] → verify</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BEFORE / AFTER -->
+<section class="max-w-[1480px] mx-auto px-6 py-8 grid lg:grid-cols-2 gap-6">
+  <div class="rounded-2xl p-6 card">
+    <div class="mono kicker" style="color:rgba(248,250,252,0.45)">BEFORE — v0.3</div>
+    <h3 class="display text-[28px] mt-1">Thin demo wrapper</h3>
+    <ul class="mt-3 space-y-2 mono text-[12px]" style="color:rgba(248,250,252,0.62)">
+      <li>• Only <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:6px">generate_daily_report()</code> + <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:6px">campaign_assets</code></li>
+      <li>• <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:6px">tools/computer_use</code> imported as optional — no loop, no tools</li>
+      <li>• Every task → SOM screenshot loop (even when Excel API exists)</li>
+      <li>• 2 endpoints, in-memory, no replay</li>
+    </ul>
+    <div class="mt-4 inline-flex mono text-[11px] tracking-[0.10em] px-3 py-1.5 rounded-full" style="background:rgba(248,113,113,0.10);border:1px solid rgba(248,113,113,0.18);color:#FCA5A5">SLOW • TOKEN-HEAVY • FRAGILE</div>
+  </div>
+  <div class="rounded-2xl p-6" style="background:linear-gradient(135deg, #C9A86A 0%, #E8D5B5 100%);color:var(--ink)">
+    <div class="mono kicker" style="color:rgba(7,10,18,0.55)">AFTER — v0.4 HERMES</div>
+    <h3 class="display text-[28px] mt-1" style="color:var(--ink)">Hermes-powered agent</h3>
+    <ul class="mt-3 space-y-2 mono text-[12px]" style="color:rgba(7,10,18,0.68)">
+      <li>• <b>10 RealEstate skills</b> via <code style="background:rgba(7,10,18,0.08);padding:2px 6px;border-radius:6px">/hermes/*</code> + hybrid router</li>
+      <li>• <b>70 Hermes-Agent tools</b> via registry + conversation_loop ready</li>
+      <li>• Direct API first (70% token saving) → SOM only when no API</li>
+      <li>• 11 endpoints, event-sourced <code style="background:rgba(7,10,18,0.08);padding:2px 6px;border-radius:6px">~/.bangi/events.jsonl</code>, replayable</li>
+    </ul>
+    <div class="mt-4 inline-flex mono text-[11px] tracking-[0.10em] px-3 py-1.5 rounded-full" style="background:rgba(7,10,18,0.10);border:1px solid rgba(7,10,18,0.14);color:var(--ink)">FAST • CHEAP • DURABLE</div>
+  </div>
+</section>
+
+<!-- ROUTER DIAGRAM -->
+<section id="router" class="max-w-[1480px] mx-auto px-6 py-6">
+  <div class="flex items-baseline justify-between gap-4">
+    <h2 class="display text-[32px]">Hybrid Router — How Bangi Decides</h2>
+    <span class="mono kicker hidden md:inline-flex px-3 py-1 rounded-full pill">CONFIG: hermes.mode = hybrid • hot-swappable</span>
+  </div>
+  <p class="mono text-[12px] mt-2 max-w-[860px]" style="color:rgba(248,250,252,0.60)">Keyword router in <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:6px">backend/bangi_agent.py:do_task()</code>. Every branch logs to <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:6px">events.jsonl</code>. Add a new skill → one new <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:6px">if "keyword" in p</code> line.</p>
+  <div class="mt-4 rounded-2xl overflow-hidden card p-2">
+    <img src="assets/arch-hybrid-router.svg" alt="Hybrid router diagram" class="w-full h-auto block rounded-xl">
+  </div>
+  <div class="mt-4 grid lg:grid-cols-3 gap-3 mono text-[11px]">
+    <div class="card rounded-2xl p-4"><div class="kicker" style="color:#6EE7B7">DIRECT API — NO SOM</div><div class="mt-2" style="color:rgba(248,250,252,0.68)">If prompt contains <b>crm, tracker, report, campaign, reel, coach, convert, emi, market, nri, cadence, visit</b> → calls Hermes skill Python directly. No screenshot. No model vision tokens.</div></div>
+    <div class="card rounded-2xl p-4" style="border-color:rgba(201,168,106,0.18)"><div class="kicker" style="color:var(--gold)">SOM FALLBACK</div><div class="mt-2" style="color:rgba(248,250,252,0.68)">If prompt contains <b>job, naukri, linkedin, indeed, apply</b> or generic desktop (“open Excel”, “fill form”) → <code style="background:rgba(201,168,106,0.12);padding:1px 5px;border-radius:6px">handle_computer_use(capture/click)</code> with numbered overlays [1][2][3].</div></div>
+    <div class="card rounded-2xl p-4"><div class="kicker" style="color:rgba(248,250,252,0.55)">HOW TO ADD A SKILL</div><div class="mt-2" style="color:rgba(248,250,252,0.68)">Add Hermes skill file → expose one endpoint in <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:6px">app.py</code> → add one keyword branch in <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:6px">bangi_agent.py</code> → list it in <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:6px">config.yaml: hermes.routing.prefer_direct</code>.</div></div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture" class="max-w-[1480px] mx-auto px-6 py-6">
+  <h2 class="display text-[32px]">Architecture — C4 Container</h2>
+  <p class="mono text-[12px] mt-2" style="color:rgba(248,250,252,0.60)">Single FastAPI, two Hermes systems, one SOM driver. Same <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:6px">backend/</code> ships to Web (PWA), Desktop (Tauri 5MB), Mobile (Capacitor) — 95% shared.</p>
+  <div class="mt-4 rounded-2xl overflow-hidden card p-2">
+    <img src="assets/arch-c4-container.svg" alt="C4 container diagram" class="w-full h-auto block rounded-xl">
+  </div>
+  <div class="mt-4 rounded-2xl overflow-hidden card p-2">
+    <img src="assets/capability-matrix.svg" alt="Capability matrix" class="w-full h-auto block rounded-xl">
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills" class="max-w-[1480px] mx-auto px-6 py-6">
+  <h2 class="display text-[32px]">All 10 Hermes Skills — Now in Bangi</h2>
+  <p class="mono text-[12px] mt-2" style="color:rgba(248,250,252,0.60)">Hermes-RealEstate <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:6px">RealEstate/hermes_automation/skills/*.py</code> — every skill tested via <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:6px">main.py</code> mock Hyderabad flow.</p>
+  <div class="mt-4 grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div class="card rounded-2xl p-5"><div class="mono kicker" style="color:var(--gold)">01 — MAMA HERMES</div><h4 class="font-bold mt-1">Lead Generator</h4><p class="mono text-[11px] mt-2" style="color:rgba(248,250,252,0.62)">Instagram Reel + FB Ad per corridor. Price per sqyd → EMI hook: “Own 150 sqyd for ₹EMI/month”. Pickup landmark + RERA.</p><code class="mono text-[10px] mt-3 inline-block px-2 py-1 rounded" style="background:rgba(255,255,255,0.06)">POST /hermes/campaign {corridor_id}</code></div>
+    <div class="card rounded-2xl p-5"><div class="mono kicker" style="color:var(--gold)">02 — SPEED-TO-LEAD</div><h4 class="font-bold mt-1">Lead Qualifier</h4><p class="mono text-[11px] mt-2" style="color:rgba(248,250,252,0.62)">Persona classify (location+budget+residence) + instant Telugu/English response. SLA 0.5s.</p><code class="mono text-[10px] mt-3 inline-block px-2 py-1 rounded" style="background:rgba(255,255,255,0.06)">POST /hermes/lead {lead_payload}</code></div>
+    <div class="card rounded-2xl p-5"><div class="mono kicker" style="color:var(--gold)">03 — NURTURE</div><h4 class="font-bold mt-1">Cadence (90-day)</h4><p class="mono text-[11px] mt-2" style="color:rgba(248,250,252,0.62)">7-day pilot with success stories → long nurture. Calendar + CRM tracking zero-leakage.</p><code class="mono text-[10px] mt-3 inline-block px-2 py-1 rounded" style="background:rgba(255,255,255,0.06)">do_task("nurture / follow up")</code></div>
+    <div class="card rounded-2xl p-5"><div class="mono kicker" style="color:var(--gold)">04 — VISIT</div><h4 class="font-bold mt-1">Site Visit Scheduler</h4><p class="mono text-[11px] mt-2" style="color:rgba(248,250,252,0.62)">Books car pickup from corridor landmark, sends reminder, syncs to tracker.</p><code class="mono text-[10px] mt-3 inline-block px-2 py-1 rounded" style="background:rgba(255,255,255,0.06)">do_task("schedule visit")</code></div>
+    <div class="card rounded-2xl p-5"><div class="mono kicker" style="color:var(--gold)">05 — NRI</div><h4 class="font-bold mt-1">Remote Closing</h4><p class="mono text-[11px] mt-2" style="color:rgba(248,250,252,0.62)">Video tour + token flow for overseas buyers. Handles doc + payment async.</p><code class="mono text-[10px] mt-3 inline-block px-2 py-1 rounded" style="background:rgba(255,255,255,0.06)">do_task("nri closing")</code></div>
+    <div class="card rounded-2xl p-5"><div class="mono kicker" style="color:var(--gold)">06 — EMI</div><h4 class="font-bold mt-1">Plot Matcher</h4><p class="mono text-[11px] mt-2" style="color:rgba(248,250,252,0.62)">Budget (lakhs) → plot size + EMI plan. 80% loan × 0.012 estimate.</p><code class="mono text-[10px] mt-3 inline-block px-2 py-1 rounded" style="background:rgba(255,255,255,0.06)">do_task("emi for 25L")</code></div>
+    <div class="emerald-card rounded-2xl p-5"><div class="mono kicker" style="color:#6EE7B7">07 — TRACKER ★ FAST PATH</div><h4 class="font-bold mt-1">Tracker Sync</h4><p class="mono text-[11px] mt-2" style="color:rgba(248,250,252,0.62)">Reads/writes <code>Abhinandhana_Visit_Close_Tracker.xlsx</code> without opening Excel via SOM. Daily digest with leak warnings.</p><code class="mono text-[10px] mt-3 inline-block px-2 py-1 rounded" style="background:rgba(16,185,129,0.10)">GET /hermes/report</code></div>
+    <div class="card rounded-2xl p-5"><div class="mono kicker" style="color:var(--gold)">08 — INTEL</div><h4 class="font-bold mt-1">Market Scanner</h4><p class="mono text-[11px] mt-2" style="color:rgba(248,250,252,0.62)">Corridor trends, price per sqyd, demand signals for Shankarpally / Shadnagar.</p><code class="mono text-[10px] mt-3 inline-block px-2 py-1 rounded" style="background:rgba(255,255,255,0.06)">GET /hermes/market?corridor=</code></div>
+    <div class="card rounded-2xl p-5"><div class="mono kicker" style="color:var(--gold)">09 — COACH</div><h4 class="font-bold mt-1">Sales Call Coach — 4-Pillar</h4><p class="mono text-[11px] mt-2" style="color:rgba(248,250,252,0.62)">Scores transcript: Rapport → Diagnosis → Automation System → Responsibilities + pricing/closing.</p><code class="mono text-[10px] mt-3 inline-block px-2 py-1 rounded" style="background:rgba(255,255,255,0.06)">POST /hermes/coach {agent, transcript}</code></div>
+    <div class="card rounded-2xl p-5"><div class="mono kicker" style="color:var(--gold)">10 — CONVERT</div><h4 class="font-bold mt-1">Lead Converter</h4><p class="mono text-[11px] mt-2" style="color:rgba(248,250,252,0.62)">Meta CSV (17 cols, UTF-16LE) → <code>contacts.csv</code> (47 cols) with scoring, Telugu scripts, routing.</p><code class="mono text-[10px] mt-3 inline-block px-2 py-1 rounded" style="background:rgba(255,255,255,0.06)">POST /hermes/convert {src,dst}</code></div>
+    <div class="rounded-2xl p-5" style="background:var(--gold);color:var(--ink)"><div class="mono kicker" style="color:rgba(7,10,18,0.60)">+ 70 TOOLS</div><h4 class="font-bold mt-1" style="color:var(--ink)">Hermes-Agent Tools</h4><p class="mono text-[11px] mt-2" style="color:rgba(7,10,18,0.65)">computer_use, file_ops, browser, code_exec, MCP gateway, memory, cron — via <code style="background:rgba(7,10,18,0.08);padding:1px 4px;border-radius:5px">tools.registry</code>.</p><code class="mono text-[10px] mt-3 inline-block px-2 py-1 rounded" style="background:rgba(7,10,18,0.08)">POST /cua/capture • /cua/act</code></div>
+  </div>
+</section>
+
+<!-- API -->
+<section id="api" class="max-w-[1480px] mx-auto px-6 py-6">
+  <h2 class="display text-[32px]">API — 11 Endpoints</h2>
+  <div class="mt-4 card rounded-2xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full mono text-[11px]">
+        <thead><tr style="color:rgba(248,250,252,0.45);border-bottom:1px solid rgba(255,255,255,0.07)"><th class="text-left px-4 py-3 font-semibold tracking-[0.08em]">METHOD</th><th class="text-left px-4 py-3 font-semibold tracking-[0.08em]">PATH</th><th class="text-left px-4 py-3 font-semibold tracking-[0.08em]">BODY / QUERY</th><th class="text-left px-4 py-3 font-semibold tracking-[0.08em]">MODE</th></tr></thead>
+        <tbody style="color:rgba(248,250,252,0.78)">
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold" style="background:#10B981;color:#070A12">POST</span></td><td class="px-4 py-3 font-semibold" style="color:#C9A86A">/computer-use</td><td class="px-4 py-3">{prompt: string}</td><td class="px-4 py-3">hybrid</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold" style="background:rgba(255,255,255,0.10);color:rgba(248,250,252,0.75)">POST</span></td><td class="px-4 py-3 font-semibold">/task</td><td class="px-4 py-3">{prompt: string} — alias</td><td class="px-4 py-3">hybrid</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold" style="background:#10B981;color:#070A12">POST</span></td><td class="px-4 py-3">/hermes/lead</td><td class="px-4 py-3">Hermes lead_payload</td><td class="px-4 py-3" style="color:#6EE7B7">direct</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold" style="background:rgba(255,255,255,0.10)">GET</span></td><td class="px-4 py-3">/hermes/report</td><td class="px-4 py-3">—</td><td class="px-4 py-3" style="color:#6EE7B7">direct</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold" style="background:#10B981;color:#070A12">POST</span></td><td class="px-4 py-3">/hermes/coach</td><td class="px-4 py-3">{agent_name, transcript}</td><td class="px-4 py-3" style="color:#6EE7B7">direct</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold" style="background:#10B981;color:#070A12">POST</span></td><td class="px-4 py-3">/hermes/convert</td><td class="px-4 py-3">{source_path, target_path}</td><td class="px-4 py-3" style="color:#6EE7B7">direct</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold" style="background:#10B981;color:#070A12">POST</span></td><td class="px-4 py-3">/hermes/campaign</td><td class="px-4 py-3">{corridor_id}</td><td class="px-4 py-3" style="color:#6EE7B7">direct</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold" style="background:rgba(255,255,255,0.10)">GET</span></td><td class="px-4 py-3">/hermes/market</td><td class="px-4 py-3">?corridor=shankarpally_west</td><td class="px-4 py-3" style="color:#6EE7B7">direct</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold" style="background:var(--gold);color:var(--ink)">POST</span></td><td class="px-4 py-3" style="color:var(--gold)">/cua/capture</td><td class="px-4 py-3">—</td><td class="px-4 py-3" style="color:var(--gold)">SOM</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold" style="background:var(--gold);color:var(--ink)">POST</span></td><td class="px-4 py-3" style="color:var(--gold)">/cua/act</td><td class="px-4 py-3">{action, element_index?, text?}</td><td class="px-4 py-3" style="color:var(--gold)">SOM</td></tr>
+          <tr><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold" style="background:rgba(255,255,255,0.10)">GET</span></td><td class="px-4 py-3">/cua/schema</td><td class="px-4 py-3">—</td><td class="px-4 py-3">schema</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="px-4 py-3 flex gap-2 mono text-[11px]" style="background:rgba(255,255,255,0.03);border-top:1px solid rgba(255,255,255,0.06);color:rgba(248,250,252,0.55)">
+      <span>Also:</span><code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:6px">GET /health</code><code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:6px">GET /capabilities</code><code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:6px">GET /docs</code><code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:6px">GET /static/index.html</code>
+    </div>
+  </div>
+  <div class="mt-3 grid lg:grid-cols-2 gap-3 mono text-[11px]">
+    <div class="card rounded-2xl p-4"><div class="kicker" style="color:#6EE7B7">CURL — SPEED-TO-LEAD</div><pre class="mt-2 p-3 rounded-xl text-[11px] leading-relaxed" style="background:#020617;border:1px solid rgba(255,255,255,0.07);color:rgba(248,250,252,0.78)">curl -X POST http://localhost:8000/hermes/lead \
+  -H "Content-Type: application/json" \
+  -d '{"lead_id":"HYD_9901","name":"Srinivas Rao",
+       "location":"Gachibowli","budget_lakhs":25,
+       "residence":"India","language":"te_en"}' | jq</pre></div>
+    <div class="card rounded-2xl p-4" style="border-color:rgba(201,168,106,0.14)"><div class="kicker" style="color:var(--gold)">CURL — HYBRID ROUTER</div><pre class="mt-2 p-3 rounded-xl text-[11px] leading-relaxed" style="background:#020617;border:1px solid rgba(255,255,255,0.07);color:rgba(248,250,252,0.78)">curl -X POST http://localhost:8000/computer-use \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"generate campaign for shankarpally"}' | jq
+
+# Any prompt — Bangi picks direct vs SOM
+# "check CRM" → direct • "apply jobs" → SOM</pre></div>
+  </div>
+</section>
+
+<!-- QUICKSTART -->
+<section id="quickstart" class="max-w-[1480px] mx-auto px-6 py-6">
+  <div class="card rounded-2xl p-6 lg:p-8">
+    <div class="flex flex-wrap items-baseline justify-between gap-3">
+      <h2 class="display text-[32px]">Quickstart — 60 seconds</h2>
+      <span class="mono kicker px-3 py-1 rounded-full pill">NO REBUILD — config.yaml hot-swappable</span>
+    </div>
+    <div class="mt-4 grid lg:grid-cols-[1.15fr_0.85fr] gap-6">
+      <pre class="p-4 rounded-xl mono text-[12px] leading-relaxed overflow-auto" style="background:#020617;border:1px solid rgba(255,255,255,0.07);color:rgba(248,250,252,0.82)">cd BANGI_Agent
+
+# 1. Install
+uv sync
+# Hermes skills need pandas + openpyxl — already in deps
+
+# 2. Optional: enable real desktop control (SOM)
+uv sync --extra computer-use
+# or editable Hermes-Agent (70+ tools):
+# pip install -e ../Hermes-agent/hermes-agent
+
+# 3. Run
+uv run bangi
+# → http://localhost:8000 • /docs • /static/index.html • /health
+
+# 4. Smoke test
+curl -X POST http://localhost:8000/computer-use \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"check CRM lead status"}' | jq
+
+curl http://localhost:8000/health | jq .hermes_realestate
+open http://localhost:8000/static/index.html</pre>
+      <div class="space-y-3">
+        <div class="rounded-xl p-4" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.16)"><div class="mono kicker" style="color:#6EE7B7">CONFIG — NO REBUILD</div><pre class="mono text-[11px] mt-2 leading-relaxed" style="color:rgba(248,250,252,0.75)">hermes:
+  mode: hybrid
+  routing:
+    prefer_direct: [tracker_sync, qualifier, coach]
+    fallback_som: [browser, job_apply]
+features:
+  jobs: {providers: [naukri, linkedin], daily_limit: 20}
+  coaching: {agents: [Yagna, Prabhuraj]}</pre></div>
+        <div class="rounded-xl p-4 card"><div class="mono kicker" style="color:rgba(248,250,252,0.55)">DURABILITY</div><p class="mono text-[11px] mt-2" style="color:rgba(248,250,252,0.62)">Every <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:5px">do_task</code> + <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:5px">cua_act</code> appends to <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:5px">~/.bangi/events.jsonl</code> — replayable after crash. APScheduler retries 1s→30s. SQLite + S3 sync ready.</p></div>
+        <div class="rounded-xl p-4 card"><div class="mono kicker" style="color:rgba(248,250,252,0.55)">CROSS-PLATFORM</div><p class="mono text-[11px] mt-2" style="color:rgba(248,250,252,0.62)">Same <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:5px">backend/</code> → Web PWA, Desktop Tauri (5MB, not Electron 120MB), Mobile Capacitor + AccessibilityService.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LINKEDIN -->
+<section id="linkedin" class="max-w-[1480px] mx-auto px-6 py-6">
+  <div class="flex items-baseline justify-between gap-4">
+    <h2 class="display text-[32px]">LinkedIn — Ready to Post</h2>
+    <a href="LINKEDIN_POST.md" class="mono kicker px-3 py-1.5 rounded-full" style="border:1px solid rgba(255,255,255,0.12);color:rgba(248,250,252,0.60)">Open LINKEDIN_POST.md →</a>
+  </div>
+  <p class="mono text-[11px] mt-2" style="color:rgba(248,250,252,0.55)">Copy-ready post + carousel. Images: <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:5px">assets/linkedin-*.svg</code> (1080×1350) + <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:5px">assets/arch-*.svg</code> for the doc.</p>
+  <div class="mt-4 grid lg:grid-cols-2 gap-4">
+    <div class="card rounded-2xl p-5">
+      <div class="mono kicker" style="color:var(--gold)">LINKEDIN POST — COPY</div>
+      <div class="mt-3 p-4 rounded-xl mono text-[12px] leading-relaxed whitespace-pre-wrap" style="background:#020617;border:1px solid rgba(255,255,255,0.07);color:rgba(248,250,252,0.78)">We made our personal computer-use agent 10× more powerful — without making it heavier. 🤖
+
+Meet <b>Bangi v0.4 — Hermes-Powered</b>.
+
+The problem: Bangi could click any desktop button via Meta Computer-Use (SOM + AX tree, pid-scoped, no cursor steal) — but every CRM check still opened Excel via screenshots. Slow. Expensive. Fragile.
+
+The fix: <b>Hybrid Router</b> (ADR-003)
+→ Direct Hermes skill API when it exists (tracker, coach, converter — 70% fewer tokens, ~0.5s)
+→ SOM fallback only when no API exists (jobs, generic desktop)
+
+Result:
+✅ 10 RealEstate skills (Mama Hermes → Lead Converter) via /hermes/*
+✅ 70 Hermes-Agent tools (file, browser, code, MCP) via registry
+✅ 11 endpoints, event-sourced (~/.bangi/events.jsonl), replayable
+✅ &lt;50MB install, &lt;120MB RAM — still lightweight
+✅ config.yaml hot-swappable — Naukri→LinkedIn without rebuild
+
+One endpoint for everything:
+POST /computer-use {prompt: "check CRM / coach Yagna / apply jobs / any desktop task"}
+Bangi picks the cheapest path automatically.
+
+Stack: FastAPI + Preact (30KB) + cua-driver MCP + Hermes — Tauri (5MB) + Capacitor. Not Electron.
+
+Docs + architecture diagrams → BANGI_Agent/docs/BANGI_HERMES_INTEGRATION.html
+Health → /health • Swagger → /docs
+
+What would you automate first with a hybrid computer-use agent? 👇
+
+#ComputerUse #AIAgent #MetaAI #Hermes #Bangi #BuildInPublic #OpenSource</div>
+      <div class="mt-3 flex gap-2">
+        <a href="LINKEDIN_POST.md" class="mono text-[11px] px-4 py-2 rounded-full" style="background:var(--gold);color:var(--ink)">Open full post + carousel →</a>
+        <button onclick="navigator.clipboard.writeText(document.querySelector('#linkedin pre')?.textContent || ''); this.textContent='Copied ✓'; setTimeout(()=>this.textContent='Copy',1500)" class="mono text-[11px] px-4 py-2 rounded-full" style="border:1px solid rgba(255,255,255,0.12);color:rgba(248,250,252,0.70)">Copy</button>
+      </div>
+    </div>
+    <div class="space-y-3">
+      <div class="rounded-2xl overflow-hidden card p-2">
+        <div class="mono kicker p-2" style="color:var(--gold)">CAROUSEL PREVIEW — 1080×1350 (4 slides) — see LINKEDIN_POST.md for copy</div>
+        <div class="grid grid-cols-2 gap-2 p-2">
+          <a href="assets/linkedin-slide-1.svg" target="_blank" class="block rounded-xl overflow-hidden" style="border:1px solid rgba(255,255,255,0.08)"><img src="assets/linkedin-slide-1.svg" alt="LinkedIn slide 1" class="w-full h-auto"></a>
+          <a href="assets/linkedin-slide-2.svg" target="_blank" class="block rounded-xl overflow-hidden" style="border:1px solid rgba(255,255,255,0.08)"><img src="assets/linkedin-slide-2.svg" alt="LinkedIn slide 2" class="w-full h-auto"></a>
+          <a href="assets/linkedin-slide-3.svg" target="_blank" class="block rounded-xl overflow-hidden" style="border:1px solid rgba(255,255,255,0.08)"><img src="assets/linkedin-slide-3.svg" alt="LinkedIn slide 3" class="w-full h-auto"></a>
+          <a href="assets/linkedin-slide-4.svg" target="_blank" class="block rounded-xl overflow-hidden" style="border:1px solid rgba(255,255,255,0.08)"><img src="assets/linkedin-slide-4.svg" alt="LinkedIn slide 4" class="w-full h-auto"></a>
+        </div>
+        <div class="px-2 pb-2 mono text-[10px]" style="color:rgba(248,250,252,0.45)">1080×1350 — click to open full SVG. Export to PNG for LinkedIn upload: open in browser → right-click → Save Image.</div>
+      </div>
+      <div class="card rounded-2xl p-4 mono text-[11px]" style="color:rgba(248,250,252,0.60)"><b style="color:#F8FAFC">How to post:</b> 1) Export 4 SVGs to PNG (1080×1350). 2) Paste post text from <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:5px">LINKEDIN_POST.md</code>. 3) Upload carousel in order 1→4. 4) Link first comment to <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:5px">BANGI_HERMES_INTEGRATION.html</code>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="max-w-[1480px] mx-auto px-6 py-10" style="border-top:1px solid rgba(255,255,255,0.07)">
+  <div class="flex flex-wrap gap-6 mono text-[11px]" style="color:rgba(248,250,252,0.45)">
+    <span>BANGI v0.4 — Hermes-Powered • Meta Computer-Use (SOM + AX, cua-driver MCP)</span>
+    <span>•</span><a href="HERMES_INTEGRATION.md" class="hover:text-white" style="color:var(--gold)">HERMES_INTEGRATION.md</a>
+    <span>•</span><a href="/docs" class="hover:text-white">Swagger /docs</a>
+    <span>•</span><a href="/health" class="hover:text-white">/health</a>
+    <span class="ml-auto">Glass Antigravity • Preact (30KB) • FastAPI (15MB) • &lt;50MB install</span>
+  </div>
+  <div class="mono text-[10px] mt-3" style="color:rgba(248,250,252,0.30)">Files: backend/bangi_agent.py • backend/app.py • config.yaml • docs/HERMES_INTEGRATION.md • docs/assets/*.svg • docs/LINKEDIN_POST.md</div>
+</footer>
+
+</body>
+</html>

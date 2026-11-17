@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --ink:#070A12; --gold:#C9A86A; --panel:#0F172A; }
+html,body { background:var(--ink); color:#F8FAFC; }
+.mono { font-family: JetBrains Mono, monospace; }
+.glass { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }

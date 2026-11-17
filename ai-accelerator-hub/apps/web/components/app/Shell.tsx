@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useEffect, useRef, useState } from 'react';
-import { Bell, Flame, LogOut, Menu, Moon, Sun, X, Snowflake, Clock, Pause, ChevronRight, Settings } from 'lucide-react';
+import { Bell, Flame, LogOut, Menu, Moon, Sun, X, Snowflake, Clock, Pause, ChevronRight, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { api } from '@/lib/client/api';
 import { NavIcon } from './icons';
 
@@ -19,8 +19,27 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
   const [open, setOpen] = useState(false); const [notifOpen, setNotifOpen] = useState(false); const [menuOpen, setMenuOpen] = useState(false);
   const [notes, setNotes] = useState<Notif[] | null>(null); const [unread, setUnread] = useState(unread0);
   const [dark, setDark] = useState(false);
+  // Collapsed ("rail") sidebar on desktop. Stored on <html data-sidebar> (set before paint in app/layout.tsx).
+  const [rail, setRail] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null); const menuRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { setDark(document.documentElement.getAttribute('data-theme') === 'dark'); }, []);
+  useEffect(() => { setDark(document.documentElement.getAttribute('data-theme') === 'dark'); setRail(document.documentElement.getAttribute('data-sidebar') === 'rail'); }, []);
+  const toggleRail = () => setRail(r => {
+    const next = !r;
+    if (next) document.documentElement.setAttribute('data-sidebar', 'rail'); else document.documentElement.removeAttribute('data-sidebar');
+    try { localStorage.setItem('aih_sidebar', next ? 'rail' : 'full'); } catch {}
+    return next;
+  });
+  useEffect(() => {
+    // Ctrl/⌘ + B toggles the sidebar, except while typing (where it may mean "bold").
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'b') return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      e.preventDefault(); toggleRail();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
   useEffect(() => { setOpen(false); setNotifOpen(false); setMenuOpen(false); }, [path]);
   useEffect(() => { setUnread(unread0); }, [unread0]);
   useEffect(() => {
@@ -48,6 +67,10 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
             <span className="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 4 4 21h8z" fill="#3878F6" /><path d="M12 4l8 17h-8z" fill="#8658E8" /><circle cx="12" cy="3.6" r="2.2" fill="#E8B94F" /></svg></span>
             <span className="brand-txt"><b>AI Accelerator</b><small>HUB</small></span>
           </Link>
+          <button className="rail-btn desk" type="button" onClick={toggleRail} aria-controls="sidebar" aria-expanded={!rail}
+            aria-label={rail ? 'Expand sidebar' : 'Collapse sidebar'} title={`${rail ? 'Expand' : 'Collapse'} sidebar (Ctrl/⌘ + B)`}>
+            {rail ? <PanelLeftOpen size={17} aria-hidden="true" /> : <PanelLeftClose size={17} aria-hidden="true" />}
+          </button>
           <button className="rail-btn only-mobile" type="button" aria-label="Close menu" onClick={() => setOpen(false)}><X size={16} /></button>
         </div>
         <nav className="nav" aria-label="Main">
@@ -55,7 +78,8 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
             <div key={g}>
               <div className="side-group-label">{g}</div>
               {nav.filter(n => n.group === g).map(n => (
-                <Link key={n.href} href={n.href} className={`nav-item top ${active(n.href) ? 'active' : ''}`} aria-current={active(n.href) ? 'page' : undefined}>
+                <Link key={n.href} href={n.href} className={`nav-item top ${active(n.href) ? 'active' : ''}`} aria-current={active(n.href) ? 'page' : undefined}
+                  aria-label={n.count ? `${n.label}, ${n.count} pending` : n.label} title={rail ? n.label : undefined}>
                   <NavIcon name={n.icon} /><span className="lbl">{n.label}</span>{n.count ? <span className="badge-count" aria-label={`${n.count} pending`}>{n.count}</span> : null}
                 </Link>
               ))}
@@ -63,6 +87,7 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
           ))}
         </nav>
         <div className="side-foot"><b>{user.tenant}</b>{user.roleLabel}</div>
+        <div className="side-foot-rail" title={`${user.tenant} · ${user.roleLabel}`} aria-hidden="true">{initials(user.tenant)}</div>
       </aside>
       {open && <div className="overlay" onClick={() => setOpen(false)} />}
 

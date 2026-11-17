@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img">
+<rect width="1080" height="1350" rx="28" fill="#070A12"/>
+<!-- subtle grid -->
+<g opacity="0.08" stroke="rgba(201,168,106,0.9)" stroke-width="0.7">
+  <line x1="0" y1="240" x2="1080" y2="240"/><line x1="0" y1="680" x2="1080" y2="680"/><line x1="0" y1="1100" x2="1080" y2="1100"/>
+</g>
+<circle cx="860" cy="260" r="280" fill="none" stroke="rgba(201,168,106,0.10)" stroke-width="1.2"/>
+<circle cx="860" cy="260" r="180" fill="none" stroke="rgba(16,185,129,0.08)" stroke-width="1.2"/>
+<!-- top pill -->
+<g transform="translate(56,56)">
+  <rect width="520" height="36" rx="18" fill="rgba(201,168,106,0.12)" stroke="rgba(201,168,106,0.24)"/>
+  <text x="260" y="23" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" letter-spacing="0.14em" font-weight="700" fill="#C9A86A">BANGI v0.4  •  HERMES-POWERED</text>
+</g>
+<!-- B logo -->
+<g transform="translate(56,120)">
+  <rect width="72" height="72" rx="18" fill="#C9A86A"/>
+  <text x="36" y="50" text-anchor="middle" font-family="Inter, sans-serif" font-size="38" font-weight="900" fill="#070A12">B</text>
+</g>
+<text x="148" y="148" font-family="Inter, sans-serif" font-size="13" letter-spacing="0.14em" font-weight="700" fill="rgba(248,250,252,0.55)">PERSONAL COMPUTER-USE AGENT</text>
+<text x="148" y="170" font-family="Inter, sans-serif" font-size="12" letter-spacing="0.10em" fill="rgba(248,250,252,0.45)">SOM + AX Tree  •  pid-scoped  •  no cursor steal</text>
+
+<!-- Headline -->
+<text x="56" y="300" font-family="Bebas Neue, sans-serif" font-size="92" letter-spacing="0.01em" fill="#F8FAFC">BANGI WAS</text>
+<text x="56" y="390" font-family="Bebas Neue, sans-serif" font-size="92" letter-spacing="0.01em" fill="#F8FAFC">A DEMO.</text>
+<text x="56" y="500" font-family="Bebas Neue, sans-serif" font-size="92" letter-spacing="0.01em" fill="#C9A86A">NOW IT'S</text>
+<text x="56" y="590" font-family="Bebas Neue, sans-serif" font-size="92" letter-spacing="0.01em" fill="#C9A86A">HERMES-</text>
+<text x="56" y="680" font-family="Bebas Neue, sans-serif" font-size="92" letter-spacing="0.01em" fill="#C9A86A">POWERED.</text>
+
+<text x="56" y="740" font-family="Inter, sans-serif" font-size="20" fill="rgba(248,250,252,0.72)">10 RealEstate skills + 70 Hermes-Agent tools</text>
+<text x="56" y="770" font-family="Inter, sans-serif" font-size="20" fill="rgba(248,250,252,0.72)">— one hybrid router, one endpoint.</text>
+
+<!-- badges -->
+<g transform="translate(56,810)">
+  <rect width="300" height="64" rx="16" fill="#C9A86A"/>
+  <text x="150" y="30" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.12em" font-weight="800" fill="#070A12">10 SKILLS • 70+ TOOLS</text>
+  <text x="150" y="48" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.08em" fill="rgba(7,10,18,0.65)">via Hermes</text>
+  <rect x="316" width="300" height="64" rx="16" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.10)"/>
+  <text x="466" y="30" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.12em" font-weight="800" fill="#F8FAFC">70% FEWER TOKENS</text>
+  <text x="466" y="48" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.08em" fill="rgba(248,250,252,0.55)">direct API vs SOM</text>
+</g>
+<g transform="translate(56,890)">
+  <rect width="300" height="56" rx="16" fill="#0B1A14" stroke="rgba(16,185,129,0.22)"/>
+  <text x="150" y="26" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.10em" font-weight="700" fill="#6EE7B7">11 ENDPOINTS</text>
+  <text x="150" y="42" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(110,231,183,0.70)">/hermes/* • /cua/* • /health</text>
+  <rect x="316" width="300" height="56" rx="16" fill="#0F172A" stroke="rgba(255,255,255,0.08)"/>
+  <text x="466" y="26" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.10em" font-weight="700" fill="#F8FAFC">&lt;50MB • &lt;120MB RAM</text>
+  <text x="466" y="42" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(248,250,252,0.50)">lightweight + durable</text>
+</g>
+
+<!-- footer -->
+<rect x="56" y="1100" width="968" height="1.2" fill="rgba(255,255,255,0.08)"/>
+<text x="56" y="1130" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.08em" fill="rgba(248,250,252,0.42)">Meta Computer-Use (SOM + AX, cua-driver MCP)  •  FastAPI + Preact (30KB)  •  Tauri 5MB</text>
+<text x="56" y="1152" font-family="JetBrains Mono, monospace" font-size="11" fill="rgba(201,168,106,0.85)">POST /computer-use {prompt: "any desktop task"}  →  Bangi picks direct vs SOM automatically.</text>
+<text x="56" y="1200" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.10em" fill="rgba(248,250,252,0.28)">Swipe →  Before → After  •  Hybrid Router  •  CTA</text>
+<text x="1024" y="1200" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.10em" fill="rgba(201,168,106,0.6)">1 / 4</text>
+</svg>

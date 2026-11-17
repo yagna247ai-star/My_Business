@@ -5,24 +5,46 @@ import { signIn } from 'next-auth/react';
 import { Suspense, useState } from 'react';
 import { AuthCard } from '@/components/auth/AuthCard';
 
+/** Only same-site paths: "?next=https://evil.example" or "//evil.example" must never redirect off-site. */
+function safeNext(raw: string | null) {
+  if (!raw || !raw.startsWith('/') || raw.startsWith('//') || raw.startsWith('/\\')) return '/dashboard';
+  return raw;
+}
+
 function LoginForm() {
   const router = useRouter(); const sp = useSearchParams();
-  const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
-  const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState(() => sp.get('email') || ''); const [password, setPassword] = useState('');
+  const [error, setError] = useState(''); const [busy, setBusy] = useState(false); const [showPw, setShowPw] = useState(false);
+  const registered = !!sp.get('registered');
   const submit = async (e: React.FormEvent) => {
-    e.preventDefault(); setError(''); setBusy(true);
-    const r = await signIn('credentials', { email, password, redirect: false });
-    setBusy(false);
-    if (!r || r.error) { setError('That email and password do not match, or the account is temporarily locked after too many attempts.'); return; }
-    router.push(sp.get('next') || '/dashboard'); router.refresh();
+    e.preventDefault();
+    if (busy) return;
+    setError('');
+    if (!email.trim() || !password) { setError('Enter your email and password.'); return; }
+    setBusy(true);
+    try {
+      const r = await signIn('credentials', { email: email.trim(), password, redirect: false });
+      if (!r || r.error) { setError('That email and password do not match, or the account is temporarily locked after too many attempts. Try again in 15 minutes.'); setBusy(false); return; }
+      router.replace(safeNext(sp.get('next'))); router.refresh();
+    } catch {
+      setError('Could not reach the server. Check your internet connection and try again.');
+      setBusy(false);
+    }
   };
   return (
-    <AuthCard title="Sign in" subtitle={sp.get('registered') ? 'Your account is ready. Sign in to start Level 1.' : 'Welcome back.'}>
-      <form className="stack gap-16" onSubmit={submit} noValidate>
-        <div><label className="field-label" htmlFor="email">Email</label><input className="input" id="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
-        <div><label className="field-label" htmlFor="password">Password</label><input className="input" id="password" type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></div>
-        {error && <p className="field-err" role="alert">{error}</p>}
-        <button className="btn btn-gold btn-block" type="submit" disabled={busy || !email || !password}>{busy ? 'Signing in…' : 'Sign in'}</button>
+    <AuthCard title="Sign in" subtitle={registered ? 'Your account is ready. Sign in to start Level 1.' : 'Welcome back.'}>
+      <form className="stack gap-16" onSubmit={submit} noValidate aria-busy={busy}>
+        {registered && <p className="small" role="status" style={{ background: 'var(--success-tint)', color: 'var(--success)', padding: '10px 12px', borderRadius: 12, fontWeight: 600 }}>Account created. Sign in with the password you just chose.</p>}
+        <div><label className="field-label" htmlFor="email">Email</label><input className="input" id="email" name="email" type="email" inputMode="email" autoComplete="email" required disabled={busy} value={email} onChange={e => setEmail(e.target.value)} /></div>
+        <div>
+          <label className="field-label" htmlFor="password">Password</label>
+          <div style={{ position: 'relative' }}>
+            <input className="input" id="password" name="password" type={showPw ? 'text' : 'password'} autoComplete="current-password" required disabled={busy} autoFocus={registered} value={password} onChange={e => setPassword(e.target.value)} style={{ paddingRight: 64 }} />
+            <button type="button" className="link small" onClick={() => setShowPw(s => !s)} aria-controls="password" aria-pressed={showPw} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontWeight: 700 }}>{showPw ? 'Hide' : 'Show'}</button>
+          </div>
+        </div>
+        {error && <p className="field-err" role="alert" aria-live="assertive" style={{ marginTop: 0 }}>{error}</p>}
+        <button className="btn btn-gold btn-block" type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
         <p className="small text-2">New here? <Link className="link" href="/register">Create an account</Link></p>
       </form>
     </AuthCard>

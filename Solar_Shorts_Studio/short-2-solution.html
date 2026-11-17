@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Short #2 — Zero Leakage Engine</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#010a1a;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.stage{width:100vw;height:100vh;display:grid;place-items:center;background:radial-gradient(1200px 800px at 50% -10%,#14325e,#010a1a)}
+.phone{width:min(420px,100vw);height:min(740px,92vh);background:#000;border-radius:22px;overflow:hidden;position:relative;border:4px solid #1a1a1a;box-shadow:0 24px 64px rgba(0,0,0,.6)}
+.topbar{position:absolute;top:0;left:0;right:0;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:10;background:linear-gradient(to bottom,rgba(0,0,0,.75),transparent);color:#fff;font-size:12px;font-weight:700}
+.reactor{position:absolute;top:52px;right:12px;width:86px;height:108px;border-radius:14px;overflow:hidden;border:2px solid #ffb700;z-index:8;background:#0c2448;box-shadow:0 8px 20px rgba(0,0,0,.5)}
+.reactor img{width:100%;height:100%;object-fit:cover}
+.reactor .live{position:absolute;top:6px;left:6px;background:#ff2a2a;color:#fff;font-size:8px;font-weight:900;letter-spacing:.8px;padding:3px 6px;border-radius:6px}
+.reactor .name{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);color:#fff;font-size:8px;padding:4px 6px;text-align:center;font-weight:700}
+.viewport{position:absolute;inset:0;overflow:hidden;background:#061a33}
+.infographic{position:absolute;inset:0;will-change:transform}
+.infographic img{width:100%;height:100%;object-fit:cover;object-position:center center;transform-origin:center center}
+.ken{animation:ken2 30s linear forwards}
+@keyframes ken2{
+ 0%{transform:scale(1) translate(0,0)}
+ 18%{transform:scale(1.6) translate(0,-8%)} /* WhatsApp arrow */
+ 40%{transform:scale(1.5) translate(4%,4%)} /* scoring gauges */
+ 70%{transform:scale(1.4) translate(0,16%)} /* 7-day timeline */
+ 100%{transform:scale(1.05) translate(0,0)}
+}
+.overlay{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;justify-content:space-between;padding:52px 14px 14px;pointer-events:none}
+.pill{display:inline-flex;align-items:center;gap:6px;background:#ffb700;color:#061a33;font-weight:900;font-size:11px;letter-spacing:.6px;padding:6px 10px;border-radius:999px}
+.hook h1{margin-top:10px;font-size:26px;line-height:1.05;font-weight:900;color:#fff;text-shadow:0 3px 16px rgba(0,0,0,.7);max-width:78%}
+.hook h1 em{color:#ffb700;font-style:normal}
+.hook p{margin-top:8px;color:#fff;opacity:.95;font-size:12px;line-height:1.4;max-width:78%;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);padding:8px 10px;border-radius:10px;border-left:3px solid #25D366}
+.captions .subline{background:rgba(0,0,0,.78);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;min-height:56px}
+.subline .ava{width:28px;height:28px;border-radius:50%;background:#25D366;display:grid;place-items:center;font-size:13px;flex-shrink:0}
+.subline .txt{font-size:12px;line-height:1.4;color:#fff;font-weight:600}
+.subline .txt b{color:#ffb700}
+.progress{position:absolute;bottom:0;left:0;height:4px;background:#25D366;z-index:10;width:0}
+.controls{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);z-index:12;display:flex;gap:10px}
+.btn{pointer-events:auto;border:none;padding:10px 16px;border-radius:999px;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.btn-play{background:#ffb700;color:#061a33}
+.btn-mute{background:rgba(255,255,255,.14);color:#fff;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2)}
+.countdown{position:absolute;inset:0;display:grid;place-items:center;z-index:20;background:rgba(2,10,26,.92);color:#fff}
+.countdown h2{font-size:64px;font-weight:900;color:#25D366}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone">
+    <div class="topbar"><span id="timer">● REC • 0:00 / 0:30</span><span>WHATSAPP SLA</span></div>
+    <div class="reactor"><div class="live">● LIVE</div><img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=300&fit=crop" alt="reactor"><div class="name">YOUR REACTION</div></div>
+    <div class="viewport"><div class="infographic" id="infographic"><img src="blueprint.png" alt=""></div></div>
+    <div class="overlay">
+      <div class="hook">
+        <div class="pill">✅ PART 2/4 • THE SOLUTION</div>
+        <h1>Reply in <em>5 minutes</em> or lose the deal — here’s the engine ⚙️</h1>
+        <p>5-Minute WhatsApp SLA + AI scoring = zero leakage. Telugu/English auto-reply.</p>
+      </div>
+      <div class="captions">
+        <div class="subline"><div class="ava">💬</div><div class="txt" id="subtxt">Tap <b>PLAY</b> — see the automation engine animate</div></div>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <span style="background:#25D366;color:#fff;font-weight:900;font-size:10px;padding:5px 8px;border-radius:999px">5-Min WhatsApp SLA</span>
+          <span style="background:#ffb700;color:#061a33;font-weight:900;font-size:10px;padding:5px 8px;border-radius:999px">7-Day Nurture</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress" id="progress"></div>
+    <div class="controls"><button class="btn btn-play" id="playBtn">▶ PLAY — 30s</button><button class="btn btn-mute" id="camBtn">📷 Camera</button></div>
+    <div class="countdown" id="countdown" style="display:none"><div style="text-align:center"><h2 id="cdNum">3</h2><div style="opacity:.7;margin-top:6px;font-size:12px;font-weight:800;letter-spacing:1px">ENGINE STARTING</div></div></div>
+  </div>
+</div>
+<script>
+const subs=[
+  {t:0, text:`Stop chasing — <b>automate.</b> This is the <b>Zero Lead Leakage Automation Engine.</b>`},
+  {t:4, text:`Lead fills form → <b>5-minute WhatsApp SLA</b> triggers instantly in <b>Telugu/English.</b> Prevents them from calling your competitor.`},
+  {t:11, text:`Then AI scores: <b>Business Tenure 20pts, Profit 25pts, Digital Readiness 10pts, Decency 20pts.</b> You call HOT leads first.`},
+  {t:18, text:`For 80–90% who don’t reply? <b>7-Day Nurturing Sequence</b> — daily success stories, bill savings, emotions. Trust before pitch.`},
+  {t:24, text:`Scripts available in <b>Telugu / Hindi / Tamil.</b> Comment <b>“ENGINE”</b> and I’ll send the flow. Part 3 = 4 pillars 👇`},
+];
+let playing=false, elapsed=0, dur=30, tm, prog;
+const elSub=document.getElementById('subtxt'), elProg=document.getElementById('progress'), elInf=document.getElementById('infographic'), playBtn=document.getElementById('playBtn'), countdown=document.getElementById('countdown'), cdNum=document.getElementById('cdNum'), timer=document.getElementById('timer');
+function tick(){ elapsed+=0.05; elProg.style.width=Math.min(100,(elapsed/dur)*100)+'%'; timer.textContent=`● REC • 0:${String(Math.floor(elapsed)).padStart(2,'0')} / 0:30`;
+  let cur=subs[0]; for(let s of subs) if(elapsed>=s.t) cur=s;
+  if(cur && cur.text!==elSub._last){ elSub.innerHTML=cur.text; elSub._last=cur.text; }
+  if(elapsed>=dur){ playing=false; clearInterval(tm); clearInterval(prog); playBtn.textContent='↻ REPLAY — 30s'; }
+}
+function start(){ countdown.style.display='grid'; let c=3; cdNum.textContent=c; let ci=setInterval(()=>{ c--; if(c>0) cdNum.textContent=c; else { clearInterval(ci); countdown.style.display='none'; actuallyStart(); } },600); }
+function actuallyStart(){ playing=true; elapsed=0; elSub._last=''; elProg.style.width='0%'; playBtn.textContent='⏸ PLAYING...'; elInf.classList.remove('ken'); void elInf.offsetWidth; elInf.classList.add('ken'); if(tm) clearInterval(tm); tm=setInterval(tick,50); }
+playBtn.addEventListener('click', ()=>{ if(!playing) start(); });
+document.getElementById('camBtn').addEventListener('click', async (e)=>{
+  try{ const s=await navigator.mediaDevices.getUserMedia({video:true}); const v=document.createElement('video'); v.srcObject=s; v.autoplay=true; v.muted=true; v.style.width='100%'; v.style.height='100%'; v.style.objectFit='cover'; document.querySelector('.reactor img').replaceWith(v); e.target.textContent='📷 OFF'; }catch{ alert('Camera blocked — record duet in Instagram instead.'); }
+});
+</script>
+</body>
+</html>

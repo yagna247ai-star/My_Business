@@ -13,6 +13,14 @@ export const prisma =
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
+// SQLite (local/dev): WAL lets reads continue while one write is in progress, so bursts of sign-ups queue instead
+// of timing out. journal_mode is stored in the database file, so this only needs to succeed once.
+const g = globalThis as unknown as { __sqliteTuned?: boolean };
+if (!g.__sqliteTuned && (process.env.DATABASE_URL || "").startsWith("file:")) {
+  g.__sqliteTuned = true;
+  prisma.$queryRawUnsafe("PRAGMA journal_mode=WAL").catch((e: unknown) => console.warn("[prisma] could not enable WAL", e));
+}
+
 // Tenant context — AsyncLocalStorage-like via explicit passing
 // Every tenant-scoped query MUST include tenantId filter
 export function withTenant<T>(tenantId: string, fn: (tx: PrismaClient) => Promise<T>) {

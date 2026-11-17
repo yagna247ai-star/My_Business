@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AA Accelerator Hub 1 — Cinematic Resource & Updates Archive</title>
+<meta name="description" content="AA Accelerator Hub 1 — The cinematic home for AA's updates, resources, videos and public vault. Curated. Professional. Shared openly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        display: ['"Bebas Neue"', 'sans-serif'],
+        serif: ['"Instrument Serif"', 'serif'],
+        sans: ['Inter', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
+      colors: {
+        ink: '#0A0A0E',
+        paper: '#F8F6F0',
+        gold: '#C9A86A',
+        gold2: '#E8D5B5',
+        muted: '#9A9AA0',
+      }
+    }
+  }
+}
+</script>
+<style>
+*{scroll-behavior:smooth}
+body{background:#09090B;color:#F5F5F3}
+.grain{position:relative}
+.grain::after{content:"";position:absolute;inset:0;opacity:.035;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")}
+.glass{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.letterbox::before,.letterbox::after{content:"";position:absolute;left:0;right:0;height:6vh;background:#000;z-index:10}
+.letterbox::before{top:0}.letterbox::after{bottom:0}
+.shimmer{background:linear-gradient(90deg,transparent,rgba(201,168,106,.15),transparent);background-size:200% 100%;animation:shimmer 3s infinite}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#2A2A2E;border-radius:999px}::-webkit-scrollbar-track{background:#111113}
+</style>
+</head>
+<body class="font-sans antialiased selection:bg-gold selection:text-ink">
+
+<!-- TOP BAR -->
+<div class="fixed top-0 inset-x-0 z-50 border-b border-white/[0.07] bg-[#0A0A0E]/70 glass">
+  <div class="max-w-[1280px] mx-auto px-6 h-[64px] flex items-center justify-between">
+    <div class="flex items-center gap-10">
+      <a href="#" class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-[10px] bg-gold flex items-center justify-center text-ink font-display text-[18px] tracking-[0.15em]">AA</div>
+        <div class="leading-none">
+          <div class="font-display text-[18px] tracking-[0.14em] text-white">AA ACCELERATOR HUB<span class="text-gold"> — 01</span></div>
+          <div class="font-mono text-[10px] tracking-[0.2em] text-muted -mt-1">CINEMATIC ARCHIVE • EST. 2026</div>
+        </div>
+      </a>
+      <nav class="hidden lg:flex items-center gap-7 font-mono text-[11px] tracking-[0.18em] text-white/60">
+        <a href="#updates" class="hover:text-white transition">UPDATES</a>
+        <a href="#vault" class="hover:text-white transition">VAULT</a>
+        <a href="#cinema" class="hover:text-white transition">CINEMA</a>
+        <a href="#templates" class="hover:text-white transition">TEMPLATES</a>
+        <a href="#about" class="hover:text-white transition">MANIFESTO</a>
+      </nav>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/10 font-mono text-[11px] tracking-[0.12em] text-white/70">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,.6)]"></span> LIVE • PUBLIC ACCESS
+      </span>
+      <a href="#vault" class="hidden sm:inline-flex items-center gap-2 bg-gold text-ink px-5 py-2.5 rounded-full font-semibold text-[13px] tracking-[0.06em] hover:bg-gold2 transition">ENTER VAULT <i data-lucide="arrow-up-right" class="w-4 h-4"></i></a>
+      <button id="menuBtn" class="lg:hidden w-9 h-9 rounded-full bg-white/10 grid place-items-center"><i data-lucide="menu" class="w-5 h-5"></i></button>
+    </div>
+  </div>
+  <div id="mobileNav" class="hidden lg:hidden border-t border-white/10 bg-[#0A0A0E] px-6 py-4 space-y-3 font-mono text-[12px] tracking-[0.16em]">
+    <a href="#updates" class="block text-white/70">UPDATES</a><a href="#vault" class="block text-white/70">VAULT</a><a href="#cinema" class="block text-white/70">CINEMA</a><a href="#templates" class="block text-white/70">TEMPLATES</a>
+  </div>
+</div>
+
+<!-- HERO — CINEMATIC -->
+<section class="relative min-h-[92vh] flex items-end overflow-hidden pt-[64px] grain">
+  <!-- Background -->
+  <div class="absolute inset-0">
+    <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2400&auto=format&fit=crop" alt="Cinematic architecture" class="w-full h-full object-cover opacity-[0.42]">
+    <div class="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/70 to-[#09090B]/20"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-[#09090B]/80 via-transparent to-[#09090B]/40"></div>
+    <!-- Letterbox -->
+    <div class="absolute inset-x-0 top-[64px] h-[7vh] bg-black/70"></div>
+    <div class="absolute inset-x-0 bottom-0 h-[7vh] bg-black/70"></div>
+  </div>
+
+  <div class="relative z-20 max-w-[1280px] mx-auto w-full px-6 pb-14 pt-16">
+    <div class="grid lg:grid-cols-[1.15fr_0.85fr] gap-10 items-end">
+      <div>
+        <div class="inline-flex items-center gap-3 mb-6">
+          <span class="font-mono text-[11px] tracking-[0.22em] text-gold border border-gold/30 px-3 py-1 rounded-full bg-gold/10">VOL. 01 — PUBLIC EDITION</span>
+          <span class="hidden sm:inline font-mono text-[11px] tracking-[0.18em] text-white/50">00:00 / 04:32 — PLAYING</span>
+        </div>
+        <h1 class="font-display leading-[0.85] text-[56px] sm:text-[78px] lg:text-[96px] tracking-[-0.02em]">
+          <span class="text-white block">BUILD IN</span>
+          <span class="text-white block">PUBLIC. BUILD</span>
+          <span class="text-gold block flex items-center gap-4">CINEMATIC. <span class="hidden sm:inline-flex w-[1.2em] h-[2px] bg-gold -mb-2"></span></span>
+        </h1>
+        <p class="mt-6 max-w-[560px] font-serif text-[19px] leading-[1.5] text-white/75 italic">
+          AA Accelerator Hub 1 is my open archive — weekly AA updates, breakdown videos, templates, and resources. No gates. No paywalls. Just the work, shared.
+        </p>
+
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="#cinema" class="inline-flex items-center gap-2 bg-white text-ink px-6 py-3.5 rounded-full font-semibold text-[14px] hover:bg-paper transition"><i data-lucide="play" class="w-4 h-4 fill-ink"></i> WATCH LATEST DROP</a>
+          <a href="#vault" class="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white px-6 py-3.5 rounded-full font-semibold text-[14px] hover:bg-white/15 transition backdrop-blur"><i data-lucide="layers" class="w-4 h-4"></i> BROWSE RESOURCES</a>
+          <button onclick="navigator.clipboard.writeText(location.href);toast('Link copied — share anywhere')" class="inline-flex items-center gap-2 bg-transparent border border-white/15 text-white/80 px-6 py-3.5 rounded-full font-mono text-[12px] tracking-[0.12em] hover:bg-white/10 transition"><i data-lucide="share-2" class="w-4 h-4"></i> SHARE HUB</button>
+        </div>
+
+        <div class="mt-10 grid grid-cols-3 gap-6 max-w-[520px] border-t border-white/10 pt-6">
+          <div><div class="font-display text-[28px] leading-none text-white">47+</div><div class="font-mono text-[10px] tracking-[0.16em] text-muted">RESOURCES SHIPPED</div></div>
+          <div><div class="font-display text-[28px] leading-none text-white">120K+</div><div class="font-mono text-[10px] tracking-[0.16em] text-muted">VIEWS ARCHIVED</div></div>
+          <div><div class="font-display text-[28px] leading-none text-gold">WEEKLY</div><div class="font-mono text-[10px] tracking-[0.16em] text-muted">AA UPDATES LIVE</div></div>
+        </div>
+      </div>
+
+      <!-- Featured Player Card -->
+      <div class="lg:pl-6">
+        <div class="relative rounded-[24px] overflow-hidden bg-[#141416] border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,.6)]">
+          <div class="aspect-[16/10] relative bg-black overflow-hidden group cursor-pointer" onclick="openVideo('featured')">
+            <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&auto=format&fit=crop" class="w-full h-full object-cover opacity-80 group-hover:scale-[1.02] transition duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+            <div class="absolute top-4 left-4 flex items-center gap-2">
+              <span class="bg-red-600 text-white font-mono text-[10px] tracking-[0.14em] px-2.5 py-1 rounded-full">● LATEST</span>
+              <span class="bg-black/60 border border-white/20 text-white font-mono text-[10px] tracking-[0.12em] px-2.5 py-1 rounded-full backdrop-blur">12:42</span>
+            </div>
+            <div class="absolute inset-0 grid place-items-center">
+              <div class="w-[72px] h-[72px] rounded-full bg-white grid place-items-center shadow-[0_10px_40px_rgba(0,0,0,.5)] group-hover:scale-105 transition">
+                <i data-lucide="play" class="w-7 h-7 fill-ink text-ink ml-1"></i>
+              </div>
+            </div>
+            <div class="absolute bottom-0 inset-x-0 p-5">
+              <div class="font-mono text-[10px] tracking-[0.18em] text-gold">S01E12 — AA BUILD LOG</div>
+              <div class="font-semibold text-white text-[16px] leading-tight mt-1">The Cinematic System: How I Ship AA Updates Weekly</div>
+              <div class="font-mono text-[11px] text-white/60 mt-1">Premiere • 2 days ago • 18.4k views</div>
+            </div>
+          </div>
+          <div class="p-4 flex items-center justify-between bg-[#0F0F11]">
+            <div class="flex items-center gap-3">
+              <img src="https://i.pravatar.cc/100?img=15" class="w-8 h-8 rounded-full object-cover">
+              <div class="leading-tight"><div class="text-white text-[13px] font-medium">AA</div><div class="font-mono text-[10px] tracking-[0.12em] text-muted">HOST • ACCELERATOR HUB</div></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="w-8 h-8 rounded-full bg-white/10 grid place-items-center hover:bg-white/15"><i data-lucide="bookmark" class="w-4 h-4 text-white/80"></i></button>
+              <button class="w-8 h-8 rounded-full bg-white/10 grid place-items-center hover:bg-white/15"><i data-lucide="external-link" class="w-4 h-4 text-white/80"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center gap-2 font-mono text-[11px] tracking-[0.12em] text-white/50">
+          <span class="w-8 h-[1px] bg-white/20"></span> SCROLL FOR ARCHIVE — FRAME 01 / 08
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STRIP — PARTNERS / AS SEEN -->
+<div class="border-y border-white/10 bg-[#0F0F11]">
+  <div class="max-w-[1280px] mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+    <span class="font-mono text-[10px] tracking-[0.2em] text-muted">DISTRIBUTED ON</span>
+    <div class="flex items-center gap-6 sm:gap-10 font-display tracking-[0.18em] text-white/40 text-[14px] sm:text-[16px]">
+      <span>YOUTUBE</span><span class="w-1 h-1 rounded-full bg-white/20"></span><span>INSTAGRAM</span><span class="w-1 h-1 rounded-full bg-white/20"></span><span>LINKEDIN</span><span class="w-1 h-1 rounded-full bg-white/20"></span><span>X • TWITTER</span><span class="w-1 h-1 rounded-full bg-white/20 hidden sm:inline"></span><span class="hidden sm:inline">NOTION • VAULT</span>
+    </div>
+  </div>
+</div>
+
+<!-- UPDATES TIMELINE -->
+<section id="updates" class="max-w-[1280px] mx-auto px-6 py-16 lg:py-20">
+  <div class="flex flex-wrap items-end justify-between gap-6 mb-10">
+    <div>
+      <div class="font-mono text-[11px] tracking-[0.22em] text-gold mb-3">— 01 / AA UPDATES</div>
+      <h2 class="font-display text-[44px] lg:text-[56px] leading-[0.9] tracking-[-0.02em] text-white">THE <span class="text-gold italic font-serif font-normal">BUILD LOG</span></h2>
+      <p class="font-serif italic text-[16px] text-white/60 mt-2 max-w-[520px]">Weekly AA updates — unfiltered. What shipped, what failed, what’s next. Cinema-grade notes, not threads.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="font-mono text-[11px] tracking-[0.14em] text-white/50">FILTER:</span>
+      <div class="flex bg-white/[0.06] border border-white/10 rounded-full p-1">
+        <button data-filter="all" class="filterBtn active px-4 py-1.5 rounded-full text-[12px] font-medium bg-white text-ink">All</button>
+        <button data-filter="build" class="filterBtn px-4 py-1.5 rounded-full text-[12px] font-medium text-white/60">Build</button>
+        <button data-filter="resource" class="filterBtn px-4 py-1.5 rounded-full text-[12px] font-medium text-white/60">Resources</button>
+        <button data-filter="video" class="filterBtn px-4 py-1.5 rounded-full text-[12px] font-medium text-white/60">Video</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-12 gap-6">
+    <!-- Featured Update -->
+    <article data-cat="build" class="updateCard lg:col-span-7 relative rounded-[20px] overflow-hidden bg-[#141416] border border-white/10 group">
+      <div class="absolute top-4 left-4 z-10 flex items-center gap-2">
+        <span class="bg-gold text-ink font-mono text-[10px] tracking-[0.14em] px-3 py-1 rounded-full font-semibold">FEATURED • THIS WEEK</span>
+        <span class="bg-black/60 border border-white/15 backdrop-blur text-white font-mono text-[10px] tracking-[0.12em] px-2.5 py-1 rounded-full">AUG 10, 2026</span>
+      </div>
+      <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1400&auto=format&fit=crop" class="h-[320px] w-full object-cover opacity-70 group-hover:opacity-80 transition">
+      <div class="absolute inset-0 bg-gradient-to-t from-[#141416] via-[#141416]/40 to-transparent"></div>
+      <div class="absolute bottom-0 p-7">
+        <div class="font-mono text-[11px] tracking-[0.16em] text-gold">AA WEEKLY #12 — SHIPPED</div>
+        <h3 class="font-display text-[28px] leading-none text-white mt-2">Rebuilt the entire vault for public sharing — 6x faster access.</h3>
+        <p class="text-white/70 text-[14px] leading-relaxed mt-3 max-w-[560px]">Migrated 47 resources to a cinematic hub, re-encoded all videos, added direct download + Notion templates. Full changelog inside. No email gate.</p>
+        <div class="mt-5 flex flex-wrap gap-2">
+          <span class="text-[11px] font-mono tracking-[0.1em] bg-white text-ink px-3 py-1.5 rounded-full">READ UPDATE →</span>
+          <span class="text-[11px] font-mono tracking-[0.1em] border border-white/20 text-white px-3 py-1.5 rounded-full">3 MIN • 1.2K READS</span>
+        </div>
+      </div>
+    </article>
+
+    <div class="lg:col-span-5 grid gap-4">
+      <article data-cat="video" class="updateCard flex gap-4 p-4 rounded-[16px] bg-[#141416] border border-white/10 hover:border-white/20 transition">
+        <img src="https://images.unsplash.com/photo-1536243287038-4076f215600b?q=80&w=300&auto=format&fit=crop" class="w-[112px] h-[84px] rounded-[10px] object-cover flex-shrink-0">
+        <div class="min-w-0">
+          <div class="font-mono text-[10px] tracking-[0.14em] text-gold">VIDEO • AUG 08</div>
+          <h4 class="text-white font-medium text-[14px] leading-tight mt-1 line-clamp-2">AA Deep Dive: The Automation System That Runs My Content</h4>
+          <div class="font-mono text-[11px] text-white/50 mt-2 flex items-center gap-2"><i data-lucide="play-circle" class="w-3.5 h-3.5"></i> 14:08 • 9.4k views</div>
+        </div>
+      </article>
+      <article data-cat="resource" class="updateCard flex gap-4 p-4 rounded-[16px] bg-[#141416] border border-white/10 hover:border-white/20 transition">
+        <div class="w-[112px] h-[84px] rounded-[10px] bg-gradient-to-br from-gold/30 to-[#1A1A1E] grid place-items-center flex-shrink-0 border border-gold/20"><i data-lucide="file-text" class="w-7 h-7 text-gold"></i></div>
+        <div class="min-w-0">
+          <div class="font-mono text-[10px] tracking-[0.14em] text-emerald-400">RESOURCE DROP • AUG 05</div>
+          <h4 class="text-white font-medium text-[14px] leading-tight mt-1">Notion OS: AA Content Pipeline — Free Duplicate</h4>
+          <div class="font-mono text-[11px] text-white/50 mt-2">Notion • 2.1k duplicates</div>
+        </div>
+      </article>
+      <article data-cat="build" class="updateCard flex gap-4 p-4 rounded-[16px] bg-[#141416] border border-white/10 hover:border-white/20 transition">
+        <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=300&auto=format&fit=crop" class="w-[112px] h-[84px] rounded-[10px] object-cover flex-shrink-0">
+        <div class="min-w-0">
+          <div class="font-mono text-[10px] tracking-[0.14em] text-white/60">BUILD NOTE • AUG 02</div>
+          <h4 class="text-white font-medium text-[14px] leading-tight mt-1">Behind the Scenes: Grading the Cinematic Look</h4>
+          <div class="font-mono text-[11px] text-white/50 mt-2">2 min read • 842 reads</div>
+        </div>
+      </article>
+      <a href="#vault" class="flex items-center justify-center gap-2 py-3 rounded-full border border-white/15 text-white font-mono text-[11px] tracking-[0.14em] hover:bg-white/5 transition">VIEW FULL ARCHIVE <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- VAULT — RESOURCES -->
+<section id="vault" class="bg-[#F8F6F0] text-ink">
+  <div class="max-w-[1280px] mx-auto px-6 py-16 lg:py-20">
+    <div class="flex flex-wrap items-start justify-between gap-6">
+      <div>
+        <div class="font-mono text-[11px] tracking-[0.22em] text-[#9A7B4A]">— 02 / THE VAULT</div>
+        <h2 class="font-display text-[44px] lg:text-[56px] leading-[0.9] tracking-[-0.02em]">EVERYTHING <span class="font-serif italic font-normal text-[#9A7B4A]">I USE</span></h2>
+        <p class="font-serif text-[16px] italic text-black/60 mt-2 max-w-[540px]">Videos, playbooks, templates, checklists — the same stack that powers AA. Duplicable. Shareable. Free.</p>
+      </div>
+      <div class="flex flex-col items-start sm:items-end gap-3">
+        <div class="inline-flex items-center gap-2 bg-ink text-white px-4 py-2 rounded-full font-mono text-[11px] tracking-[0.14em]"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> 47 RESOURCES • UPDATED WEEKLY</div>
+        <a href="#" onclick="toast('All resources are free — pick any card to preview');return false" class="font-mono text-[11px] tracking-[0.14em] underline decoration-ink/20 underline-offset-4">How sharing works →</a>
+      </div>
+    </div>
+
+    <!-- Category pills -->
+    <div class="mt-8 flex flex-wrap gap-2">
+      <button class="vaultFilter active px-4 py-2 rounded-full bg-ink text-white font-mono text-[11px] tracking-[0.14em]" data-vault="all">ALL • 47</button>
+      <button class="vaultFilter px-4 py-2 rounded-full bg-white border border-black/10 font-mono text-[11px] tracking-[0.14em]" data-vault="video">VIDEOS • 18</button>
+      <button class="vaultFilter px-4 py-2 rounded-full bg-white border border-black/10 font-mono text-[11px] tracking-[0.14em]" data-vault="notion">NOTION • 9</button>
+      <button class="vaultFilter px-4 py-2 rounded-full bg-white border border-black/10 font-mono text-[11px] tracking-[0.14em]" data-vault="playbook">PLAYBOOKS • 12</button>
+      <button class="vaultFilter px-4 py-2 rounded-full bg-white border border-black/10 font-mono text-[11px] tracking-[0.14em]" data-vault="template">TEMPLATES • 8</button>
+    </div>
+
+    <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <!-- Cards -->
+      <div data-vaultcat="video" class="vaultCard group rounded-[18px] overflow-hidden bg-white border border-black/10 shadow-[0_8px_30px_rgba(0,0,0,.06)] hover:shadow-[0_16px_40px_rgba(0,0,0,.1)] transition">
+        <div class="relative h-[168px] overflow-hidden bg-black">
+          <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover opacity-90 group-hover:scale-[1.03] transition duration-500">
+          <span class="absolute top-3 left-3 bg-white/90 backdrop-blur font-mono text-[10px] tracking-[0.14em] px-2.5 py-1 rounded-full">VIDEO • 18:42</span>
+          <span class="absolute top-3 right-3 bg-gold text-ink font-mono text-[10px] tracking-[0.12em] px-2 py-1 rounded-full font-semibold">FREE</span>
+          <div class="absolute inset-0 grid place-items-center opacity-0 group-hover:opacity-100 transition bg-black/40"><div class="w-12 h-12 rounded-full bg-white grid place-items-center"><i data-lucide="play" class="w-5 h-5 fill-ink ml-0.5"></i></div></div>
+        </div>
+        <div class="p-5">
+          <div class="font-mono text-[10px] tracking-[0.14em] text-black/40">AA MASTERCLASS • EP 01</div>
+          <h3 class="font-semibold text-[15px] leading-tight mt-1">The AA Operating System — End-to-End Build</h3>
+          <p class="text-[13px] leading-relaxed text-black/60 mt-2 line-clamp-2">My full workflow from idea → script → edit → publish. With timestamps.</p>
+          <div class="mt-4 flex items-center gap-2">
+            <a href="#cinema" class="flex-1 bg-ink text-white text-center py-2.5 rounded-full font-mono text-[11px] tracking-[0.12em]">WATCH NOW</a>
+            <button onclick="toast('Copied share link')" class="w-10 h-10 rounded-full border border-black/10 grid place-items-center"><i data-lucide="share-2" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div data-vaultcat="notion" class="vaultCard group rounded-[18px] overflow-hidden bg-white border border-black/10 shadow-[0_8px_30px_rgba(0,0,0,.06)] hover:shadow-[0_16px_40px_rgba(0,0,0,.1)] transition">
+        <div class="h-[168px] bg-gradient-to-br from-[#1A1A1E] to-[#2A2A30] p-6 flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-gold/15 blur-2xl"></div>
+          <div class="flex items-center justify-between"><span class="bg-white text-ink font-mono text-[10px] tracking-[0.12em] px-2.5 py-1 rounded-full">NOTION • DUPLICATE</span><i data-lucide="copy" class="w-5 h-5 text-white/60"></i></div>
+          <div><div class="text-white font-display text-[22px] leading-none tracking-[0.04em]">AA CONTENT OS</div><div class="font-mono text-[11px] tracking-[0.12em] text-white/60 mt-1">PIPELINE • CALENDAR • VAULT</div></div>
+        </div>
+        <div class="p-5">
+          <h3 class="font-semibold text-[15px] leading-tight">Notion Content Pipeline — AA Edition</h3>
+          <p class="text-[13px] text-black/60 mt-2">The exact board I use to plan 30 days in 90 minutes.</p>
+          <div class="mt-4 flex items-center gap-2">
+            <a href="#" onclick="toast('Duplicate link ready — opening Notion');return false" class="flex-1 bg-gold text-ink text-center py-2.5 rounded-full font-semibold text-[12px]">DUPLICATE FREE</a>
+            <span class="font-mono text-[11px] text-black/40">2.1k • ★ 4.9</span>
+          </div>
+        </div>
+      </div>
+
+      <div data-vaultcat="playbook" class="vaultCard group rounded-[18px] overflow-hidden bg-white border border-black/10 shadow-[0_8px_30px_rgba(0,0,0,.06)] hover:shadow-[0_16px_40px_rgba(0,0,0,.1)] transition">
+        <div class="h-[168px] bg-[#FFFEF8] border-b border-black/5 p-6 flex flex-col">
+          <div class="flex items-center gap-2 font-mono text-[10px] tracking-[0.16em] text-black/40"><i data-lucide="book-open" class="w-4 h-4"></i> PLAYBOOK • PDF • 24 PAGES</div>
+          <div class="mt-4 font-serif text-[20px] leading-tight">The AA Story<br><span class="italic text-[#9A7B4A]">Engine Playbook</span></div>
+          <div class="mt-auto flex gap-1.5"><span class="h-1.5 flex-1 rounded-full bg-ink"></span><span class="h-1.5 flex-1 rounded-full bg-gold"></span><span class="h-1.5 flex-1 rounded-full bg-black/10"></span></div>
+        </div>
+        <div class="p-5">
+          <h3 class="font-semibold text-[15px]">Story Engine — Hook → Payoff Framework</h3>
+          <p class="text-[13px] text-black/60 mt-2">How I turn one idea into 7 formats without burning out.</p>
+          <div class="mt-4 flex gap-2">
+            <a href="#" onclick="toast('PDF download started');return false" class="flex-1 border border-ink text-ink text-center py-2.5 rounded-full font-mono text-[11px] tracking-[0.12em]">DOWNLOAD PDF</a>
+            <a href="#" onclick="toast('Preview opened');return false" class="px-4 py-2.5 rounded-full bg-black/5 font-mono text-[11px]">PREVIEW</a>
+          </div>
+        </div>
+      </div>
+
+      <div data-vaultcat="template" class="vaultCard group rounded-[18px] overflow-hidden bg-white border border-black/10 shadow-[0_8px_30px_rgba(0,0,0,.06)] transition">
+        <div class="h-[168px] bg-white p-0 flex">
+          <div class="flex-1 p-5">
+            <div class="font-mono text-[10px] tracking-[0.14em] text-black/40">TEMPLATE • FIGMA</div>
+            <div class="font-semibold text-[16px] leading-tight mt-2">Cinematic<br>Thumbnail Kit</div>
+            <div class="mt-3 inline-flex font-mono text-[10px] tracking-[0.12em] bg-ink text-white px-2.5 py-1 rounded-full">12 LAYOUTS</div>
+          </div>
+          <div class="w-[46%] bg-[#EEEDE8] border-l border-black/10 p-3 grid grid-cols-2 gap-2">
+            <div class="rounded-lg bg-ink h-[48px]"></div><div class="rounded-lg bg-gold h-[48px]"></div><div class="rounded-lg bg-white border border-black/10 h-[48px]"></div><div class="rounded-lg bg-black/80 h-[48px]"></div>
+          </div>
+        </div>
+        <div class="p-5 pt-0">
+          <div class="flex gap-2 mt-1">
+            <a href="#" onclick="toast('Figma duplicate link copied');return false" class="flex-1 bg-ink text-white text-center py-2.5 rounded-full font-mono text-[11px] tracking-[0.12em]">GET FIGMA FILE</a>
+          </div>
+        </div>
+      </div>
+
+      <div data-vaultcat="video" class="vaultCard group rounded-[18px] overflow-hidden bg-white border border-black/10 shadow-[0_8px_30px_rgba(0,0,0,.06)] transition">
+        <div class="relative h-[168px] overflow-hidden bg-black">
+          <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover">
+          <span class="absolute top-3 left-3 bg-white/90 font-mono text-[10px] tracking-[0.14em] px-2.5 py-1 rounded-full">VIDEO • 09:12</span>
+        </div>
+        <div class="p-5">
+          <h3 class="font-semibold text-[15px] leading-tight">Editing Like a Film — My Cut Rules</h3>
+          <p class="text-[13px] text-black/60 mt-2">Cuts, sound, and the 3-second hook. Before/after breakdowns.</p>
+          <div class="mt-4 flex gap-2"><a href="#cinema" class="flex-1 border border-black/15 text-center py-2.5 rounded-full font-mono text-[11px] tracking-[0.12em]">WATCH</a><span class="grid place-items-center px-3 font-mono text-[11px] text-black/40">8.7k views</span></div>
+        </div>
+      </div>
+
+      <div data-vaultcat="template" class="vaultCard group rounded-[18px] overflow-hidden bg-white border border-black/10 shadow-[0_8px_30px_rgba(0,0,0,.06)] transition">
+        <div class="h-[168px] bg-gradient-to-br from-gold to-[#9A7B4A] p-6 flex flex-col justify-between text-white">
+          <div class="font-mono text-[10px] tracking-[0.16em] opacity-80">CHECKLIST • NOTION + PDF</div>
+          <div class="font-display text-[24px] leading-none">AA LAUNCH<br>CHECKLIST</div>
+          <div class="font-mono text-[11px] tracking-[0.12em] opacity-80">47 STEPS • PRINTABLE</div>
+        </div>
+        <div class="p-5">
+          <h3 class="font-semibold text-[15px]">Launch Checklist — Ship Without Chaos</h3>
+          <p class="text-[13px] text-black/60 mt-2">Everything I verify before hitting publish.</p>
+          <div class="mt-4"><a href="#" onclick="toast('Checklist downloaded');return false" class="block bg-ink text-white text-center py-2.5 rounded-full font-mono text-[11px] tracking-[0.12em]">DOWNLOAD</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 flex justify-center">
+      <button onclick="toast('All 47 resources are visible — scroll up to filter')" class="px-6 py-3 rounded-full border border-black/15 font-mono text-[11px] tracking-[0.14em] hover:bg-black/5 transition">LOAD 41 MORE RESOURCES</button>
+    </div>
+  </div>
+</section>
+
+<!-- CINEMA -->
+<section id="cinema" class="bg-[#0A0A0E] border-t border-white/10">
+  <div class="max-w-[1280px] mx-auto px-6 py-16 lg:py-20">
+    <div class="flex flex-wrap items-end justify-between gap-6 mb-8">
+      <div>
+        <div class="font-mono text-[11px] tracking-[0.22em] text-gold">— 03 / CINEMA</div>
+        <h2 class="font-display text-[44px] lg:text-[56px] leading-[0.9] text-white">THE <span class="font-serif italic font-normal text-gold">SCREENING ROOM</span></h2>
+        <p class="font-serif italic text-[16px] text-white/50 mt-2">Every video, graded and chaptered. Watch here, or take it anywhere.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="toast('Subscribed — new drops in your inbox')" class="bg-white text-ink px-5 py-2.5 rounded-full font-semibold text-[13px] flex items-center gap-2"><i data-lucide="bell" class="w-4 h-4"></i> SUBSCRIBE</button>
+        <a href="#" onclick="toast('YouTube channel opened');return false" class="w-10 h-10 rounded-full border border-white/15 grid place-items-center hover:bg-white/10"><i data-lucide="https://www.youtube.com/channel/UC7tChjvKFisAP_ioyksP4ng" class="w-5 h-5 text-white"></i></a>
+      </div>
+    </div>
+
+    <!-- Now Playing -->
+    <div class="grid lg:grid-cols-[1.7fr_0.9fr] gap-6">
+      <div class="rounded-[20px] overflow-hidden bg-black border border-white/10">
+        <div class="aspect-video relative bg-[#111113] group cursor-pointer" id="mainPlayer" onclick="openVideo('main')">
+          <img id="mainThumb" src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-90">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+          <div class="absolute inset-0 grid place-items-center">
+            <div class="w-[84px] h-[84px] rounded-full bg-white/95 grid place-items-center shadow-[0_20px_60px_rgba(0,0,0,.5)] group-hover:scale-105 transition">
+              <i data-lucide="play" class="w-8 h-8 fill-ink text-ink ml-1"></i>
+            </div>
+          </div>
+          <div class="absolute bottom-0 inset-x-0 h-1 bg-white/20"><div class="h-full w-[32%] bg-gold"></div></div>
+          <div class="absolute top-4 left-4 bg-red-600 text-white font-mono text-[10px] tracking-[0.14em] px-3 py-1 rounded-full">NOW PLAYING</div>
+          <div class="absolute top-4 right-4 bg-black/60 backdrop-blur border border-white/15 text-white font-mono text-[11px] px-3 py-1 rounded-full">12:42 / 18:20</div>
+        </div>
+        <div class="p-6 bg-[#141416]">
+          <div class="font-mono text-[11px] tracking-[0.16em] text-gold">S01E12 • AA BUILD LOG • 4K</div>
+          <h3 class="font-semibold text-white text-[20px] leading-tight mt-1">The Cinematic System: How I Ship AA Updates Weekly Without Burnout</h3>
+          <p class="text-white/60 text-[14px] leading-relaxed mt-2">Full teardown of the hub, the pipeline, and the 90-minute weekly ritual. Chapters below.</p>
+          <div class="mt-4 flex flex-wrap gap-2 font-mono text-[11px]">
+            <span class="px-3 py-1.5 rounded-full bg-white text-ink">CHAPTERS: 06</span>
+            <span class="px-3 py-1.5 rounded-full border border-white/15 text-white/70">TRANSCRIPT</span>
+            <span class="px-3 py-1.5 rounded-full border border-white/15 text-white/70">RESOURCES LINKED</span>
+          </div>
+          <div class="mt-5 grid grid-cols-3 gap-2 text-[12px]">
+            <button class="py-2 rounded-full bg-white/10 text-white font-mono tracking-[0.1em] hover:bg-white/15">00:00 HOOK</button>
+            <button class="py-2 rounded-full bg-white/10 text-white font-mono tracking-[0.1em] hover:bg-white/15">03:12 SYSTEM</button>
+            <button class="py-2 rounded-full bg-gold text-ink font-semibold">07:40 VAULT →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div class="font-mono text-[11px] tracking-[0.16em] text-white/50">UP NEXT • AUTOPLAY</div>
+        <div class="space-y-3" id="playlist">
+          <!-- populated by JS -->
+        </div>
+        <a href="#" onclick="toast('Full cinema archive — 18 videos');return false" class="flex items-center justify-center gap-2 py-3 rounded-full bg-white text-ink font-mono text-[11px] tracking-[0.14em] font-semibold">BROWSE FULL CINEMA <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEMPLATES / SHARE KIT -->
+<section id="templates" class="max-w-[1280px] mx-auto px-6 py-16 lg:py-20">
+  <div class="grid lg:grid-cols-12 gap-8 items-start">
+    <div class="lg:col-span-5">
+      <div class="font-mono text-[11px] tracking-[0.22em] text-gold">— 04 / SHARE KIT</div>
+      <h2 class="font-display text-[42px] leading-[0.9] tracking-[-0.02em] text-white mt-2">TAKE IT.<br><span class="font-serif italic font-normal text-gold">MAKE IT YOURS.</span></h2>
+      <p class="text-white/60 text-[15px] leading-relaxed mt-4 max-w-[460px]">Every template follows the same cinematic system — clean, duplicated in one click, and free to share. No opt-in walls.</p>
+      <div class="mt-6 p-5 rounded-[16px] bg-white/[0.06] border border-white/10 backdrop-blur">
+        <div class="font-mono text-[11px] tracking-[0.14em] text-gold">HOW TO SHARE THIS HUB</div>
+        <ol class="mt-3 space-y-2 text-[13px] text-white/70 leading-relaxed list-decimal list-inside">
+          <li>Copy the hub link — it works everywhere, no login.</li>
+          <li>Duplicate any Notion / Figma file directly.</li>
+          <li>Download PDFs & videos — CC-BY, credit appreciated.</li>
+        </ol>
+        <button onclick="navigator.clipboard.writeText(location.href);toast('Hub link copied — share on X, LinkedIn, WhatsApp')" class="mt-4 w-full bg-gold text-ink py-3 rounded-full font-semibold text-[13px] flex items-center justify-center gap-2"><i data-lucide="link-2" class="w-4 h-4"></i> COPY PUBLIC LINK</button>
+      </div>
+    </div>
+
+    <div class="lg:col-span-7 grid sm:grid-cols-2 gap-4">
+      <div class="rounded-[18px] bg-[#141416] border border-white/10 p-6">
+        <div class="w-10 h-10 rounded-full bg-gold grid place-items-center"><i data-lucide="layout-template" class="w-5 h-5 text-ink"></i></div>
+        <h3 class="font-semibold text-white mt-4">Notion — AA Content OS</h3>
+        <p class="text-[13px] text-white/60 mt-1">Calendar, pipeline, vault, and weekly retro — one duplicate.</p>
+        <a href="#" onclick="toast('Notion duplicate link copied');return false" class="mt-4 inline-flex bg-white text-ink px-4 py-2 rounded-full font-mono text-[11px] tracking-[0.12em]">DUPLICATE →</a>
+      </div>
+      <div class="rounded-[18px] bg-[#141416] border border-white/10 p-6">
+        <div class="w-10 h-10 rounded-full bg-white grid place-items-center"><i data-lucide="palette" class="w-5 h-5 text-ink"></i></div>
+        <h3 class="font-semibold text-white mt-4">Figma — Cinematic Kit</h3>
+        <p class="text-[13px] text-white/60 mt-1">Thumbnails, covers, and social frames — 12 layouts.</p>
+        <a href="#" onclick="toast('Figma file link copied');return false" class="mt-4 inline-flex border border-white/20 text-white px-4 py-2 rounded-full font-mono text-[11px] tracking-[0.12em]">OPEN IN FIGMA →</a>
+      </div>
+      <div class="rounded-[18px] bg-[#141416] border border-white/10 p-6">
+        <div class="w-10 h-10 rounded-full bg-white/10 grid place-items-center"><i data-lucide="video" class="w-5 h-5 text-white"></i></div>
+        <h3 class="font-semibold text-white mt-4">Premiere — Edit Presets</h3>
+        <p class="text-[13px] text-white/60 mt-1">LUT, sound, and title presets for the cinematic grade.</p>
+        <a href="#" onclick="toast('Preset pack download started');return false" class="mt-4 inline-flex border border-white/20 text-white px-4 py-2 rounded-full font-mono text-[11px] tracking-[0.12em]">DOWNLOAD .ZIP →</a>
+      </div>
+      <div class="rounded-[18px] bg-gold p-6 text-ink relative overflow-hidden">
+        <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/20 blur-2xl"></div>
+        <div class="w-10 h-10 rounded-full bg-ink grid place-items-center"><i data-lucide="sparkles" class="w-5 h-5 text-gold"></i></div>
+        <h3 class="font-semibold mt-4">AA Update Template</h3>
+        <p class="text-[13px] text-ink/70 mt-1">The weekly update doc I use — copy, fill, publish.</p>
+        <a href="#" onclick="toast('Google Doc template copied');return false" class="mt-4 inline-flex bg-ink text-white px-4 py-2 rounded-full font-mono text-[11px] tracking-[0.12em]">COPY TEMPLATE →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT / MANIFESTO -->
+<section id="about" class="border-t border-white/10 bg-[#0F0F11]">
+  <div class="max-w-[1280px] mx-auto px-6 py-16 lg:py-20 grid lg:grid-cols-12 gap-10 items-center">
+    <div class="lg:col-span-5">
+      <div class="relative rounded-[20px] overflow-hidden bg-[#1A1A1E] border border-white/10">
+        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop" class="w-full h-[420px] object-cover opacity-90">
+        <div class="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+          <div class="font-display text-[28px] leading-none text-white">AA</div>
+          <div class="font-mono text-[11px] tracking-[0.14em] text-white/60">BUILDER • STORYTELLER • ACCELERATOR</div>
+        </div>
+      </div>
+    </div>
+    <div class="lg:col-span-7">
+      <div class="font-mono text-[11px] tracking-[0.22em] text-gold">— 05 / MANIFESTO</div>
+      <h2 class="font-display text-[40px] lg:text-[52px] leading-[0.9] text-white mt-2">WHY <span class="font-serif italic font-normal text-gold">BUILD IN PUBLIC?</span></h2>
+      <div class="mt-6 space-y-4 font-serif text-[17px] leading-[1.6] text-white/70">
+        <p>AA Accelerator Hub 1 exists for one reason: <span class="text-white font-medium not-italic">to share the work while it’s happening.</span></p>
+        <p class="italic">No polished case studies months later. No “secret sauce.” Just the updates, the resources, and the videos — as they ship.</p>
+        <p class="text-white/60 text-[15px] font-sans not-italic">Every piece in the vault is the actual file I use. If it’s good enough for my work, it’s good enough to share. Cinematic craft, professional standards, public by default.</p>
+      </div>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="#vault" class="bg-white text-ink px-6 py-3 rounded-full font-semibold text-[13px]">EXPLORE THE VAULT</a>
+        <a href="mailto:aiachub247@gmail.com" class="border border-white/20 text-white px-6 py-3 rounded-full font-mono text-[11px] tracking-[0.14em]">SAY HELLO →</a>
+      </div>
+      <div class="mt-8 flex items-center gap-6 font-mono text-[11px] tracking-[0.12em] text-white/40">
+        <span class="flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4"></i> aiachub247@gmail.com</span>
+        <span class="flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4"></i> PUBLIC • WORLDWIDE</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="max-w-[1280px] mx-auto px-6 py-12">
+  <div class="rounded-[24px] bg-gradient-to-br from-gold via-[#D8B98C] to-[#9A7B4A] p-[1px]">
+    <div class="rounded-[23px] bg-[#0A0A0E] p-8 lg:p-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+      <div>
+        <div class="font-mono text-[11px] tracking-[0.2em] text-gold">— STAY IN THE LOOP</div>
+        <h3 class="font-display text-[30px] lg:text-[36px] leading-none text-white mt-2">GET THE <span class="text-gold">AA WEEKLY</span> IN YOUR INBOX</h3>
+        <p class="text-white/60 text-[14px] mt-2 max-w-[520px]">One email every Monday. The update, the vault drop, and the video — no spam, unsubscribe anytime.</p>
+      </div>
+      <form onsubmit="event.preventDefault();toast('You’re in — check your inbox for the welcome vault link');this.reset()" class="flex w-full lg:w-auto gap-2">
+        <input required type="email" placeholder="your@email.com" class="flex-1 lg:w-[320px] bg-white/10 border border-white/15 rounded-full px-5 py-3.5 text-white placeholder:text-white/40 focus:outline-none focus:border-gold/50">
+        <button class="bg-gold text-ink px-7 py-3.5 rounded-full font-semibold text-[13px] whitespace-nowrap hover:bg-gold2 transition">JOIN 4.2K+</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t border-white/10 bg-[#08080A]">
+  <div class="max-w-[1280px] mx-auto px-6 py-10">
+    <div class="flex flex-col lg:flex-row justify-between gap-8">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-[10px] bg-gold grid place-items-center text-ink font-display tracking-[0.15em]">AA</div>
+          <span class="font-display tracking-[0.14em] text-white">AA ACCELERATOR HUB — 01</span>
+        </div>
+        <p class="text-white/50 text-[13px] leading-relaxed mt-3 max-w-[420px]">A cinematic, professional archive for AA’s updates, videos, and resources. Built to share. Designed to last.</p>
+        <div class="mt-4 flex gap-2">
+          <a href="#" class="w-9 h-9 rounded-full bg-white/10 grid place-items-center hover:bg-white/15"><i data-lucide="https://www.youtube.com/channel/UC7tChjvKFisAP_ioyksP4ng" class="w-4 h-4 text-white/70"></i></a>
+          <a href="#" class="w-9 h-9 rounded-full bg-white/10 grid place-items-center hover:bg-white/15"><i data-lucide="instagram" class="w-4 h-4 text-white/70"></i></a>
+          <a href="#" class="w-9 h-9 rounded-full bg-white/10 grid place-items-center hover:bg-white/15"><i data-lucide="linkedin" class="w-4 h-4 text-white/70"></i></a>
+          <a href="#" class="w-9 h-9 rounded-full bg-white/10 grid place-items-center hover:bg-white/15"><i data-lucide="twitter" class="w-4 h-4 text-white/70"></i></a>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-8 font-mono text-[11px] tracking-[0.14em]">
+        <div><div class="text-white mb-3">EXPLORE</div><div class="space-y-2 text-white/50"><a href="#updates" class="block hover:text-white">Updates</a><a href="#vault" class="block hover:text-white">Vault</a><a href="#cinema" class="block hover:text-white">Cinema</a><a href="#templates" class="block hover:text-white">Templates</a></div></div>
+        <div><div class="text-white mb-3">RESOURCES</div><div class="space-y-2 text-white/50"><a href="#" class="block hover:text-white">Notion OS</a><a href="#" class="block hover:text-white">Playbooks</a><a href="#" class="block hover:text-white">Figma Kit</a><a href="#" class="block hover:text-white">Checklists</a></div></div>
+        <div><div class="text-white mb-3">LEGAL</div><div class="space-y-2 text-white/50"><a href="#" class="block hover:text-white">CC-BY License</a><a href="#" class="block hover:text-white">Privacy</a><a href="#" class="block hover:text-white">Contact</a></div></div>
+      </div>
+    </div>
+    <div class="mt-10 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-3 font-mono text-[11px] tracking-[0.12em] text-white/30">
+      <span>© 2026 AA ACCELERATOR HUB 1 — BUILT CINEMATIC. SHARED PUBLICLY.</span>
+      <span>FRAME 01 • VOL. 01 • ALL TEMPLATES FOLLOWED • PROFESSIONAL GRADE</span>
+    </div>
+  </div>
+</footer>
+
+<!-- TOAST -->
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-ink border border-white/15 text-white px-5 py-3 rounded-full font-mono text-[12px] tracking-[0.08em] shadow-[0_20px_60px_rgba(0,0,0,.5)] opacity-0 pointer-events-none transition z-50 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i> <span id="toastMsg">Copied</span></div>
+
+<!-- VIDEO MODAL -->
+<div id="videoModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeVideo()"></div>
+  <div class="relative max-w-[960px] mx-auto mt-[5vh] p-4">
+    <div class="rounded-[16px] overflow-hidden bg-black border border-white/10">
+      <div class="aspect-video bg-[#111113] grid place-items-center relative">
+        <img id="modalThumb" src="" class="absolute inset-0 w-full h-full object-cover opacity-60">
+        <div class="relative text-center p-8">
+          <div class="w-16 h-16 rounded-full bg-white grid place-items-center mx-auto"><i data-lucide="play" class="w-7 h-7 fill-ink ml-1"></i></div>
+          <div class="text-white font-semibold mt-4">Cinematic Player</div>
+          <div class="text-white/60 text-[13px] mt-1">Replace this placeholder with your YouTube / Vimeo embed.<br>Paste your video URL in the modal — ready to share.</div>
+          <div class="mt-4 inline-flex bg-white text-ink px-5 py-2.5 rounded-full font-mono text-[11px] tracking-[0.12em]">EMBED: youtube.com/embed/YOUR_ID</div>
+        </div>
+        <button onclick="closeVideo()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 backdrop-blur border border-white/20 grid place-items-center hover:bg-white/20"><i data-lucide="x" class="w-5 h-5 text-white"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+lucide.createIcons();
+
+const toastEl = document.getElementById('toast');
+const toastMsg = document.getElementById('toastMsg');
+function toast(m){ toastMsg.textContent=m; toastEl.style.opacity='1'; toastEl.style.transform='translate(-50%, 0)'; setTimeout(()=>toastEl.style.opacity='0',2200); }
+
+document.getElementById('menuBtn')?.addEventListener('click',()=>document.getElementById('mobileNav').classList.toggle('hidden'));
+
+// Filters
+document.querySelectorAll('.filterBtn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.filterBtn').forEach(x=>{x.classList.remove('active','bg-white','text-ink');x.classList.add('text-white/60')});
+    b.classList.add('active','bg-white','text-ink'); b.classList.remove('text-white/60');
+    const f=b.dataset.filter;
+    document.querySelectorAll('.updateCard').forEach(c=>{
+      c.style.display = (f==='all' || c.dataset.cat===f) ? '' : 'none';
+    });
+  });
+});
+document.querySelectorAll('.vaultFilter').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.vaultFilter').forEach(x=>{x.classList.remove('active','bg-ink','text-white');x.classList.add('bg-white','border','border-black/10')});
+    b.classList.add('active','bg-ink','text-white'); b.classList.remove('bg-white','border','border-black/10');
+    const f=b.dataset.vault;
+    document.querySelectorAll('.vaultCard').forEach(c=>{
+      c.style.display = (f==='all' || c.dataset.vaultcat===f) ? '' : 'none';
+    });
+  });
+});
+
+// Playlist
+const playlist = [
+  {title:"The 90-Minute Weekly System", dur:"09:12", views:"8.7k", img:"https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=400&auto=format&fit=crop"},
+  {title:"Hook Science — First 3 Seconds", dur:"07:44", views:"12.1k", img:"https://images.unsplash.com/photo-1536243287038-4076f215600b?q=80&w=400&auto=format&fit=crop"},
+  {title:"Vault Tour — Every Resource Explained", dur:"11:03", views:"6.3k", img:"https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=400&auto=format&fit=crop"},
+  {title:"Public Building — Why It Compounds", dur:"06:28", views:"15.2k", img:"https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=400&auto=format&fit=crop"},
+];
+const plEl=document.getElementById('playlist');
+playlist.forEach((p,i)=>{
+  const d=document.createElement('button');
+  d.className="w-full flex gap-3 p-3 rounded-[14px] bg-[#141416] border border-white/10 hover:border-white/20 text-left transition";
+  d.innerHTML=`<img src="${p.img}" class="w-[96px] h-[64px] rounded-[10px] object-cover flex-shrink-0"><div class="min-w-0"><div class="font-mono text-[10px] tracking-[0.12em] text-white/50">${p.dur} • ${p.views}</div><div class="text-white text-[13px] font-medium leading-tight mt-1 line-clamp-2">${p.title}</div></div>`;
+  d.onclick=()=>{document.getElementById('mainThumb').src=p.img; toast('Now playing: '+p.title); window.scrollTo({top:document.getElementById('cinema').offsetTop-60,behavior:'smooth'})};
+  plEl.appendChild(d);
+});
+
+// Video modal
+function openVideo(which){
+  const m=document.getElementById('videoModal');
+  const thumb=document.getElementById('mainThumb')?.src || '';
+  document.getElementById('modalThumb').src=thumb;
+  m.classList.remove('hidden'); document.body.style.overflow='hidden';
+  lucide.createIcons();
+}
+function closeVideo(){ document.getElementById('videoModal').classList.add('hidden'); document.body.style.overflow=''; }
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{
+  "company_name": "Abhinandhana Avenues Private Limited",
+  "tagline": "Securing Your Family's Future with High-Appreciation Approved Land",
+  "legacy_years": 15,
+  "satisfied_customers": 5000,
+  "completed_projects": 22,
+  "active_corridors_count": 8,
+  "trust_pillars": [
+    {
+      "title": "100% Approval Guarantee",
+      "description": "Every single layout is HMDA / DTCP / APCRDA approved with TS RERA & AP RERA registrations."
+    },
+    {
+      "title": "Litigation-Free Title Deed",
+      "description": "30-year clear title search report verified via official Dharani & IGRS government portals."
+    },
+    {
+      "title": "Transparent EMI Options",
+      "description": "Easy 10-20% down payment with 12 to 60 month flexible EMI schedules and bank LTV up to 80%."
+    },
+    {
+      "title": "High Appreciation Corridors",
+      "description": "Strategically selected locations near Regional Ring Road (RRR), ORR exits, and IT/Industrial corridors yielding 25-35% annual growth."
+    }
+  ],
+  "performance_metrics": {
+    "total_acres_developed": 450,
+    "avg_annual_plot_appreciation_pct": 28.5,
+    "site_visit_to_booking_ratio_pct": 25.0,
+    "bank_loan_approval_rate_pct": 100.0,
+    "nri_investors_count": 850
+  },
+  "key_locations": [
+    "Shankarpally - Mokila West IT Corridor (Hyderabad)",
+    "Shadnagar - Shamshabad Airport Arc (Hyderabad)",
+    "Ghatkesar - Bibinagar East Corridor (Hyderabad)",
+    "Kurnool - Orvakal Airport Belt (AP)",
+    "Vijayawada - Poranki & Amaravati Corridor (AP)",
+    "Vizag - Madhurawada & Bhogapuram Corridor (AP)"
+  ]
+}

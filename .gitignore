@@ -1,0 +1,50 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credentials*.json
+token*.json
+service-account*.json
+
+# Dependencies and build output
+node_modules/
+.next/
+.turbo/
+dist/
+build/
+out/
+coverage/
+*.tsbuildinfo
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Local databases
+*.db
+*.db.*
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.log
+
+# Separate git repository (tracked on its own)
+Hermes-agent/hermes-agent/
+
+# Large media and archives (kept on disk, not in git)
+*.mp4
+*.mov
+*.m4v
+*.avi
+*.mkv
+*.zip

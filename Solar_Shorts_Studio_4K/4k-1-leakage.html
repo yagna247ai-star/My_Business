@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4K #1 — 40% Leakage | Telugu</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#000;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.stage{width:100vw;height:100vh;display:grid;place-items:center;background:#000}
+.phone{width:min(1080px,100vw);height:min(1920px,100vh);background:#061a33;position:relative;overflow:hidden;border:6px solid #111;box-shadow:0 24px 64px rgba(0,0,0,.6)}
+@media(min-width:1200px){.phone{width:420px;height:740px;border-radius:22px}}
+.topbar{position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10;background:linear-gradient(to bottom,rgba(0,0,0,.85),transparent);color:#fff;font-size:11px;font-weight:800;letter-spacing:.5px}
+.live-photo{position:absolute;top:62px;right:14px;width:118px;height:148px;border-radius:16px;overflow:hidden;border:3px solid #ffb700;z-index:8;background:#000;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+.live-photo img{width:100%;height:100%;object-fit:cover;object-position:top}
+.live-photo .tag{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.9));color:#fff;font-size:9px;padding:8px 6px 6px;text-align:center;font-weight:800}
+.live-photo .live-dot{position:absolute;top:8px;left:8px;background:#ff2a2a;color:#fff;font-size:9px;font-weight:900;padding:4px 7px;border-radius:6px;display:flex;gap:4px;align-items:center}
+.viewport{position:absolute;inset:0;overflow:hidden;background:#061a33}
+.infographic{position:absolute;inset:0;will-change:transform}
+.infographic img{width:100%;height:100%;object-fit:cover;object-position:left center}
+.ken{animation:ken 28s linear forwards}
+@keyframes ken{0%{transform:scale(1)}18%{transform:scale(1.6) translate(-5%, -3%)}38%{transform:scale(1.6) translate(-7%,7%)}65%{transform:scale(1.5) translate(-4%,14%)}100%{transform:scale(1.05)}}
+.overlay{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;justify-content:space-between;padding:62px 16px 16px;pointer-events:none}
+.pill{display:inline-flex;align-items:center;gap:6px;background:#ffb700;color:#061a33;font-weight:900;font-size:12px;letter-spacing:.5px;padding:7px 14px;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.4)}
+.hook h1{margin-top:12px;font-size:34px;line-height:1.08;font-weight:900;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.7);max-width:76%}
+.hook h1 em{color:#ffb700;font-style:normal}
+.hook p{margin-top:10px;color:#fff;opacity:.95;font-size:14px;line-height:1.5;max-width:76%;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);padding:10px 14px;border-radius:12px;border-left:4px solid #ffb700}
+.captions{pointer-events:auto}
+.subline{background:rgba(0,0,0,.82);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;min-height:64px}
+.subline .ava{width:32px;height:32px;border-radius:50%;background:#ffb700;display:grid;place-items:center;font-size:15px;flex-shrink:0}
+.subline .txt{font-size:13px;line-height:1.5;color:#fff;font-weight:600}
+.subline .txt b{color:#ffb700}
+.progress{position:absolute;bottom:0;left:0;height:6px;background:#ffb700;z-index:10;width:0}
+.controls{position:absolute;bottom:74px;left:50%;transform:translateX(-50%);z-index:12;display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn{pointer-events:auto;border:none;padding:12px 18px;border-radius:999px;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.btn-play{background:#ffb700;color:#061a33}
+.btn-telugu{background:#25D366;color:#fff}
+.btn-upload{background:rgba(255,255,255,.14);color:#fff;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2)}
+.countdown{position:absolute;inset:0;display:grid;place-items:center;z-index:20;background:rgba(2,10,26,.96);color:#fff}
+.countdown h2{font-size:84px;font-weight:900;color:#ffb700}
+.audio-player{position:absolute;top:62px;left:14px;z-index:9;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);border-radius:12px;padding:8px 10px;display:flex;gap:8px;align-items:center;border:1px solid rgba(255,255,255,.15)}
+.audio-player audio{width:160px;height:28px}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone">
+    <div class="topbar"><span id="timer">● 4K 2160×3840 • 30fps • TELUGU</span><span>TE + EN SUBS</span></div>
+    <div class="live-photo"><div class="live-dot">● LIVE</div><img src="live_photo.jpg" alt="You"><div class="tag">YOUR LIVE PHOTO</div></div>
+    <div class="viewport"><div class="infographic" id="infographic"><img src="blueprint.png" alt=""></div></div>
+    <div class="audio-player"><span style="font-size:10px;font-weight:800;color:#ffb700">YOUR META AD</span><audio id="metaAudio" controls src="live_voice.mp4"></audio></div>
+    <div class="overlay">
+      <div class="hook">
+        <div class="pill">⚠️ VIDEO 1/4 • లీకేజ్ సమస్య</div>
+        <h1>మీ లీడ్స్ లో <em>40% ముందే పోతోంది!</em> 😱</h1>
+        <p>Meta/Google యాడ్స్ వేస్తున్నారా? 5 నిమిషాల్లో రిప్లై ఇస్తే 8 రెట్లు సర్వేలు!</p>
+      </div>
+      <div class="captions">
+        <div class="subline"><div class="ava">🎙️</div><div class="txt" id="subtxt">Tap <b>PLAY</b> → Telugu voice + subtitles. Or upload your cloned Telugu audio.</div></div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <span style="background:#ffb700;color:#061a33;font-weight:900;font-size:11px;padding:6px 10px;border-radius:999px">BOOK FREE SITE SURVEY</span>
+          <span style="background:rgba(255,255,255,.14);color:#fff;font-weight:700;font-size:11px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.2)">కామెంట్ “లీకేజ్” 👇</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress" id="progress"></div>
+    <div class="controls">
+      <button class="btn btn-play" id="playBtn">▶ PLAY 4K — 28s</button>
+      <button class="btn btn-telugu" id="teluguBtn">🔊 తెలుగు TTS</button>
+      <label class="btn btn-upload" style="cursor:pointer"><input type="file" id="audioUpload" accept="audio/*" style="display:none">📤 Upload Telugu Audio</label>
+    </div>
+    <div class="countdown" id="countdown" style="display:none"><div style="text-align:center"><h2 id="cdNum">3</h2><div style="opacity:.7;margin-top:8px;font-size:12px;letter-spacing:1px;font-weight:800">4K STARTING</div></div></div>
+  </div>
+</div>
+<script>
+const teluguScript = `నమస్తే, AP/TS సోలార్ బిజినెస్ ఓనర్స్! మీ Meta/Google లీడ్స్ లో 40 శాతం ముందే పోతున్నాయి తెలుసా? ఇండస్ట్రీలో యావరేజ్ రిప్లై 14 నుండి 24 గంటలు. కానీ 5 నిమిషాల్లో రిప్లై ఇస్తే 8 రెట్లు ఎక్కువ సైట్ సర్వేలు వస్తాయి. చీప్ ప్యానెల్ ట్రాప్ లో పడొద్దు — 25 ఏళ్ల నమ్మకాన్ని చెప్పండి. మీ యాడ్ బడ్జెట్ లీకయ్యే పైప్ లా ఉంది. పరిష్కారం నెక్స్ట్ వీడియోలో చూద్దాం.`;
+const subs=[
+  {t:0, text:`<b>నమస్తే!</b> AP/TS సోలార్ ఓనర్స్ — మీ లీడ్స్ <b>40% ముందే పోతున్నాయి!</b>`},
+  {t:3.5, text:`యావరేజ్ రిప్లై <b>14–24 గంటలు</b>. <b>5 నిమిషాల్లో</b> రిప్లై ఇస్తే <b>8 రెట్లు</b> సర్వేలు.`},
+  {t:10, text:`<b>చీప్ ప్యానెల్ ట్రాప్:</b> 25 ఏళ్ల నమ్మకం చెప్పరు, కస్టమర్ చీప్ కి పోతాడు.`},
+  {t:17, text:`ఫలితం? <b>40% లీడ్ లాస్.</b> మీ Meta/Google బడ్జెట్ సగం వృధా.`},
+  {t:23, text:`పరిష్కారం? <b>పార్ట్ 2: 5 నిమిషాల WhatsApp ఇంజిన్</b>. కామెంట్ <b>“లీకేజ్”</b> 👇`},
+];
+let playing=false, elapsed=0, dur=28, tm;
+const elSub=document.getElementById('subtxt'), elProg=document.getElementById('progress'), elInf=document.getElementById('infographic'), playBtn=document.getElementById('playBtn'), countdown=document.getElementById('countdown'), cdNum=document.getElementById('cdNum'), timer=document.getElementById('timer');
+let customAudio=null, useTTS=false;
+function speakTelugu(){
+  if('speechSynthesis' in window){
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(teluguScript);
+    u.lang='te-IN'; u.rate=0.95;
+    // try to pick Telugu voice
+    const voices=speechSynthesis.getVoices();
+    const te=voices.find(v=>v.lang.includes('te'))||voices.find(v=>v.lang.includes('hi'))||voices[0];
+    if(te) u.voice=te;
+    speechSynthesis.speak(u);
+    return u;
+  } else alert('Browser lo Telugu TTS support ledu. Upload Telugu audio use cheyandi.');
+}
+function tick(){ elapsed+=0.05; elProg.style.width=Math.min(100,(elapsed/dur)*100)+'%'; timer.textContent=`● 4K • 0:${String(Math.floor(elapsed)).padStart(2,'0')} / 0:28 • తెలుగు`;
+  let cur=subs[0]; for(let s of subs) if(elapsed>=s.t) cur=s;
+  if(cur && cur.text!==elSub._last){ elSub.innerHTML=cur.text; elSub._last=cur.text; }
+  if(elapsed>=dur){ playing=false; clearInterval(tm); if(useTTS) speechSynthesis.cancel(); playBtn.textContent='↻ REPLAY 4K — 28s'; }
+}
+function start(){ countdown.style.display='grid'; let c=3; cdNum.textContent=c; let ci=setInterval(()=>{ c--; if(c>0) cdNum.textContent=c; else { clearInterval(ci); countdown.style.display='none'; actuallyStart(); } },600); }
+function actuallyStart(){
+  playing=true; elapsed=0; elSub._last=''; elProg.style.width='0%'; playBtn.textContent='⏸ PLAYING 4K...';
+  elInf.classList.remove('ken'); void elInf.offsetWidth; elInf.classList.add('ken');
+  if(tm) clearInterval(tm); tm=setInterval(tick,50);
+  if(customAudio){ customAudio.currentTime=0; customAudio.play(); }
+  else if(useTTS){ speakTelugu(); }
+}
+playBtn.addEventListener('click', ()=>{ if(!playing) start(); });
+document.getElementById('teluguBtn').addEventListener('click', ()=>{
+  useTTS=!useTTS;
+  if(useTTS){ document.getElementById('teluguBtn').textContent='🔊 TTS ON ✓'; useTTS=true; if(playing) speakTelugu(); else { speakTelugu(); alert('Telugu TTS playing — now hit PLAY to sync with video'); speechSynthesis.cancel(); } }
+  else { document.getElementById('teluguBtn').textContent='🔊 తెలుగు TTS'; speechSynthesis.cancel(); }
+});
+// upload cloned voice
+document.getElementById('audioUpload').addEventListener('change', (e)=>{
+  const file=e.target.files[0]; if(!file) return;
+  const url=URL.createObjectURL(file);
+  customAudio=new Audio(url);
+  document.getElementById('teluguBtn').textContent='📤 Custom Audio Ready';
+  alert('Telugu cloned audio loaded! Hit PLAY — your voice will play with video.');
+});
+if('speechSynthesis' in window) speechSynthesis.getVoices();
+</script>
+</body>
+</html>

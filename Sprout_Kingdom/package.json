@@ -1,0 +1,10 @@
+{
+  "name": "sprout-kingdom",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Sprout Kingdom — Super Mario Bros.-style platformer with original art",
+  "scripts": {
+    "test": "node --test tests/physics.test.mjs",
+    "start": "python3 -m http.server 8080"
+  }
+}

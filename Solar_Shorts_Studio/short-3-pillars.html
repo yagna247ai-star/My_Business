@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Short #3 — 4 Pillar Framework</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#010a1a;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.stage{width:100vw;height:100vh;display:grid;place-items:center;background:radial-gradient(1200px 800px at 50% -10%,#13315e,#010a1a)}
+.phone{width:min(420px,100vw);height:min(740px,92vh);background:#000;border-radius:22px;overflow:hidden;position:relative;border:4px solid #1a1a1a;box-shadow:0 24px 64px rgba(0,0,0,.6)}
+.topbar{position:absolute;top:0;left:0;right:0;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:10;background:linear-gradient(to bottom,rgba(0,0,0,.75),transparent);color:#fff;font-size:12px;font-weight:700}
+.reactor{position:absolute;top:52px;right:12px;width:86px;height:108px;border-radius:14px;overflow:hidden;border:2px solid #ffb700;z-index:8;background:#0c2448}
+.reactor img{width:100%;height:100%;object-fit:cover}
+.reactor .live{position:absolute;top:6px;left:6px;background:#ff2a2a;color:#fff;font-size:8px;font-weight:900;padding:3px 6px;border-radius:6px}
+.reactor .name{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);color:#fff;font-size:8px;padding:4px 6px;text-align:center;font-weight:700}
+.viewport{position:absolute;inset:0;overflow:hidden;background:#061a33}
+.infographic{position:absolute;inset:-6%;will-change:transform}
+.infographic img{width:100%;height:100%;object-fit:cover;object-position:72% 28%}
+.ken{animation:ken3 32s linear forwards}
+@keyframes ken3{
+ 0%{transform:scale(1) translate(0,0)}
+ 18%{transform:scale(1.6) translate(-10%, -6%)} /* pillars 1-2 */
+ 38%{transform:scale(1.6) translate(10%, -6%)} /* pillar 3 crown */
+ 62%{transform:scale(1.6) translate(10%, 4%)} /* pillar 4 */
+ 100%{transform:scale(1.08) translate(0,0)}
+}
+.overlay{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;justify-content:space-between;padding:52px 14px 14px;pointer-events:none}
+.pill{display:inline-flex;align-items:center;gap:6px;background:#ffb700;color:#061a33;font-weight:900;font-size:11px;letter-spacing:.6px;padding:6px 10px;border-radius:999px}
+.hook h1{margin-top:10px;font-size:26px;line-height:1.05;font-weight:900;color:#fff;text-shadow:0 3px 16px rgba(0,0,0,.7);max-width:78%}
+.hook h1 em{color:#ffb700;font-style:normal}
+.hook p{margin-top:8px;color:#fff;opacity:.95;font-size:12px;line-height:1.4;max-width:78%;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);padding:8px 10px;border-radius:10px;border-left:3px solid #ffb700}
+.captions .subline{background:rgba(0,0,0,.78);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;min-height:56px}
+.subline .ava{width:28px;height:28px;border-radius:50%;background:#ffb700;display:grid;place-items:center;font-size:13px;flex-shrink:0;color:#061a33;font-weight:900}
+.subline .txt{font-size:12px;line-height:1.4;color:#fff;font-weight:600}
+.subline .txt b{color:#ffb700}
+.pillar-tags{position:absolute;top:46%;left:10px;right:10px;display:flex;gap:6px;justify-content:center;z-index:6;pointer-events:none}
+.pillar-tags span{font-size:9px;font-weight:900;padding:5px 7px;border-radius:999px;background:rgba(0,0,0,.75);color:#fff;border:1px solid rgba(255,183,0,.6);opacity:0;transform:translateY(6px);transition:.4s}
+.pillar-tags span.on{opacity:1;transform:translateY(0);background:#ffb700;color:#061a33}
+.progress{position:absolute;bottom:0;left:0;height:4px;background:#ffb700;z-index:10;width:0}
+.controls{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);z-index:12;display:flex;gap:10px}
+.btn{pointer-events:auto;border:none;padding:10px 16px;border-radius:999px;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.btn-play{background:#ffb700;color:#061a33}
+.countdown{position:absolute;inset:0;display:grid;place-items:center;z-index:20;background:rgba(2,10,26,.92);color:#fff}
+.countdown h2{font-size:64px;font-weight:900;color:#ffb700}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone">
+    <div class="topbar"><span id="timer">● REC • 0:00 / 0:32</span><span>4-PILLAR CLOSE</span></div>
+    <div class="reactor"><div class="live">● LIVE</div><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=300&fit=crop" alt=""><div class="name">YOUR REACTION</div></div>
+    <div class="viewport"><div class="infographic" id="infographic"><img src="blueprint.png" alt=""></div></div>
+    <div class="pillar-tags" id="ptags"><span id="p1">1. RAPPORT</span><span id="p2">2. DIAGNOSIS</span><span id="p3">3. ₹55K OFFER</span><span id="p4">4. RESPONSIBILITY</span></div>
+    <div class="overlay">
+      <div class="hook">
+        <div class="pill">💰 PART 3/4 • CLOSING FRAMEWORK</div>
+        <h1>Close <em>₹55K</em> deals without discount? 4 pillars 👇</h1>
+        <p>Stop being a salesman. Become a consultant. This framework does it.</p>
+      </div>
+      <div class="captions">
+        <div class="subline"><div class="ava">4</div><div class="txt" id="subtxt">Tap <b>PLAY</b> — each pillar lights up</div></div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+          <span style="background:#ffb700;color:#061a33;font-weight:900;font-size:10px;padding:5px 8px;border-radius:999px">Standard ₹50k → Special ₹55k</span>
+          <span style="background:rgba(255,255,255,.14);color:#fff;font-weight:700;font-size:10px;padding:5px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.2)">Consultant Close</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress" id="progress"></div>
+    <div class="controls"><button class="btn btn-play" id="playBtn">▶ PLAY — 32s</button></div>
+    <div class="countdown" id="countdown" style="display:none"><div style="text-align:center"><h2 id="cdNum">3</h2><div style="opacity:.7;margin-top:6px;font-size:12px;font-weight:800;letter-spacing:1px">FRAMEWORK REVEAL</div></div></div>
+  </div>
+</div>
+<script>
+const subs=[
+  {t:0, text:`If you discount to close, you’ve already lost. Use the <b>4-Pillar Framework.</b>`},
+  {t:5, text:`<b>1. Rapport & Professionalism (First 90s):</b> Non-business box setup. Eye-level camera. You’re an expert, not a vendor.`},
+  {t:11, text:`<b>2. Business Diagnosis:</b> Ask WHY — high bills, outages. Diagnose pain. Position as <b>consultant, not salesperson.</b>`},
+  {t:17, text:`<b>3. Zero-Brainer Offer:</b> Don’t sell panels — sell <b>end-to-end automated system.</b> ₹50k Standard vs <b>₹55k Special with Feeston & Benefits</b> — crown wins.`},
+  {t:24, text:`<b>4. Mutual Responsibilities:</b> Frame as partnership. Client must follow up & fund ROI. <b>Commitment closes deals.</b> Comment “PILLAR” 👇`},
+];
+let playing=false, elapsed=0, dur=32, tm;
+const elSub=document.getElementById('subtxt'), elProg=document.getElementById('progress'), elInf=document.getElementById('infographic'), playBtn=document.getElementById('playBtn'), countdown=document.getElementById('countdown'), cdNum=document.getElementById('cdNum'), timer=document.getElementById('timer'), p1=document.getElementById('p1'),p2=document.getElementById('p2'),p3=document.getElementById('p3'),p4=document.getElementById('p4');
+function tick(){ elapsed+=0.05; elProg.style.width=Math.min(100,(elapsed/dur)*100)+'%'; timer.textContent=`● REC • 0:${String(Math.floor(elapsed)).padStart(2,'0')} / 0:32`;
+  let cur=subs[0]; for(let s of subs) if(elapsed>=s.t) cur=s;
+  if(cur && cur.text!==elSub._last){ elSub.innerHTML=cur.text; elSub._last=cur.text; }
+  p1.classList.toggle('on', elapsed>=5 && elapsed<11); p2.classList.toggle('on', elapsed>=11 && elapsed<17); p3.classList.toggle('on', elapsed>=17 && elapsed<24); p4.classList.toggle('on', elapsed>=24);
+  if(elapsed>=dur){ playing=false; clearInterval(tm); playBtn.textContent='↻ REPLAY — 32s'; }
+}
+function start(){ countdown.style.display='grid'; let c=3; cdNum.textContent=c; let ci=setInterval(()=>{ c--; if(c>0) cdNum.textContent=c; else { clearInterval(ci); countdown.style.display='none'; actuallyStart(); } },600); }
+function actuallyStart(){ playing=true; elapsed=0; elSub._last=''; elProg.style.width='0%'; playBtn.textContent='⏸ PLAYING...'; elInf.classList.remove('ken'); void elInf.offsetWidth; elInf.classList.add('ken'); if(tm) clearInterval(tm); tm=setInterval(tick,50); }
+playBtn.addEventListener('click', ()=>{ if(!playing) start(); });
+</script>
+</body>
+</html>

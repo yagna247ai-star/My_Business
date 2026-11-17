@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img">
+<rect width="1080" height="1350" rx="28" fill="#C9A86A"/>
+<!-- top bar -->
+<g transform="translate(56,56)">
+  <rect width="340" height="36" rx="18" fill="rgba(7,10,18,0.12)" stroke="rgba(7,10,18,0.14)"/>
+  <text x="170" y="23" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.12em" font-weight="800" fill="#070A12">BANGI v0.4  •  ONE ENDPOINT</text>
+</g>
+<g transform="translate(860,56)">
+  <rect width="164" height="36" rx="18" fill="#070A12"/>
+  <text x="82" y="23" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.08em" font-weight="800" fill="#C9A86A">● LIVE</text>
+</g>
+<!-- Headline -->
+<text x="56" y="180" font-family="Bebas Neue, sans-serif" font-size="78" fill="#070A12">ONE ENDPOINT</text>
+<text x="56" y="250" font-family="Bebas Neue, sans-serif" font-size="78" fill="#070A12">FOR EVERYTHING.</text>
+<!-- code block -->
+<g transform="translate(56,280)">
+  <rect width="968" height="120" rx="16" fill="#070A12"/>
+  <text x="24" y="36" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700" fill="#6EE7B7">POST /computer-use</text>
+  <text x="24" y="60" font-family="JetBrains Mono, monospace" font-size="14" fill="#F8FAFC">{  prompt: "check CRM / coach Yagna /</text>
+  <text x="24" y="84" font-family="JetBrains Mono, monospace" font-size="14" fill="#F8FAFC">          apply jobs / any desktop task"  }</text>
+  <text x="920" y="36" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.08em" fill="rgba(248,250,252,0.35)">HYBRID</text>
+</g>
+<text x="56" y="440" font-family="JetBrains Mono, monospace" font-size="12" letter-spacing="0.08em" fill="rgba(7,10,18,0.55)">Bangi picks the cheapest path automatically — direct API or SOM.</text>
+<!-- 3 stats -->
+<g transform="translate(56,470)">
+  <rect width="310" height="96" rx="16" fill="rgba(7,10,18,0.08)" stroke="rgba(7,10,18,0.10)"/>
+  <text x="155" y="36" text-anchor="middle" font-family="Inter, sans-serif" font-size="28" font-weight="900" fill="#070A12">11</text>
+  <text x="155" y="56" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.10em" font-weight="700" fill="rgba(7,10,18,0.60)">ENDPOINTS</text>
+  <text x="155" y="76" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(7,10,18,0.50)">/hermes/* • /cua/* • /health</text>
+
+  <rect x="326" width="310" height="96" rx="16" fill="rgba(7,10,18,0.08)" stroke="rgba(7,10,18,0.10)"/>
+  <text x="481" y="36" text-anchor="middle" font-family="Inter, sans-serif" font-size="28" font-weight="900" fill="#070A12">70%</text>
+  <text x="481" y="56" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.10em" font-weight="700" fill="rgba(7,10,18,0.60)">FEWER TOKENS</text>
+  <text x="481" y="76" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(7,10,18,0.50)">direct path</text>
+
+  <rect x="652" width="316" height="96" rx="16" fill="#070A12"/>
+  <text x="810" y="36" text-anchor="middle" font-family="Inter, sans-serif" font-size="28" font-weight="900" fill="#C9A86A">~0.5s</text>
+  <text x="810" y="56" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.10em" font-weight="700" fill="rgba(201,168,106,0.85)">FAST PATH</text>
+  <text x="810" y="76" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(248,250,252,0.50)">vs 4–8s SOM</text>
+</g>
+<!-- Links -->
+<g transform="translate(56,600)">
+  <rect width="968" height="88" rx="16" fill="#070A12"/>
+  <text x="24" y="32" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.10em" font-weight="800" fill="rgba(248,250,252,0.45)">DOCS + SWAGGER + HEALTH</text>
+  <text x="24" y="54" font-family="JetBrains Mono, monospace" font-size="12" fill="#F8FAFC">BANGI_HERMES_INTEGRATION.html  •  /docs  •  /health</text>
+  <text x="24" y="72" font-family="JetBrains Mono, monospace" font-size="11" fill="rgba(248,250,252,0.45)">uv run bangi  →  http://localhost:8000</text>
+</g>
+<!-- Stack -->
+<g transform="translate(56,710)">
+  <rect width="968" height="88" rx="16" fill="rgba(7,10,18,0.06)" stroke="rgba(7,10,18,0.08)"/>
+  <text x="24" y="32" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.10em" font-weight="800" fill="rgba(7,10,18,0.55)">STACK — LIGHTWEIGHT</text>
+  <text x="24" y="54" font-family="JetBrains Mono, monospace" font-size="12" fill="#070A12">FastAPI + Preact (30KB) + cua-driver MCP + Hermes</text>
+  <text x="24" y="72" font-family="JetBrains Mono, monospace" font-size="11" fill="rgba(7,10,18,0.55)">Tauri 5MB (not Electron 120MB)  •  Capacitor Mobile  •  &lt;50MB install</text>
+</g>
+<!-- Question -->
+<g transform="translate(56,830)">
+  <rect width="968" height="160" rx="20" fill="#070A12"/>
+  <text x="32" y="48" font-family="Bebas Neue, sans-serif" font-size="36" fill="#F8FAFC">WHAT WOULD YOU</text>
+  <text x="32" y="86" font-family="Bebas Neue, sans-serif" font-size="36" fill="#C9A86A">AUTOMATE FIRST?</text>
+  <text x="32" y="116" font-family="JetBrains Mono, monospace" font-size="12" fill="rgba(248,250,252,0.55)">Comment below — CRM? Jobs? Sales coaching? Any desktop task.</text>
+  <text x="32" y="136" font-family="JetBrains Mono, monospace" font-size="11" fill="rgba(201,168,106,0.70)">#ComputerUse  #AIAgent  #MetaAI  #BuildInPublic</text>
+</g>
+<!-- Footer -->
+<text x="56" y="1050" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.08em" fill="rgba(7,10,18,0.45)">Full docs with diagrams → BANGI_Agent/docs/BANGI_HERMES_INTEGRATION.html</text>
+<text x="56" y="1072" font-family="JetBrains Mono, monospace" font-size="11" fill="rgba(7,10,18,0.45)">Bangi × Hermes — Glass Antigravity • Open to contributors</text>
+<!-- CTA button -->
+<g transform="translate(56,1100)">
+  <rect width="968" height="64" rx="16" fill="#070A12"/>
+  <text x="484" y="40" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" letter-spacing="0.12em" font-weight="800" fill="#C9A86A">SWIPE FOR DOCS →  LIKE + REPOST IF USEFUL  ♻️</text>
+</g>
+<text x="56" y="1210" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.10em" fill="rgba(7,10,18,0.35)">BANGI v0.4 — Hermes-Powered • Hybrid Router • Durable • Lightweight</text>
+<text x="1024" y="1210" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.10em" fill="rgba(7,10,18,0.35)">4 / 4</text>
+</svg>

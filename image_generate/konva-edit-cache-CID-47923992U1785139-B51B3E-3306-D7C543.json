@@ -1,0 +1,66 @@
+{
+  "version": 2,
+  "state": {
+    "imageUrls": [
+      "https://sc02.alicdn.com/kf/A4a4ad2809eec4d70ae50062f6a97a057Q.png",
+      "https://sc02.alicdn.com/kf/Ac41e159a5e0c4bd294436475a40de310I.png",
+      "https://sc02.alicdn.com/kf/A334c1037026e47c195fb20a39c33ca5ag.png",
+      "https://sc02.alicdn.com/kf/A0ce28e22212440ac986d5db538c679f2m.png",
+      "https://sc02.alicdn.com/kf/A83352f750c3c4b04bd48cac97d36268aJ.png"
+    ],
+    "images": [
+      {
+        "url": "https://sc02.alicdn.com/kf/A4a4ad2809eec4d70ae50062f6a97a057Q.png",
+        "naturalWidth": 1024,
+        "naturalHeight": 1024,
+        "x": 0,
+        "y": 0,
+        "displayWidth": 1024,
+        "displayHeight": 1024,
+        "zIndex": 0
+      },
+      {
+        "url": "https://sc02.alicdn.com/kf/Ac41e159a5e0c4bd294436475a40de310I.png",
+        "naturalWidth": 1024,
+        "naturalHeight": 1024,
+        "x": 1064,
+        "y": 0,
+        "displayWidth": 1024,
+        "displayHeight": 1024,
+        "zIndex": 1
+      },
+      {
+        "url": "https://sc02.alicdn.com/kf/A334c1037026e47c195fb20a39c33ca5ag.png",
+        "naturalWidth": 1536,
+        "naturalHeight": 1024,
+        "x": 2128,
+        "y": 0,
+        "displayWidth": 1536,
+        "displayHeight": 1024,
+        "zIndex": 2
+      },
+      {
+        "url": "https://sc02.alicdn.com/kf/A0ce28e22212440ac986d5db538c679f2m.png",
+        "naturalWidth": 1536,
+        "naturalHeight": 1024,
+        "x": 3704,
+        "y": 0,
+        "displayWidth": 1536,
+        "displayHeight": 1024,
+        "zIndex": 3
+      },
+      {
+        "url": "https://sc02.alicdn.com/kf/A83352f750c3c4b04bd48cac97d36268aJ.png",
+        "naturalWidth": 1536,
+        "naturalHeight": 1024,
+        "x": 5280,
+        "y": 0,
+        "displayWidth": 1536,
+        "displayHeight": 1024,
+        "zIndex": 4
+      }
+    ],
+    "selectedImageUrl": "https://sc02.alicdn.com/kf/A4a4ad2809eec4d70ae50062f6a97a057Q.png",
+    "updatedAt": 1787291945540
+  }
+}

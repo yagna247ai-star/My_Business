@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img">
+<rect width="1080" height="1350" rx="28" fill="#070A12"/>
+<text x="56" y="80" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.16em" font-weight="800" fill="#C9A86A">03 — HYBRID ROUTER  •  HOW BANGI DECIDES</text>
+<!-- Input -->
+<g transform="translate(56,110)">
+  <rect width="968" height="96" rx="16" fill="#0F172A" stroke="rgba(255,255,255,0.08)"/>
+  <rect x="16" y="16" width="44" height="44" rx="10" fill="#C9A86A"/><text x="38" y="45" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" font-weight="900" fill="#070A12">B</text>
+  <text x="72" y="32" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.10em" font-weight="800" fill="#F8FAFC">POST /computer-use {prompt: "any task"}</text>
+  <text x="72" y="52" font-family="JetBrains Mono, monospace" font-size="11" fill="rgba(248,250,252,0.55)">BangiAgent.do_task(prompt) — keyword router + events.jsonl log</text>
+  <text x="72" y="70" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(201,168,106,0.75)">config.yaml: hermes.routing.prefer_direct vs fallback_som</text>
+</g>
+<!-- Two columns -->
+<g transform="translate(56,240)">
+  <!-- Left: direct -->
+  <rect width="472" height="820" rx="20" fill="#0B1A14" stroke="rgba(16,185,129,0.22)"/>
+  <text x="20" y="36" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.11em" font-weight="800" fill="#6EE7B7">DIRECT API — NO SOM</text>
+  <text x="20" y="56" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(248,250,252,0.50)">Fast. Cheap. Deterministic.</text>
+  <g font-family="JetBrains Mono, monospace" font-size="11">
+    <rect x="16" y="72" width="440" height="56" rx="12" fill="rgba(16,185,129,0.10)" stroke="rgba(16,185,129,0.18)"/><text x="28" y="96" fill="#F8FAFC">crm / tracker / report</text><text x="444" y="96" text-anchor="end" font-size="10" fill="#6EE7B7">/hermes/report</text><text x="28" y="112" font-size="9.5" fill="rgba(248,250,252,0.45)">→ tracker_sync (Excel direct)</text>
+    <rect x="16" y="140" width="440" height="56" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)"/><text x="28" y="164" fill="#F8FAFC">campaign / reel / ad</text><text x="444" y="164" text-anchor="end" font-size="10" fill="rgba(248,250,252,0.45)">/hermes/campaign</text><text x="28" y="180" font-size="9.5" fill="rgba(248,250,252,0.45)">→ Mama Hermes (Reel + FB Ad)</text>
+    <rect x="16" y="208" width="440" height="56" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)"/><text x="28" y="232" fill="#F8FAFC">coach / transcript</text><text x="444" y="232" text-anchor="end" font-size="10" fill="rgba(248,250,252,0.45)">/hermes/coach</text><text x="28" y="248" font-size="9.5" fill="rgba(248,250,252,0.45)">→ 4-Pillar sales coach</text>
+    <rect x="16" y="276" width="440" height="56" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)"/><text x="28" y="300" fill="#F8FAFC">convert / contacts.csv</text><text x="444" y="300" text-anchor="end" font-size="10" fill="rgba(248,250,252,0.45)">/hermes/convert</text><text x="28" y="316" font-size="9.5" fill="rgba(248,250,252,0.45)">→ lead_converter (47 cols)</text>
+    <rect x="16" y="344" width="440" height="56" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)"/><text x="28" y="368" fill="#F8FAFC">emi / nri / market / cadence</text><text x="444" y="368" text-anchor="end" font-size="10" fill="rgba(248,250,252,0.45)">/hermes/*</text><text x="28" y="384" font-size="9.5" fill="rgba(248,250,252,0.45)">→ 6 more skills</text>
+  </g>
+  <rect x="16" y="420" width="440" height="52" rx="12" fill="rgba(16,185,129,0.10)" stroke="rgba(16,185,129,0.18)"/>
+  <text x="230" y="442" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="800" fill="#6EE7B7">~0.5s  •  ~200 tokens  •  no screenshot</text>
+  <text x="230" y="458" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(110,231,183,0.65)">why hybrid saves 70% tokens</text>
+  <!-- Direct API badge -->
+  <g transform="translate(16,500)">
+    <rect width="440" height="96" rx="12" fill="#020617" stroke="rgba(255,255,255,0.06)"/>
+    <text x="16" y="28" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.08em" fill="rgba(248,250,252,0.45)">EXAMPLE — SPEED-TO-LEAD</text>
+    <text x="16" y="48" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(248,250,252,0.75)">POST /hermes/lead → persona + Telugu</text>
+    <text x="16" y="66" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(248,250,252,0.75)">instant response + tracker write</text>
+    <text x="16" y="84" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#6EE7B7">SLA 0.5s — no desktop needed</text>
+  </g>
+  <text x="236" y="640" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.08em" fill="rgba(110,231,183,0.55)">70% OF TASKS TAKE THIS PATH</text>
+</g>
+<g transform="translate(552,240)">
+  <rect width="472" height="820" rx="20" fill="#1A140B" stroke="rgba(201,168,106,0.22)"/>
+  <text x="20" y="36" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.11em" font-weight="800" fill="#C9A86A">SOM FALLBACK — CUA-DRIVER</text>
+  <text x="20" y="56" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(248,250,252,0.50)">Pid-scoped. No cursor steal.</text>
+  <!-- mock screen -->
+  <rect x="16" y="72" width="440" height="200" rx="16" fill="#020617" stroke="rgba(255,255,255,0.07)"/>
+  <rect x="16" y="72" width="440" height="24" rx="16" fill="rgba(255,255,255,0.06)"/>
+  <circle cx="32" cy="84" r="5" fill="#EF4444"/><circle cx="48" cy="84" r="5" fill="#F59E0B"/><circle cx="64" cy="84" r="5" fill="#10B981"/>
+  <text x="260" y="88" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="0.08em" fill="rgba(248,250,252,0.40)">DESKTOP — SOM OVERLAY</text>
+  <circle cx="140" cy="150" r="16" fill="#C9A86A"/><text x="140" y="156" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" font-weight="900" fill="#070A12">1</text><text x="164" y="156" font-family="JetBrains Mono, monospace" font-size="11" fill="rgba(248,250,252,0.75)">Jobs</text>
+  <circle cx="280" cy="170" r="16" fill="#F8FAFC"/><text x="280" y="176" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" font-weight="900" fill="#070A12">2</text><text x="304" y="176" font-family="JetBrains Mono, monospace" font-size="11" fill="rgba(248,250,252,0.75)">Apply</text>
+  <circle cx="380" cy="140" r="16" fill="#F8FAFC"/><text x="380" y="146" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" font-weight="900" fill="#070A12">3</text><text x="404" y="146" font-family="JetBrains Mono, monospace" font-size="11" fill="rgba(248,250,252,0.75)">Submit</text>
+  <g font-family="JetBrains Mono, monospace" font-size="11">
+    <rect x="16" y="292" width="440" height="52" rx="12" fill="rgba(201,168,106,0.10)" stroke="rgba(201,168,106,0.18)"/><text x="28" y="322" fill="#F8FAFC">job / naukri / linkedin / indeed</text><text x="444" y="322" text-anchor="end" font-size="10" fill="#C9A86A">SOM ✓</text>
+    <rect x="16" y="356" width="440" height="52" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)"/><text x="28" y="386" fill="#F8FAFC">generic desktop — any task</text><text x="444" y="386" text-anchor="end" font-size="10" fill="rgba(248,250,252,0.45)">SOM ✓</text>
+  </g>
+  <rect x="16" y="420" width="440" height="64" rx="12" fill="rgba(201,168,106,0.10)" stroke="rgba(201,168,106,0.18)"/>
+  <text x="28" y="446" font-family="JetBrains Mono, monospace" font-size="10" fill="#F8FAFC">capture() → click {element_index:1} → type → verify</text>
+  <text x="28" y="466" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(248,250,252,0.55)">POST /cua/capture  •  POST /cua/act</text>
+  <g transform="translate(16,500)">
+    <rect width="440" height="96" rx="12" fill="#020617" stroke="rgba(255,255,255,0.06)"/>
+    <text x="16" y="28" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.08em" fill="rgba(248,250,252,0.45)">EXAMPLE — JOB APPLY</text>
+    <text x="16" y="48" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(248,250,252,0.75)">Open Chrome → Naukri → SOM [1:Jobs]</text>
+    <text x="16" y="66" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(248,250,252,0.75)">→ click index 1, type resume, click Apply</text>
+    <text x="16" y="84" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#C9A86A">config/jobs.selectors.yaml • daily_limit 20</text>
+  </g>
+  <text x="236" y="640" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.08em" fill="rgba(201,168,106,0.55)">ONLY WHEN NO API EXISTS</text>
+</g>
+<!-- bottom bar -->
+<rect x="56" y="1100" width="968" height="52" rx="12" fill="rgba(201,168,106,0.10)" stroke="rgba(201,168,106,0.18)"/>
+<text x="540" y="1124" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="800" fill="#C9A86A">ADDING A NEW SKILL = 1 KEYWORD LINE + 1 ENDPOINT  •  NO REBUILD</text>
+<text x="540" y="1142" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(248,250,252,0.50)">backend/bangi_agent.py:do_task()  •  backend/app.py  •  config.yaml:hermes.routing</text>
+<text x="56" y="1280" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.10em" fill="rgba(248,250,252,0.28)">Hybrid router — direct API first, SOM fallback — BANGI v0.4</text>
+<text x="1024" y="1280" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.10em" fill="rgba(201,168,106,0.6)">3 / 4</text>
+</svg>

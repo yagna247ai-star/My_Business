@@ -1,0 +1,72 @@
+{
+  "hyderabad_corridors": [
+    {
+      "id": "shankarpally_west",
+      "name": "Shankarpally - Mokila West Corridor",
+      "zone": "West Hyderabad (IT Belt Extension)",
+      "target_audience": "IT Professionals (Gachibowli/Tellapur commuters), Villa Plot Seekers",
+      "price_per_sqyd": 28000,
+      "typical_plot_sizes": [150, 200, 300],
+      "approvals": "HMDA Approved + TS RERA Registered",
+      "distance_from_hitech_city": "35 mins via Shankarpally Road",
+      "key_highlights": "40ft Blacktop Roads, Underground Cabling, Club House, 28% YoY Growth",
+      "pickup_landmark": "Miyapur Metro Station / Financial District"
+    },
+    {
+      "id": "shadnagar_south",
+      "name": "Shadnagar - Shamshabad Airport Arc",
+      "zone": "South Hyderabad (Airport & RRR Corridor)",
+      "target_audience": "Salaried Employees, First-time Land Buyers, Gulf Remittance Buyers",
+      "price_per_sqyd": 12500,
+      "typical_plot_sizes": [100, 150, 200],
+      "approvals": "DTCP Approved + TS RERA Registered",
+      "distance_from_airport": "20 mins from RGIA Shamshabad",
+      "key_highlights": "Adjacent to Regional Ring Road (RRR) South Arc, Easy ₹11,500/mo EMI",
+      "pickup_landmark": "LB Nagar Metro Station / Shamshabad Bus Stop"
+    },
+    {
+      "id": "warangal_hw_east",
+      "name": "Ghatkesar - Bibinagar East Corridor",
+      "zone": "East Hyderabad (NH-163 Growth Corridor)",
+      "target_audience": "Government Employees, Small Business Owners, Long-term Appreciation Seekers",
+      "price_per_sqyd": 16000,
+      "typical_plot_sizes": [150, 200, 250],
+      "approvals": "HMDA Approved + TS RERA Registered",
+      "distance_from_uppal": "25 mins via 6-lane Warangal Highway",
+      "key_highlights": "Near AIIMS Bibinagar & Infosys Pocharam Campus, 100% Title Guarantee",
+      "pickup_landmark": "Uppal Metro Station / Ghatkesar Junction"
+    },
+    {
+      "id": "chevella_southwest",
+      "name": "Chevella - RRR Growth Corridor",
+      "zone": "South-West Hyderabad",
+      "target_audience": "Farmhouse & Villa Plot Buyers, Salaried Employees",
+      "price_per_sqyd": 9500,
+      "typical_plot_sizes": [200, 300, 500],
+      "approvals": "DTCP Approved + TS RERA Registered",
+      "distance_from_hitech_city": "45 mins via Chevella Highway",
+      "key_highlights": "Located inside RRR Arc, Rapid Capital Appreciation, Clean Environment",
+      "pickup_landmark": "Miyapur / Gachibowli Metro Junction"
+    }
+  ],
+  "ap_corridors": [
+    {
+      "id": "kurnool_airport",
+      "name": "Kurnool Orvakal Airport Corridor",
+      "zone": "Rayalaseema Belt",
+      "price_per_sqyd": 8500,
+      "approvals": "DTCP Approved + AP RERA",
+      "target_audience": "Gulf Remittance Buyers, Local Salaried Employees",
+      "key_highlights": "Near DRDO Industrial Hub & Airport, ₹10,000/mo EMI available"
+    },
+    {
+      "id": "vijayawada_poranki",
+      "name": "Vijayawada - Poranki Amaravati Corridor",
+      "zone": "Coastal AP Capital Region",
+      "price_per_sqyd": 28000,
+      "approvals": "APCRDA Approved + AP RERA",
+      "target_audience": "US/UK NRIs, Business Owners, Capital Region Investors",
+      "key_highlights": "Near Amaravati Capital Belt, 30%+ annual surge post-2024"
+    }
+  ]
+}

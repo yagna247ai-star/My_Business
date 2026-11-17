@@ -1,0 +1,18 @@
+[Unit]
+Description=Bangi MVP — Gateway :8001 + Backend :8000
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/opc/BANGI_Agent
+Environment=PATH=/home/opc/BANGI_Agent/.venv/bin:/home/opc/.cargo/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=/home/opc/BANGI_Agent:/home/opc/BANGI_Agent/backend
+ExecStart=/bin/bash -c 'uv run bangi & uv run gateway & wait'
+ExecStop=/bin/bash -c 'pkill -f "backend.app" || true; pkill -f "gateway.server" || true'
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

@@ -9,7 +9,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: '#081830', width: 'device-width', initialScale: 1 };
 
 // Resolve the theme before first paint (no flash). Stored choice → OS preference.
-const themeScript = `(function(){try{var t=localStorage.getItem('aih_theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}})()`;
+// Same for the collapsed sidebar, so it never flashes open and then snaps shut on page load.
+const themeScript = `(function(){var h=document.documentElement;try{var t=localStorage.getItem('aih_theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);h.setAttribute('data-theme',d?'dark':'light')}catch(e){h.setAttribute('data-theme','light')}try{if(localStorage.getItem('aih_sidebar')==='rail')h.setAttribute('data-sidebar','rail')}catch(e){}})()`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

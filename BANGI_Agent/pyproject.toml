@@ -1,0 +1,50 @@
+[project]
+name = "bangi-agent"
+version = "0.5.0"
+description = "Bangi — Hermes-Powered Agent (Next.js + Flutter + Gateway • Meta Computer-Use + 10 Hermes skills + 70 tools)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.29",
+  "pydantic>=2.0",
+  "requests>=2.31",
+  "python-dotenv>=1.0",
+  "pyyaml>=6.0",
+  "apscheduler>=3.10",
+  "pandas>=2.0",
+  "openpyxl>=3.1",
+  "httpx>=0.27",
+  "websockets>=12.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.4", "mypy>=1.9"]
+computer-use = ["mcp", "starlette==1.3.1"]  # cua-driver MCP client, see Hermes-agent/tools/lazy_deps.py
+hermes = ["pandas", "openpyxl"]  # RealEstate skills need these; Hermes-Agent is local path
+
+[project.scripts]
+bangi = "backend.app:main"
+bangi-backend = "backend.app:main"
+bangi-agent = "backend.bangi_agent:main"
+gateway = "gateway.server:main"
+
+[tool.uv]
+managed = true
+
+[tool.uv.sources]
+# Uncomment to install Hermes-Agent editable (enables real SOM + 70 tools):
+# hermes-agent = { path = "../Hermes-agent/hermes-agent", editable = true }
+
+[tool.ruff]
+line-length = 100
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["backend"]
+
+[dependency-groups]
+dev = ["pytest>=8.0", "ruff>=0.4"]

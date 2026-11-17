@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img">
+<rect width="1080" height="1350" rx="28" fill="#070A12"/>
+<text x="56" y="80" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.16em" font-weight="800" fill="#C9A86A">02 — BEFORE → AFTER  •  WHY HYBRID WINS</text>
+<!-- Before card -->
+<g transform="translate(56,110)">
+  <rect width="968" height="520" rx="20" fill="#0F172A" stroke="rgba(248,113,113,0.14)"/>
+  <text x="28" y="40" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.12em" font-weight="800" fill="#FCA5A5">BEFORE — v0.3  •  THIN DEMO</text>
+  <text x="28" y="70" font-family="Inter, sans-serif" font-size="13" fill="rgba(248,250,252,0.55)">Every task → SOM screenshot loop, even when an API existed.</text>
+  <!-- row -->
+  <g font-family="JetBrains Mono, monospace" font-size="13">
+    <rect x="28" y="96" width="912" height="52" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)"/>
+    <text x="44" y="127" fill="rgba(248,250,252,0.85)">Only 2 Hermes calls (report + campaign)</text>
+    <text x="920" y="127" text-anchor="end" font-size="11" fill="#FCA5A5" font-weight="700">fragile</text>
+    <rect x="28" y="160" width="912" height="52" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)"/>
+    <text x="44" y="191" fill="rgba(248,250,252,0.85)">tools/computer_use imported as optional — no loop</text>
+    <text x="920" y="191" text-anchor="end" font-size="11" fill="#FCA5A5" font-weight="700">no tools</text>
+    <rect x="28" y="224" width="912" height="52" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)"/>
+    <text x="44" y="255" fill="rgba(248,250,252,0.85)">Open Excel via SOM to read tracker</text>
+    <text x="920" y="255" text-anchor="end" font-size="11" fill="#FCA5A5" font-weight="700">4–8s</text>
+    <rect x="28" y="288" width="912" height="52" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)"/>
+    <text x="44" y="319" fill="rgba(248,250,252,0.85)">2 endpoints, in-memory, no replay</text>
+    <text x="920" y="319" text-anchor="end" font-size="11" fill="#FCA5A5" font-weight="700">token-heavy</text>
+  </g>
+  <rect x="28" y="372" width="912" height="48" rx="12" fill="rgba(248,113,113,0.10)" stroke="rgba(248,113,113,0.18)"/>
+  <text x="456" y="402" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" letter-spacing="0.10em" font-weight="800" fill="#FCA5A5">SLOW  •  TOKEN-HEAVY  •  FRAGILE</text>
+</g>
+<!-- After card -->
+<g transform="translate(56,670)">
+  <rect width="968" height="560" rx="20" fill="#C9A86A"/>
+  <text x="28" y="40" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="0.12em" font-weight="800" fill="rgba(7,10,18,0.60)">AFTER — v0.4 HERMES  •  HYBRID ROUTER</text>
+  <text x="28" y="70" font-family="Inter, sans-serif" font-size="13" fill="rgba(7,10,18,0.65)">Direct Hermes skill when possible. SOM only when needed.</text>
+  <g font-family="JetBrains Mono, monospace" font-size="13">
+    <rect x="28" y="96" width="912" height="52" rx="12" fill="rgba(7,10,18,0.07)" stroke="rgba(7,10,18,0.10)"/>
+    <text x="44" y="127" fill="#070A12" font-weight="700">10 RealEstate skills via /hermes/* + router</text>
+    <text x="920" y="127" text-anchor="end" font-size="11" fill="#070A12" font-weight="800">10× coverage</text>
+    <rect x="28" y="160" width="912" height="52" rx="12" fill="rgba(7,10,18,0.07)" stroke="rgba(7,10,18,0.10)"/>
+    <text x="44" y="191" fill="#070A12" font-weight="700">70 Hermes-Agent tools via registry</text>
+    <text x="920" y="191" text-anchor="end" font-size="11" fill="#070A12" font-weight="800">70+ tools</text>
+    <rect x="28" y="224" width="912" height="52" rx="12" fill="rgba(7,10,18,0.07)" stroke="rgba(7,10,18,0.10)"/>
+    <text x="44" y="255" fill="#070A12" font-weight="700">Tracker via direct API — no Excel SOM</text>
+    <text x="920" y="255" text-anchor="end" font-size="11" fill="#070A12" font-weight="800">~0.5s</text>
+    <rect x="28" y="288" width="912" height="52" rx="12" fill="rgba(7,10,18,0.07)" stroke="rgba(7,10,18,0.10)"/>
+    <text x="44" y="319" fill="#070A12" font-weight="700">11 endpoints, events.jsonl replayable</text>
+    <text x="920" y="319" text-anchor="end" font-size="11" fill="#070A12" font-weight="800">durable</text>
+  </g>
+  <rect x="28" y="372" width="912" height="48" rx="12" fill="rgba(7,10,18,0.10)" stroke="rgba(7,10,18,0.14)"/>
+  <text x="456" y="402" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" letter-spacing="0.10em" font-weight="800" fill="#070A12">FAST  •  CHEAP (70% fewer tokens)  •  DURABLE</text>
+  <text x="28" y="450" font-family="JetBrains Mono, monospace" font-size="11" fill="rgba(7,10,18,0.55)">Config: hermes.mode = hybrid — hot-swappable in config.yaml, no rebuild. Naukri → LinkedIn in one line.</text>
+  <text x="28" y="472" font-family="JetBrains Mono, monospace" font-size="11" fill="rgba(7,10,18,0.55)">Lightweight: &lt;50MB install, &lt;120MB RAM, &lt;2s cold start — CUA optional, graceful fallback.</text>
+</g>
+<text x="56" y="1280" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.10em" fill="rgba(248,250,252,0.28)">Hybrid = direct API when possible, SOM only when needed  •  BANGI v0.4</text>
+<text x="1024" y="1280" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.10em" fill="rgba(201,168,106,0.6)">2 / 4</text>
+</svg>

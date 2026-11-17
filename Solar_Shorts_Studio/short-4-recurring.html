@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Short #4 — Recurring Revenue</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#010a1a;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.stage{width:100vw;height:100vh;display:grid;place-items:center;background:radial-gradient(1200px 800px at 50% -10%,#13315e,#010a1a)}
+.phone{width:min(420px,100vw);height:min(740px,92vh);background:#000;border-radius:22px;overflow:hidden;position:relative;border:4px solid #1a1a1a;box-shadow:0 24px 64px rgba(0,0,0,.6)}
+.topbar{position:absolute;top:0;left:0;right:0;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:10;background:linear-gradient(to bottom,rgba(0,0,0,.75),transparent);color:#fff;font-size:12px;font-weight:700}
+.reactor{position:absolute;top:52px;right:12px;width:86px;height:108px;border-radius:14px;overflow:hidden;border:2px solid #ffb700;z-index:8;background:#0c2448}
+.reactor img{width:100%;height:100%;object-fit:cover}
+.reactor .live{position:absolute;top:6px;left:6px;background:#ffb700;color:#061a33;font-size:8px;font-weight:900;padding:3px 6px;border-radius:6px}
+.reactor .name{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);color:#fff;font-size:8px;padding:4px 6px;text-align:center;font-weight:700}
+.viewport{position:absolute;inset:0;overflow:hidden;background:#061a33}
+.infographic{position:absolute;inset:-4%;will-change:transform}
+.infographic img{width:100%;height:100%;object-fit:cover;object-position:center 78%}
+.ken{animation:ken4 30s linear forwards}
+@keyframes ken4{
+ 0%{transform:scale(1) translate(0,0)}
+ 20%{transform:scale(1.55) translate(-4%, 6%)} /* AMC + IoT */
+ 55%{transform:scale(1.45) translate(0, 18%)} /* investment table */
+ 100%{transform:scale(1.06) translate(0,0)}
+}
+.overlay{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;justify-content:space-between;padding:52px 14px 14px;pointer-events:none}
+.pill{display:inline-flex;align-items:center;gap:6px;background:#ffb700;color:#061a33;font-weight:900;font-size:11px;letter-spacing:.6px;padding:6px 10px;border-radius:999px}
+.hook h1{margin-top:10px;font-size:26px;line-height:1.05;font-weight:900;color:#fff;text-shadow:0 3px 16px rgba(0,0,0,.7);max-width:78%}
+.hook h1 em{color:#ffb700;font-style:normal}
+.hook p{margin-top:8px;color:#fff;opacity:.95;font-size:12px;line-height:1.4;max-width:78%;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);padding:8px 10px;border-radius:10px;border-left:3px solid #25D366}
+.captions .subline{background:rgba(0,0,0,.78);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;min-height:56px}
+.subline .ava{width:28px;height:28px;border-radius:50%;background:#ffb700;display:grid;place-items:center;font-size:13px;flex-shrink:0}
+.subline .txt{font-size:12px;line-height:1.4;color:#fff;font-weight:600}
+.subline .txt b{color:#ffb700}
+.progress{position:absolute;bottom:0;left:0;height:4px;background:#ffb700;z-index:10;width:0}
+.controls{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);z-index:12;display:flex;gap:10px}
+.btn{pointer-events:auto;border:none;padding:10px 16px;border-radius:999px;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.btn-play{background:#ffb700;color:#061a33}
+.countdown{position:absolute;inset:0;display:grid;place-items:center;z-index:20;background:rgba(2,10,26,.92);color:#fff}
+.countdown h2{font-size:64px;font-weight:900;color:#ffb700}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone">
+    <div class="topbar"><span id="timer">● REC • 0:00 / 0:30</span><span>₹50L+ SCALE</span></div>
+    <div class="reactor"><div class="live">💰 25 YRS</div><img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=300&fit=crop" alt=""><div class="name">YOUR REACTION</div></div>
+    <div class="viewport"><div class="infographic" id="infographic"><img src="blueprint.png" alt=""></div></div>
+    <div class="overlay">
+      <div class="hook">
+        <div class="pill">♻️ PART 4/4 • RECURRING REVENUE</div>
+        <h1>Install once?<br><em>Earn for 25 YEARS.</em> Here’s how 💸</h1>
+        <p>AMC + IoT auditing = monthly salary. Plus 2026 investment map.</p>
+      </div>
+      <div class="captions">
+        <div class="subline"><div class="ava">♻️</div><div class="txt" id="subtxt">Tap <b>PLAY</b> — see the money model</div></div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+          <span style="background:#ffb700;color:#061a33;font-weight:900;font-size:10px;padding:5px 8px;border-radius:999px">BOOK FREE SITE SURVEY</span>
+          <span style="background:#25D366;color:#fff;font-weight:900;font-size:10px;padding:5px 8px;border-radius:999px">GET CERTIFIED</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress" id="progress"></div>
+    <div class="controls"><button class="btn btn-play" id="playBtn">▶ PLAY — 30s</button></div>
+    <div class="countdown" id="countdown" style="display:none"><div style="text-align:center"><h2 id="cdNum">3</h2><div style="opacity:.7;margin-top:6px;font-size:12px;font-weight:800;letter-spacing:1px">MONEY MODEL</div></div></div>
+  </div>
+</div>
+<script>
+const subs=[
+  {t:0, text:`You don’t have a solar business — you have a <b>one-time labour job.</b> Fix that.`},
+  {t:4, text:`<b>Beyond installs:</b> Add <b>AMC + cleaning</b> → predictable revenue for <b>20–25 years.</b> Same customer pays you every year.`},
+  {t:10, text:`And <b>Solar Auditing + IoT</b> — use AI to find energy leakage in factories. Sell <b>“re-powering”</b> to commercial clients. High-ticket.`},
+  {t:17, text:`<b>2026 Investments:</b> Small Dealership <b>₹2–5L</b> → Medium <b>₹5–10L</b> → Full EPC <b>₹10–58L</b> → Large <b>₹50L+</b> — pick your level.`},
+  {t:24, text:`This blueprint made 30+ installers profitable. Want it? Comment <b>“BLUEPRINT”</b> + <b>BOOK FREE SITE SURVEY</b> in bio. Follow for Part 1 👇`},
+];
+let playing=false, elapsed=0, dur=30, tm;
+const elSub=document.getElementById('subtxt'), elProg=document.getElementById('progress'), elInf=document.getElementById('infographic'), playBtn=document.getElementById('playBtn'), countdown=document.getElementById('countdown'), cdNum=document.getElementById('cdNum'), timer=document.getElementById('timer');
+function tick(){ elapsed+=0.05; elProg.style.width=Math.min(100,(elapsed/dur)*100)+'%'; timer.textContent=`● REC • 0:${String(Math.floor(elapsed)).padStart(2,'0')} / 0:30`;
+  let cur=subs[0]; for(let s of subs) if(elapsed>=s.t) cur=s;
+  if(cur && cur.text!==elSub._last){ elSub.innerHTML=cur.text; elSub._last=cur.text; }
+  if(elapsed>=dur){ playing=false; clearInterval(tm); playBtn.textContent='↻ REPLAY — 30s'; }
+}
+function start(){ countdown.style.display='grid'; let c=3; cdNum.textContent=c; let ci=setInterval(()=>{ c--; if(c>0) cdNum.textContent=c; else { clearInterval(ci); countdown.style.display='none'; actuallyStart(); } },600); }
+function actuallyStart(){ playing=true; elapsed=0; elSub._last=''; elProg.style.width='0%'; playBtn.textContent='⏸ PLAYING...'; elInf.classList.remove('ken'); void elInf.offsetWidth; elInf.classList.add('ken'); if(tm) clearInterval(tm); tm=setInterval(tick,50); }
+playBtn.addEventListener('click', ()=>{ if(!playing) start(); });
+</script>
+</body>
+</html>

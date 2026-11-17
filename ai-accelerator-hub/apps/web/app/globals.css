@@ -7,64 +7,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Theme colours come ONLY from styles/core.css (--text, --bg, --border, --primary, --focus …, switched by
+ * html[data-theme]). Do not redefine those variable names here: an old dark-only token block used to live
+ * in this file, overrode body colour to white and turned every label/heading invisible on the light theme.
+ */
 @layer base {
-  :root {
-    --background: 228 36% 8%;
-    --foreground: 0 0% 100%;
-    --card: 225 28% 16%;
-    --card-foreground: 0 0% 100%;
-    --popover: 225 28% 16%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 220 91% 62%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 262 72% 64%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 225 28% 24%;
-    --muted-foreground: 224 18% 68%;
-    --accent: 42 76% 68%;
-    --accent-foreground: 228 36% 8%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 225 28% 24%;
-    --input: 225 28% 24%;
-    --ring: 220 91% 62%;
-    --radius: 1rem;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    @apply bg-[hsl(var(--background))] text-foreground font-sans antialiased;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: var(--text);
+    background-color: var(--bg);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   code, pre {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
   }
 }
 
 /* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  @apply bg-[hsl(var(--background))];
-}
-::-webkit-scrollbar-thumb {
-  @apply bg-[hsl(var(--muted))] rounded-full;
-}
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-[hsl(var(--muted-foreground))];
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
 
-/* Focus ring — WCAG 2.4.11 double ring */
+/* Focus ring — WCAG 2.4.11 */
 *:focus-visible {
-  outline: 2px solid hsl(var(--primary));
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px hsla(42, 76%, 68%, 0.3);
 }
 
 /* Animations */
@@ -79,4 +49,7 @@
 @keyframes pulse-scale {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }

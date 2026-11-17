@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Short #1 — 40% Leakage Problem</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#010a1a;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.stage{width:100vw;height:100vh;display:grid;place-items:center;background:radial-gradient(1200px 800px at 50% -10%,#13315e,#010a1a)}
+.phone{width:min(420px,100vw);height:min(740px,92vh);background:#000;border-radius:22px;overflow:hidden;position:relative;border:4px solid #1a1a1a;box-shadow:0 24px 64px rgba(0,0,0,.6),0 0 0 1px #222}
+.topbar{position:absolute;top:0;left:0;right:0;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:10;background:linear-gradient(to bottom,rgba(0,0,0,.75),transparent);color:#fff;font-size:12px;font-weight:700}
+.topbar span{opacity:.9}
+.reactor{position:absolute;top:52px;right:12px;width:86px;height:108px;border-radius:14px;overflow:hidden;border:2px solid #ffb700;z-index:8;background:#0c2448;box-shadow:0 8px 20px rgba(0,0,0,.5)}
+.reactor img{width:100%;height:100%;object-fit:cover}
+.reactor .live{position:absolute;top:6px;left:6px;background:#ff2a2a;color:#fff;font-size:8px;font-weight:900;letter-spacing:.8px;padding:3px 6px;border-radius:6px}
+.reactor .name{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);color:#fff;font-size:8px;padding:4px 6px;text-align:center;font-weight:700}
+.viewport{position:absolute;inset:0;overflow:hidden;background:#061a33}
+.infographic{position:absolute;inset:0;will-change:transform}
+.infographic img{width:100%;height:100%;object-fit:cover;object-position:left center}
+.ken{animation:ken 28s linear forwards}
+@keyframes ken{
+  0%{transform:scale(1) translate(0,0)}
+  15%{transform:scale(1.55) translate(-6%, -2%)} /* clock */
+  35%{transform:scale(1.55) translate(-8%, 8%)} /* cheap panel */
+  60%{transform:scale(1.45) translate(-5%, 18%)} /* funnel 40% */
+  100%{transform:scale(1.05) translate(0,0)}
+}
+.spotlight{position:absolute;inset:0;box-shadow:inset 0 0 0 0 rgba(255,183,0,0);pointer-events:none;z-index:2}
+.spot1{animation:spot 28s linear forwards}
+@keyframes spot{
+  0%,12%{box-shadow:inset 0 0 0 0 rgba(255,183,0,0)}
+  15%,32%{box-shadow:inset 0 0 0 4px #ffb700, inset 0 0 40px rgba(255,183,0,.18)}
+  33%,58%{box-shadow:inset 0 0 0 4px #ffb700, inset 0 0 40px rgba(255,183,0,.18)}
+  59%,78%{box-shadow:inset 0 0 0 6px #ff2a2a, inset 0 0 60px rgba(255,42,42,.22)}
+  79%,100%{box-shadow:inset 0 0 0 0 rgba(255,183,0,0)}
+}
+.overlay{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;justify-content:space-between;padding:52px 14px 14px;pointer-events:none}
+.hook{pointer-events:auto}
+.pill{display:inline-flex;align-items:center;gap:6px;background:#ffb700;color:#061a33;font-weight:900;font-size:11px;letter-spacing:.6px;padding:6px 10px;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.hook h1{margin-top:10px;font-size:26px;line-height:1.05;font-weight:900;color:#fff;text-shadow:0 3px 16px rgba(0,0,0,.7);max-width:78%}
+.hook h1 em{color:#ffb700;font-style:normal}
+.hook p{margin-top:8px;color:#fff;opacity:.9;font-size:12px;line-height:1.4;max-width:78%;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);padding:8px 10px;border-radius:10px;border-left:3px solid #ffb700}
+.captions{pointer-events:auto}
+.subline{background:rgba(0,0,0,.78);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;min-height:56px}
+.subline .ava{width:28px;height:28px;border-radius:50%;background:#ffb700;display:grid;place-items:center;font-size:13px;flex-shrink:0}
+.subline .txt{font-size:12px;line-height:1.4;color:#fff;font-weight:600}
+.subline .txt b{color:#ffb700}
+.progress{position:absolute;bottom:0;left:0;height:4px;background:#ffb700;z-index:10;width:0}
+.controls{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);z-index:12;display:flex;gap:10px}
+.btn{pointer-events:auto;border:none;padding:10px 16px;border-radius:999px;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.btn-play{background:#ffb700;color:#061a33}
+.btn-mute{background:rgba(255,255,255,.14);color:#fff;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2)}
+.hide{display:none}
+.pulse{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.countdown{position:absolute;inset:0;display:grid;place-items:center;z-index:20;background:rgba(2,10,26,.92);color:#fff;transition:.4s}
+.countdown h2{font-size:64px;font-weight:900;color:#ffb700}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone" id="phone">
+    <div class="topbar"><span>● REC • 0:00 / 0:28</span><span>1080×1920 • 30fps</span></div>
+    <div class="reactor"><div class="live">● LIVE</div><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=300&fit=crop" alt="reactor"><div class="name">YOUR REACTION</div></div>
+    <div class="viewport">
+      <div class="infographic" id="infographic"><img src="blueprint.png" alt="blueprint"></div>
+      <div class="spotlight" id="spot"></div>
+    </div>
+    <div class="overlay">
+      <div class="hook">
+        <div class="pill">⚠️ PART 1/4 • THE LEAKAGE PROBLEM</div>
+        <h1 id="hookText">You’re losing <em>40% of leads</em> before you even call! 😱</h1>
+        <p id="hookSub">If you run Meta/Google ads for solar — this will hurt. But fix it and you 8X your surveys.</p>
+      </div>
+      <div class="captions">
+        <div class="subline" id="subline"><div class="ava">🎙️</div><div class="txt" id="subtxt">Tap <b>PLAY</b> to start reaction → subtitles auto-type like voiceover</div></div>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <span style="background:#ffb700;color:#061a33;font-weight:900;font-size:10px;padding:5px 8px;border-radius:999px">BOOK FREE SITE SURVEY</span>
+          <span style="background:rgba(255,255,255,.14);color:#fff;font-weight:700;font-size:10px;padding:5px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.2)">Comment “LEAKAGE” 👇</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress" id="progress"></div>
+    <div class="controls"><button class="btn btn-play" id="playBtn">▶ PLAY — 28s</button><button class="btn btn-mute" id="camBtn">📷 Camera ON</button></div>
+    <div class="countdown" id="countdown" style="display:none"><div style="text-align:center"><h2 id="cdNum">3</h2><div style="opacity:.7;margin-top:6px;font-size:12px;letter-spacing:1px;font-weight:800">GET READY TO REACT</div></div></div>
+  </div>
+</div>
+<script>
+const subs=[
+  {t:0, text:`<b>Hook:</b> Solar owners in AP/TS — you’re paying for leads that DIE in 15 minutes!`},
+  {t:3, text:`Industry avg? <b>14–24 HOURS</b> to respond. Leads contacted in <b>5 mins = 8X more surveys</b>. You’re gifting sales to competitors.`},
+  {t:9, text:`Second killer: <b>“Cheap Panel” trap.</b> You sell 25-year reliability, but never communicate it. Customer runs to ₹ cheaper inferiors.`},
+  {t:16, text:`Result? <b>40% LEAD LOSS.</b> Meta/Google leads wasted because you don’t qualify & book instantly. Half your ad budget = burnt.`},
+  {t:22, text:`Want the fix? <b>Part 2: Zero Lead Leakage Engine</b> — 5-min WhatsApp SLA. Follow for blueprint. Comment <b>“LEAKAGE”</b> 👇`},
+];
+const hookVariants=[
+  {h:`You’re losing <em>40% of leads</em> before you even call! 😱`, p:`If you run Meta/Google ads for solar — this will hurt. But fix it and you 8X your surveys.`},
+  {h:`Your ad budget is <em>leaking like this pipe</em> 🚰💸`, p:`See this crack? That’s your pipeline every day you reply late.`}
+];
+let tm, prog, idx=0, playing=false, elapsed=0, dur=28;
+const elProgress=document.getElementById('progress'), elSub=document.getElementById('subtxt'), elHook=document.getElementById('hookText'), elHookSub=document.getElementById('hookSub'), elInf=document.getElementById('infographic'), elSpot=document.getElementById('spot'), playBtn=document.getElementById('playBtn'), countdown=document.getElementById('countdown'), cdNum=document.getElementById('cdNum');
+function typeText(html){
+  elSub.innerHTML=''; let i=0, txt=html; elSub.innerHTML=txt;
+}
+function tick(){
+  elapsed+=0.05; const pct=Math.min(100,(elapsed/dur)*100); elProgress.style.width=pct+'%';
+  let cur=subs[0];
+  for(let s of subs){ if(elapsed>=s.t) cur=s; }
+  if(cur && cur.text!==elSub._last){ typeText(cur.text); elSub._last=cur.text; }
+  if(elapsed>1 && elapsed<3){ elHook.innerHTML=hookVariants[0].h; elHookSub.textContent=hookVariants[0].p; }
+  if(elapsed>=dur){ stop(); playBtn.textContent='↻ REPLAY — 28s'; playBtn.classList.add('pulse'); }
+}
+function start(){
+  if(playing) return; countdown.style.display='grid'; let c=3; cdNum.textContent=c;
+  let ci=setInterval(()=>{ c--; if(c>0) cdNum.textContent=c; else { clearInterval(ci); countdown.style.display='none'; actuallyStart(); } },600);
+}
+function actuallyStart(){
+  playing=true; elapsed=0; idx=0; elSub._last=''; elProgress.style.width='0%'; playBtn.textContent='⏸ PLAYING...'; playBtn.classList.remove('pulse');
+  elInf.classList.remove('ken'); void elInf.offsetWidth; elInf.classList.add('ken');
+  elSpot.classList.remove('spot1'); void elSpot.offsetWidth; elSpot.classList.add('spot1');
+  if(tm) clearInterval(tm); if(prog) clearInterval(prog);
+  tm=setInterval(tick,50);
+  // Progress in topbar
+  const topbar=document.querySelector('.topbar span');
+  prog=setInterval(()=>{ topbar.textContent=`● REC • 0:${String(Math.floor(elapsed)).padStart(2,'0')} / 0:28`; },100);
+}
+function stop(){ playing=false; clearInterval(tm); clearInterval(prog); }
+playBtn.addEventListener('click', ()=>{ if(!playing && elapsed>=dur){ elapsed=0; } if(!playing) start(); });
+document.getElementById('camBtn').addEventListener('click', async (e)=>{
+  const r=document.querySelector('.reactor img');
+  if(r.dataset.on==='1'){ r.src='https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=300&fit=crop'; r.dataset.on='0'; e.target.textContent='📷 Camera ON'; return;}
+  try{ const s=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); const v=document.createElement('video'); v.srcObject=s; v.autoplay=true; v.muted=true; v.style.width='100%'; v.style.height='100%'; v.style.objectFit='cover'; r.replaceWith(v); e.target.textContent='📷 Camera OFF'; }catch{ alert('Camera permission blocked. Using placeholder — you can record your duet in Instagram directly.'); }
+});
+// autoplay preview
+setTimeout(()=>{ elHook.classList.add('pulse'); },800);
+</script>
+</body>
+</html>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AA Accelerator Hub — Yagna Akkisetty | Staying Ahead in AI</title>
+<meta name="description" content="AA Accelerator Hub by Yagna Akkisetty — Staying Ahead in an AI-first world. Weekly letters, systems, vault & 4K cinema. One letter, one system, one vault drop every Monday.">
+<link rel="canonical" href="https://example.com/AA_Accelerator_Hub_Lean_4K.html">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#070A12">
+<link rel="icon" href="AI_Accelerator_Hub_Kit/optimized/avatar-400.webp" type="image/webp">
+
+<!-- SEO / Social — fixed -->
+<meta property="og:title" content="AA Accelerator Hub — Yagna Akkisetty">
+<meta property="og:description" content="Staying Ahead in an AI-first world — weekly letters, systems & vault. 4K avatar cinema by Yagna Akkisetty.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://example.com/AA_Accelerator_Hub_Lean_4K.html">
+<meta property="og:image" content="https://example.com/AI_Accelerator_Hub_Kit/optimized/hero-800.webp">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="1500">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AA Accelerator Hub — Yagna Akkisetty">
+<meta name="twitter:description" content="Weekly letters, systems & vault — 4K avatar cinema.">
+<meta name="twitter:image" content="https://example.com/AI_Accelerator_Hub_Kit/optimized/hero-800.webp">
+
+<!-- Performance: preconnect + preload LCP (both local hero + eclipse) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+<link rel="preload" as="image" href="AI_Accelerator_Hub_Kit/optimized/hero-800.webp" imagesrcset="AI_Accelerator_Hub_Kit/optimized/hero-400.webp 400w, AI_Accelerator_Hub_Kit/optimized/hero-800.webp 800w, AI_Accelerator_Hub_Kit/optimized/hero-1200.webp 1200w, AI_Accelerator_Hub_Kit/optimized/hero-1600.webp 1600w" imagesizes="(max-width: 1024px) 100vw, 42vw" fetchpriority="high">
+<link rel="preload" as="image" href="https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?q=80&w=2070&auto=format&fit=crop" imagesrcset="https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?q=80&w=800&auto=format&fit=crop 800w, https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?q=80&w=2070&auto=format&fit=crop 2070w" imagesizes="100vw" fetchpriority="high">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{fontFamily:{display:['Bebas Neue'],serif:['Instrument Serif'],sans:['Inter'],mono:['JetBrains Mono','monospace']},colors:{ink:'#070A12',ink2:'#0F172A',gold:'#C9A86A',paper:'#F8F7F4'}}}}
+</script>
+<style>
+:root{--ink:#070A12;--ink2:#0F172A;--gold:#C9A86A;--gold2:#E8D5B5;--paper:#F8F7F4}
+*{scroll-behavior:smooth}
+html{scrollbar-gutter:stable}
+body{font-family:Inter,system-ui,sans-serif;background:var(--ink);color:#F8FAFC;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+/* ANTIGRAVITY + ECLIPSE 4K — tuned: reduced noise, better contrast */
+.antigravity-bg{position:relative;background:linear-gradient(to bottom, #070A12 0%, #0A1224 50%, #070A12 100%)}
+.eclipse-hero{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.eclipse-hero img{width:100%;height:100%;object-fit:cover;object-position:center 38%;opacity:.55;filter:saturate(1.05) contrast(1.08) brightness(.92)}
+.eclipse-hero::after{content:"";position:absolute;inset:0;background:radial-gradient(820px 520px at 68% 42%, transparent 20%, rgba(7,10,18,.2) 52%, rgba(7,10,18,.82) 78%, #070A12 92%), linear-gradient(to bottom, rgba(7,10,18,.18) 0%, rgba(7,10,18,.32) 45%, rgba(7,10,18,.94) 100%), radial-gradient(1200px 600px at 20% -10%, rgba(201,168,106,.14), transparent 60%)}
+.eclipse-ring{position:absolute;left:58%;top:42%;transform:translate(-50%,-50%);width:min(56vw,640px);height:min(56vw,640px);border:1px solid rgba(201,168,106,.14);border-radius:9999px;box-shadow:0 0 0 1px rgba(255,255,255,.03) inset, 0 0 100px rgba(201,168,106,.1);pointer-events:none}
+.eclipse-ring::before{content:"";position:absolute;inset:16px;border:1px dashed rgba(255,255,255,.06);border-radius:9999px}
+.grid-overlay{position:absolute;inset:0;pointer-events:none;opacity:.28;
+  background-image:linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size: calc((100% - 48px)/12 + 2px) 1px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 60%, transparent 100%);}
+@media(min-width:1024px){ .grid-overlay{background-size: calc((min(1760px,100%) - 80px - 11*24px)/12 + 24px) 1px;} }
+.dot-field{position:absolute;inset:0;pointer-events:none;opacity:.08;
+  background-image:radial-gradient(rgba(255,255,255,.4) 1px, transparent 1px);
+  background-size:28px 28px;
+  mask-image:linear-gradient(to bottom, transparent, black 12%, black 82%, transparent);}
+.orb{position:absolute;border-radius:9999px;filter:blur(80px);pointer-events:none;opacity:.4;will-change:transform}
+.orb-gold{background:radial-gradient(circle, rgba(201,168,106,.22), transparent 70%);width:640px;height:460px;top:-100px;right:-120px}
+.orb-blue{background:radial-gradient(circle, rgba(59,130,246,.14), transparent 70%);width:560px;height:560px;left:-160px;top:360px}
+.glass{backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.lift{transition:transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s, border-color .35s}
+.lift:hover{transform:translateY(-3px);box-shadow:0 16px 48px rgba(0,0,0,.38)}
+.lift:focus-within{transform:translateY(-2px);box-shadow:0 10px 32px rgba(0,0,0,.3)}
+.nav-link{position:relative;padding-bottom:8px}
+.nav-link::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--gold);transform:scaleX(0);transition:transform .22s}
+.nav-link:hover::after,.nav-link[aria-current="page"]::after{transform:scaleX(1)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto !important;transition:none !important;animation:none !important}}
+.wrap{max-width:1760px;margin-inline:auto;padding-inline:24px}
+@media(min-width:1024px){.wrap{padding-inline:40px}}
+/* clamp hero to prevent overflow on 320px */
+.hero-title{font-size:clamp(42px, 9vw, 102px);line-height:.82;letter-spacing:-.03em;overflow-wrap:break-word}
+@media print{header,.eclipse-hero,.grid-overlay,.dot-field,.orb{display:none !important} body{background:white;color:black} a[href^="http"]::after{content:" (" attr(href) ")";font-size:10px}}
+/* Production note: replace Tailwind CDN with compiled build for perf — `npx tailwindcss -o ./dist/tailwind.css --minify` */
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Person","name":"Yagna Akkisetty","jobTitle":"Founder — AA Accelerator Hub","email":"aiachub247@gmail.com","url":"https://example.com","sameAs":["https://www.youtube.com/channel/UC7tChjvKFisAP_ioyksP4ng"]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"AA Accelerator Hub","url":"https://example.com","publisher":{"@type":"Person","name":"Yagna Akkisetty"}}
+</script>
+</head>
+<body>
+<a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-white text-ink px-4 py-2 rounded z-[100]">Skip to content</a>
+
+<header class="fixed top-0 inset-x-0 z-50">
+  <div class="wrap">
+    <div class="mt-3 lg:mt-4 flex items-center justify-between gap-3 bg-[rgba(7,10,18,.74)] glass border border-white/10 rounded-full px-2 sm:px-3 py-2 shadow-[0_10px_40px_rgba(0,0,0,.4)]">
+      <a href="#overview" class="flex items-center gap-3 pl-1 shrink-0" aria-label="AA Accelerator Hub home">
+        <img src="AI_Accelerator_Hub_Kit/optimized/avatar-400.webp" width="40" height="40" alt="Yagna Akkisetty avatar" class="w-9 h-9 rounded-full object-cover ring-1 ring-gold/30" decoding="async" fetchpriority="high">
+        <span class="leading-none hidden sm:block">
+          <span class="font-display tracking-[0.14em] text-[15px] text-white block">AA ACCELERATOR HUB</span>
+          <span class="text-[10px] tracking-[0.16em] text-white/50 font-mono -mt-1 block">BY YAGNA AKKISETTY</span>
+        </span>
+        <span class="sm:hidden font-display tracking-[0.12em] text-[14px] text-white">AA • YAGNA</span>
+      </a>
+      <nav aria-label="Primary" class="hidden lg:flex items-center gap-1 text-[11px] tracking-[0.15em] font-mono">
+        <a href="#overview" class="nav-link text-white px-3 py-1" aria-current="page">OVERVIEW</a>
+        <a href="#letters" class="nav-link text-white/60 hover:text-white px-3 py-1">LETTERS</a>
+        <a href="#systems" class="nav-link text-white/60 hover:text-white px-3 py-1">SYSTEMS</a>
+        <a href="#vault" class="nav-link text-white/60 hover:text-white px-3 py-1">VAULT 47</a>
+        <a href="#cinema" class="nav-link text-white/60 hover:text-white px-3 py-1">CINEMA</a>
+        <a href="#about" class="nav-link text-white/60 hover:text-white px-3 py-1">ABOUT</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <a href="mailto:aiachub247@gmail.com" class="hidden xl:inline-flex text-[11px] tracking-[0.12em] font-mono text-white/50 hover:text-white">aiachub247@gmail.com</a>
+        <a href="https://www.youtube.com/channel/UC7tChjvKFisAP_ioyksP4ng" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center gap-1.5 bg-white text-ink px-4 py-2 rounded-full text-[13px] font-semibold hover:bg-paper transition">YouTube ↗</a>
+        <a href="#letters" class="bg-gold text-ink px-5 py-2.5 rounded-full text-[13px] font-semibold hover:bg-[#E8D5B5] transition">Read letter</a>
+        <button id="menuBtn" aria-expanded="false" aria-controls="mobileNav" aria-label="Open menu" class="lg:hidden w-9 h-9 rounded-full bg-white/10 grid place-items-center border border-white/10">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <nav id="mobileNav" aria-label="Mobile" class="hidden lg:hidden wrap mt-2">
+    <div class="bg-[rgba(7,10,18,.96)] glass border border-white/10 rounded-2xl px-6 py-4 space-y-1 font-mono text-[12px] tracking-[0.14em] text-white/70 shadow-xl">
+      <a href="#overview" class="nav-link block py-2 text-white" aria-current="page">OVERVIEW</a>
+      <a href="#letters" class="nav-link block py-2">LETTERS</a>
+      <a href="#systems" class="nav-link block py-2">SYSTEMS</a>
+      <a href="#vault" class="nav-link block py-2">VAULT</a>
+      <a href="#cinema" class="nav-link block py-2">CINEMA 4K</a>
+      <a href="#about" class="nav-link block py-2">ABOUT</a>
+    </div>
+  </nav>
+</header>
+
+<main id="main">
+
+<!-- HERO — ECLIPSE 4K PROFESSIONAL — fixed: preload, no overflow, proper contrast -->
+<section id="overview" aria-labelledby="hero-title" class="antigravity-bg pt-[88px] overflow-hidden">
+  <div class="eclipse-hero" aria-hidden="true">
+    <img src="https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?q=80&w=2070&auto=format&fit=crop" srcset="https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?q=80&w=800&auto=format&fit=crop 800w, https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?q=80&w=1200&auto=format&fit=crop 1200w, https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?q=80&w=2070&auto=format&fit=crop 2070w" sizes="100vw" alt="" width="2070" height="1200" loading="eager" fetchpriority="high" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.style.display='none'">
+    <div class="eclipse-ring"></div>
+  </div>
+  <div class="grid-overlay" aria-hidden="true"></div>
+  <div class="dot-field" aria-hidden="true"></div>
+  <div class="orb orb-gold" aria-hidden="true"></div>
+  <div class="orb orb-blue" aria-hidden="true"></div>
+
+  <div class="wrap relative">
+    <div class="grid grid-cols-12 gap-6 pt-8 lg:pt-12">
+      <div class="col-span-12 flex flex-wrap items-center justify-between gap-3 border-y border-white/10 py-3 font-mono text-[10px] tracking-[0.16em] text-white/55">
+        <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.6)]" aria-hidden="true"></span> STAYING AHEAD • VOL. 01 — YAGNA AKKISETTY <span class="hidden sm:inline text-white/30">• ECLIPSE EDITION</span></span>
+        <span class="hidden md:inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-1 text-white/60">APR 8, 2024 • TOTAL SOLAR ECLIPSE • 4K CORONA</span>
+        <span class="hidden lg:inline-flex gap-2 text-white/50">52 LETTERS / YR <span class="text-gold">•</span> 47 VAULT DROPS</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-6 lg:gap-8 items-center py-8 lg:py-14">
+      <div class="col-span-12 lg:col-span-7 relative">
+        <p class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/10 border border-gold/20 font-mono text-[11px] tracking-[0.14em] text-gold">
+          <span class="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" aria-hidden="true"></span> Eclipse 4K • Personal brand • System • Proof
+        </p>
+        <h1 id="hero-title" class="mt-5 font-display hero-title">
+          <span class="block text-white">Build in</span>
+          <span class="block text-white">public.</span>
+          <span class="block text-gold">Stay ahead.</span>
+        </h1>
+        <p class="mt-6 max-w-[560px] text-[17px] leading-[1.65] text-white/75">
+          <strong class="text-white font-semibold">I’m Yagna Akkisetty.</strong> Founder of AA Accelerator Hub — I help you build an AI-first personal brand with one letter, one system, one vault drop <em class="text-white/90">every Monday</em>. Real avatar. Real voice. No AI face.
+        </p>
+        <div class="mt-7 flex flex-wrap gap-3">
+          <a href="#letters" class="inline-flex items-center gap-2 bg-white text-ink px-7 py-3.5 rounded-full text-[14px] font-semibold hover:bg-paper lift">Read latest letter <span aria-hidden="true">→</span></a>
+          <a href="#cinema" class="inline-flex items-center gap-2 bg-white/5 glass border border-white/15 text-white px-7 py-3.5 rounded-full text-[14px] font-semibold hover:bg-white/10">Watch 4K cinema <span aria-hidden="true">▶</span></a>
+        </div>
+
+        <div class="mt-8 max-w-[560px]">
+          <div class="flex items-center gap-4 rounded-2xl bg-white/[0.04] glass border border-white/10 p-3 pr-4">
+            <img src="AI_Accelerator_Hub_Kit/optimized/avatar-400.webp" width="44" height="44" alt="Yagna Akkisetty" class="w-11 h-11 rounded-full object-cover ring-1 ring-gold/30 shrink-0" loading="lazy" decoding="async">
+            <div class="leading-tight">
+              <div class="text-white text-[14px] font-semibold flex items-center gap-2">Yagna Akkisetty <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full" aria-hidden="true"></span></div>
+              <div class="text-[11px] tracking-[0.12em] font-mono text-white/50">FOUNDER • AA ACCELERATOR HUB</div>
+            </div>
+            <div class="ml-auto hidden sm:flex gap-3 text-center" aria-label="Stats">
+              <div class="px-3"><div class="font-display text-[18px] leading-none text-white">52</div><div class="font-mono text-[10px] tracking-[0.12em] text-white/40">LETTERS</div></div>
+              <div class="w-px bg-white/10" aria-hidden="true"></div>
+              <div class="px-3"><div class="font-display text-[18px] leading-none text-gold">4K</div><div class="font-mono text-[10px] tracking-[0.12em] text-white/40">CINEMA</div></div>
+              <div class="w-px bg-white/10" aria-hidden="true"></div>
+              <div class="px-3"><div class="font-display text-[18px] leading-none text-white">47</div><div class="font-mono text-[10px] tracking-[0.12em] text-white/40">VAULT</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-span-12 lg:col-span-5 relative lg:pl-4">
+        <div class="relative">
+          <div class="absolute -top-3 -left-2 lg:-left-2 z-10 hidden sm:flex items-center gap-2 bg-white text-ink px-3 py-1.5 rounded-full text-[11px] font-mono tracking-[0.12em] shadow-xl">● LIVE • LETTER #12 <span class="bg-ink text-white px-2 py-0.5 rounded-full text-[10px]">4 MIN</span></div>
+          <div class="absolute -top-2 -right-2 z-10 w-12 h-12 rounded-2xl bg-gold text-ink grid place-items-center font-display text-[20px] shadow-xl rotate-3" aria-hidden="true">AA</div>
+          <div class="rounded-[28px] overflow-hidden border border-white/15 shadow-[0_24px_64px_rgba(0,0,0,.5)] bg-black lift relative">
+            <img src="AI_Accelerator_Hub_Kit/optimized/hero-800.webp" srcset="AI_Accelerator_Hub_Kit/optimized/hero-400.webp 400w, AI_Accelerator_Hub_Kit/optimized/hero-800.webp 800w, AI_Accelerator_Hub_Kit/optimized/hero-1200.webp 1200w, AI_Accelerator_Hub_Kit/optimized/hero-1600.webp 1600w" sizes="(max-width:1024px)100vw,42vw" alt="Yagna Akkisetty — AA Accelerator Hub, Staying Ahead in AI" width="800" height="1000" fetchpriority="high" decoding="async" class="w-full aspect-[4/5] object-cover object-[center_18%]">
+            <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+              <div class="flex items-center justify-between gap-3 bg-[rgba(7,10,18,.75)] glass border border-white/10 rounded-2xl p-3">
+                <div>
+                  <div class="font-mono text-[10px] tracking-[0.14em] text-gold">FEATURED • AUG 10</div>
+                  <div class="text-white text-[13px] font-semibold leading-tight">The Staying Ahead System</div>
+                </div>
+                <a href="#letters" aria-label="Read letter 12" class="w-9 h-9 rounded-full bg-white text-ink grid place-items-center shrink-0 hover:bg-paper">→</a>
+              </div>
+            </div>
+          </div>
+          <!-- decluttered: removed floating photo cards that duplicated frame1 and caused overflow -->
+        </div>
+        <p class="mt-8 lg:mt-8 font-mono text-[11px] tracking-[0.16em] text-white/35 text-center lg:text-left">ONE SYSTEM • ONCE A WEEK • YOUR AVATAR • YOUR VOICE</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="bg-white border-y border-black/5 relative overflow-hidden">
+  <div class="wrap">
+    <div class="grid grid-cols-12 gap-4 py-3 items-center">
+      <div class="col-span-12 flex flex-wrap items-center gap-3 lg:gap-6 font-mono text-[10px] tracking-[0.16em] text-black/40">
+        <span class="text-black/60 font-medium">TRUSTED SYSTEMS</span>
+        <span class="hidden sm:inline w-1 h-1 bg-black/20 rounded-full" aria-hidden="true"></span>
+        <span class="font-display tracking-[0.12em] text-[13px] text-black/60">SOLAR 4K ADS • META TELUGU • LEADS ENGINE • VAULT 47</span>
+        <span class="ml-auto hidden lg:inline-flex items-center gap-3">ENTERPRISE-GRADE <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,.6)]" aria-hidden="true"></span> DECLUTTERED</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section id="letters" aria-labelledby="letters-title" class="bg-paper relative">
+  <div class="wrap py-14 lg:py-20">
+    <div class="grid grid-cols-12 gap-6 items-end">
+      <div class="col-span-12 lg:col-span-8">
+        <p class="font-mono text-[11px] tracking-[0.18em] text-black/40">WEEKLY LETTERS • 52 / YEAR</p>
+        <h2 id="letters-title" class="font-display text-[42px] lg:text-[56px] leading-[0.9] tracking-[-0.02em] text-ink mt-2">Weekly <span class="font-serif italic font-normal text-[#9A7B4A]">Letters</span></h2>
+        <p class="mt-3 font-serif italic text-[17px] text-black/60 max-w-[560px]">One letter. One system. One vault drop — every Monday. Antigravity minimal.</p>
+      </div>
+      <div class="col-span-12 lg:col-span-4 lg:text-right">
+        <a href="#vault" class="inline-flex items-center gap-2 border border-ink/15 text-ink px-5 py-2.5 rounded-full text-[12px] font-mono tracking-[0.12em] hover:bg-ink hover:text-white transition">VIEW ALL 52 <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+
+    <div class="mt-8 grid grid-cols-12 gap-6">
+      <article class="col-span-12 lg:col-span-8 rounded-[24px] overflow-hidden bg-ink border border-black/10 flex flex-col lg:flex-row lift group">
+        <div class="lg:w-[46%] relative overflow-hidden">
+          <img src="AI_Accelerator_Hub_Kit/optimized/frame1-800.webp" srcset="AI_Accelerator_Hub_Kit/optimized/frame1-400.webp 400w, AI_Accelerator_Hub_Kit/optimized/frame1-800.webp 800w" sizes="(max-width:1024px)100vw,38vw" width="800" height="600" alt="Yagna writing the Staying Ahead letter" loading="lazy" decoding="async" class="w-full h-[260px] lg:h-full object-cover object-[center_18%] group-hover:scale-[1.02] transition duration-700">
+          <span class="absolute top-4 left-4 bg-gold text-ink font-mono text-[10px] tracking-[0.12em] px-2.5 py-1 rounded-full">FEATURED • #12</span>
+        </div>
+        <div class="flex-1 p-7 lg:p-8 flex flex-col justify-center">
+          <p class="font-mono text-[11px] tracking-[0.14em] text-gold">AUG 10 • 4 MIN • VAULT INSIDE</p>
+          <h3 class="mt-2 font-display text-[26px] lg:text-[30px] leading-[0.95] text-white">The Staying Ahead System — Ship Weekly Without Burnout</h3>
+          <p class="mt-3 text-[14px] leading-[1.6] text-white/65">Vaibhav’s engine rebuilt for AA. Avatar-led, 4K, 6× faster. Honest system, real link.</p>
+          <div class="mt-5 flex gap-3">
+            <a href="#vault" class="inline-flex bg-white text-ink px-5 py-2.5 rounded-full text-[13px] font-semibold hover:bg-paper">Open vault <span aria-hidden="true">→</span></a>
+            <a href="#cinema" class="inline-flex border border-white/15 text-white px-5 py-2.5 rounded-full text-[13px] font-mono hover:bg-white/10">Watch</a>
+          </div>
+        </div>
+      </article>
+      <div class="col-span-12 lg:col-span-4 grid gap-4 content-start">
+        <article class="rounded-2xl bg-white border border-black/10 p-4 flex gap-4 lift">
+          <img src="AI_Accelerator_Hub_Kit/optimized/frame3-400.webp" width="96" height="96" alt="" loading="lazy" decoding="async" class="w-24 h-24 rounded-xl object-cover shrink-0">
+          <div class="min-w-0"><div class="font-mono text-[10px] tracking-[0.12em] text-gold">#11</div><h3 class="font-semibold text-ink text-[15px] leading-tight">The Menu Is the Strategy</h3><p class="text-[13px] text-black/55">Why nav wins.</p><a href="#letters" class="text-[12px] font-mono tracking-[0.12em] text-ink underline underline-offset-4">Read <span aria-hidden="true">→</span></a></div>
+        </article>
+        <article class="rounded-2xl bg-white border border-black/10 p-4 flex gap-4 lift">
+          <div class="w-24 h-24 rounded-xl bg-ink grid place-items-center shrink-0 text-gold text-xl" aria-hidden="true">◈</div>
+          <div><div class="font-mono text-[10px] tracking-[0.12em] text-gold">#10</div><h3 class="font-semibold text-ink text-[15px] leading-tight">Avatar Everywhere</h3><p class="text-[13px] text-black/55">From frame to 4K.</p><a href="#about" class="text-[12px] font-mono tracking-[0.12em] text-ink underline underline-offset-4">About Yagna <span aria-hidden="true">→</span></a></div>
+        </article>
+        <div class="rounded-2xl border border-dashed border-black/15 bg-white/60 p-4 flex items-center justify-between">
+          <span class="font-mono text-[11px] tracking-[0.14em] text-black/50">NEXT: MONDAY 6 AM IST</span>
+          <a href="#about" class="text-[11px] font-mono tracking-[0.12em] bg-ink text-white px-4 py-2 rounded-full hover:bg-black">Subscribe</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="systems" aria-labelledby="systems-title" class="bg-white border-y border-black/10">
+  <div class="wrap py-14 lg:py-20">
+    <div class="grid grid-cols-12 gap-6">
+      <div class="col-span-12 lg:col-span-5">
+        <p class="font-mono text-[11px] tracking-[0.16em] text-black/40">OPERATING SYSTEM • 12-COL</p>
+        <h2 id="systems-title" class="font-display text-[42px] lg:text-[50px] leading-[0.9] text-ink mt-2">The <span class="font-serif italic font-normal text-slate">Operating System</span></h2>
+        <p class="mt-3 text-black/60 leading-relaxed max-w-[520px]">Three systems that keep Yagna’s personal brand floating — letters, cinema, vault — all on one grid, one gold accent.</p>
+        <a href="#vault" class="mt-6 inline-flex bg-ink text-white px-5 py-2.5 rounded-full text-[13px] font-semibold hover:bg-black">Explore vault <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="col-span-12 lg:col-span-7 grid md:grid-cols-3 gap-5">
+        <div class="rounded-[20px] bg-paper border border-black/10 p-6 lift">
+          <div class="w-11 h-11 rounded-xl bg-ink grid place-items-center text-gold" aria-hidden="true">✎</div>
+          <h3 class="mt-4 font-semibold text-ink">Letter System</h3><p class="mt-1 text-[14px] leading-[1.6] text-black/60">One prompt → one letter → one drop. Notion OS duplicate. Ships Monday.</p>
+          <span class="mt-4 inline-flex font-mono text-[11px] tracking-[0.12em] text-ink border border-black/10 px-3 py-1 rounded-full">NOTION • WEEKLY</span>
+        </div>
+        <div class="rounded-[20px] bg-ink text-white p-6 lift shadow-[0_20px_50px_rgba(0,0,0,.16)] relative overflow-hidden">
+          <div class="absolute -right-8 -top-8 w-24 h-24 bg-gold/15 rounded-full blur-2xl" aria-hidden="true"></div>
+          <div class="w-11 h-11 rounded-xl bg-white grid place-items-center text-ink" aria-hidden="true">▶</div>
+          <h3 class="mt-4 font-semibold">Cinema System</h3><p class="mt-1 text-[14px] leading-[1.6] text-white/60">Your avatar + your voice. 4K, Telugu + English. Shorts + longs.</p>
+          <a href="#cinema" class="mt-4 inline-flex bg-gold text-ink px-4 py-2 rounded-full text-[11px] tracking-[0.12em] font-mono font-semibold hover:bg-[#E8D5B5]">Watch cinema</a>
+        </div>
+        <div class="rounded-[20px] bg-paper border border-black/10 p-6 lift">
+          <div class="w-11 h-11 rounded-xl bg-white border border-black/10 grid place-items-center text-ink" aria-hidden="true">▦</div>
+          <h3 class="mt-4 font-semibold text-ink">Vault System</h3><p class="mt-1 text-[14px] leading-[1.6] text-black/60">47 resources. Notion, Figma, playbooks. Enterprise checklist.</p>
+          <span class="mt-4 inline-flex font-mono text-[11px] tracking-[0.12em] text-ink border border-black/10 px-3 py-1 rounded-full">47 DROPS</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="vault" aria-labelledby="vault-title" class="bg-paper border-b border-black/10">
+  <div class="wrap py-14 lg:py-20">
+    <div class="grid grid-cols-12 gap-6 items-start">
+      <div class="col-span-12 lg:col-span-8">
+        <p class="font-mono text-[11px] tracking-[0.16em] text-black/40">ENTERPRISE VAULT • 47 RESOURCES</p>
+        <h2 id="vault-title" class="font-display text-[42px] lg:text-[50px] leading-[0.9] text-ink">Enterprise <span class="font-serif italic font-normal text-[#9A7B4A]">Vault</span></h2>
+      </div>
+      <div class="col-span-12 lg:col-span-4 lg:text-right"><a href="https://www.youtube.com/channel/UC7tChjvKFisAP_ioyksP4ng" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-ink text-white px-5 py-2.5 rounded-full text-[13px] font-semibold hover:bg-black">Explore vault <span aria-hidden="true">↗</span></a></div>
+    </div>
+    <div class="mt-8 grid grid-cols-12 gap-5">
+      <article class="col-span-12 sm:col-span-6 lg:col-span-3 rounded-2xl bg-white border border-black/10 overflow-hidden lift flex flex-col">
+        <div class="h-[128px] bg-ink p-4 flex flex-col justify-between"><span class="bg-white text-ink font-mono text-[10px] px-2 py-1 rounded-full w-fit">NOTION • DUPLICATE</span><span class="text-white font-display text-[18px]">CONTENT OS</span></div>
+        <div class="p-4 flex-1 flex flex-col"><h3 class="font-semibold text-[14px]">Notion — AA OS</h3><p class="text-[13px] text-black/60 mt-1">Letters, vault, calendar.</p><a href="https://www.notion.so" target="_blank" rel="noopener noreferrer" class="mt-auto pt-3 block bg-gold text-ink text-center py-2 rounded-full text-[12px] font-semibold hover:bg-[#E8D5B5]">Duplicate template</a></div>
+      </article>
+      <article class="col-span-12 sm:col-span-6 lg:col-span-3 rounded-2xl bg-white border border-black/10 overflow-hidden lift flex flex-col">
+        <div class="h-[128px] bg-gradient-to-br from-ink to-[#1E2A44] p-4 flex flex-col justify-between"><span class="bg-gold text-ink font-mono text-[10px] px-2 py-1 rounded-full w-fit">PLAYBOOK • 24P</span><span class="font-serif text-white text-[16px]">Story Engine</span></div>
+        <div class="p-4 flex-1 flex flex-col"><h3 class="font-semibold text-[14px]">Hook → Payoff</h3><p class="text-[13px] text-black/60 mt-1">24-page narrative system.</p><a href="#about" class="mt-auto pt-3 block border border-ink text-ink text-center py-2 rounded-full text-[11px] font-mono hover:bg-ink hover:text-white">View framework</a></div>
+      </article>
+      <article class="col-span-12 sm:col-span-6 lg:col-span-3 rounded-2xl bg-white border border-black/10 overflow-hidden lift flex flex-col">
+        <div class="h-[128px] bg-ink p-4 flex flex-col justify-between"><span class="bg-white text-ink font-mono text-[10px] px-2 py-1 rounded-full w-fit">VIDEO • 8 MIN</span><span class="text-white font-display text-[18px]">AA SYSTEM</span></div>
+        <div class="p-4 flex-1 flex flex-col"><h3 class="font-semibold text-[14px]">The AA Operating System</h3><p class="text-[13px] text-black/60 mt-1">8-min walkthrough — decluttered.</p><a href="#cinema" class="mt-auto pt-3 block bg-ink text-white text-center py-2 rounded-full text-[11px] font-mono hover:bg-black">Watch</a></div>
+      </article>
+      <article class="col-span-12 sm:col-span-6 lg:col-span-3 rounded-2xl bg-gold p-5 text-ink flex flex-col justify-between lift border border-black/5">
+        <div><p class="font-mono text-[10px] tracking-[0.14em] opacity-60">CHECKLIST • 47 STEPS</p><p class="font-display text-[26px] leading-none mt-2">LAUNCH CHECKLIST</p><p class="text-[13px] opacity-70 mt-2">Enterprise launch, antigravity lean.</p></div>
+        <a href="#about" class="mt-4 bg-ink text-white text-center py-2.5 rounded-full text-[12px] font-semibold hover:bg-black">View checklist <span aria-hidden="true">→</span></a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="cinema" aria-labelledby="cinema-title" class="bg-[#0B1220] border-y border-white/10 relative overflow-hidden">
+  <div class="absolute inset-0 opacity-[0.03]" style="background-image:linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px);background-size:40px 40px" aria-hidden="true"></div>
+  <div class="wrap py-14 lg:py-20 relative">
+    <div class="grid grid-cols-12 gap-6 items-end">
+      <div class="col-span-12 lg:col-span-8">
+        <p class="font-mono text-[11px] tracking-[0.16em] text-gold">CINEMA • 4K • YOUR AVATAR + YOUR VOICE</p>
+        <h2 id="cinema-title" class="font-display text-[42px] lg:text-[56px] leading-[0.9] text-white mt-2">Cinema <span class="font-serif italic font-normal text-gold">4K</span></h2>
+        <p class="mt-2 max-w-[640px] font-serif italic text-[16px] text-white/55">Shorts (9:16) + longs (16:9). Real files. Antigravity floating frames.</p>
+      </div>
+      <div class="col-span-12 lg:col-span-4 lg:text-right"><span class="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.12em] text-white/50 border border-white/10 rounded-full px-4 py-2">● 4 FORMATS • TELUGU + ENGLISH</span></div>
+    </div>
+
+    <div class="mt-8 grid grid-cols-12 gap-4">
+      <!-- ENTERPRISE CRITIQUE: all 4 thumbs were same avatar frame, same crop, no elevation, inconsistent perceived length -->
+      <article class="col-span-6 lg:col-span-3 rounded-2xl overflow-hidden bg-black border border-white/10 lift shadow-[0_16px_40px_rgba(0,0,0,.35)]">
+        <div class="relative aspect-[9/16] overflow-hidden bg-[#0F172A]">
+          <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=800&auto=format&fit=crop&crop=faces" onerror="this.src='AI_Accelerator_Hub_Kit/optimized/short01-800.webp'" width="800" height="1422" alt="Yagna — Hook: Are you chasing leads? 9:16 enterprise portrait" loading="lazy" decoding="async" class="w-full h-full object-cover object-[center_12%]">
+          <span class="absolute top-2 left-2 bg-white text-ink font-mono text-[10px] tracking-[0.12em] px-2 py-1 rounded-full">HOOK • 10s</span>
+          <span class="absolute bottom-2 right-2 bg-black/60 backdrop-blur text-white font-mono text-[10px] px-2 py-1 rounded-full border border-white/10">9:16</span>
+        </div>
+        <div class="p-3"><h3 class="font-semibold text-white text-[13px] leading-tight">Hook — 10s • 9:16</h3><p class="font-mono text-[11px] text-white/50 mt-1">avatar frame_0 • voice ad_audio</p><a href="Solar_business_meta_ad/english/captions.srt" download class="mt-2 block text-center py-2 rounded-full bg-white text-ink text-[11px] font-mono hover:bg-paper">SRT captions</a></div>
+      </article>
+      <article class="col-span-6 lg:col-span-3 rounded-2xl overflow-hidden bg-black border border-white/10 lift shadow-[0_16px_40px_rgba(0,0,0,.35)]">
+        <div class="relative aspect-[9/16] overflow-hidden bg-[#0F172A]">
+          <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=800&auto=format&fit=crop&crop=faces" onerror="this.src='AI_Accelerator_Hub_Kit/optimized/short02-800.webp'" width="800" height="1422" alt="Result — 15+ qualified buyers, calendar green" loading="lazy" decoding="async" class="w-full h-full object-cover object-[center_18%]">
+          <span class="absolute top-2 left-2 bg-gold text-ink font-mono text-[10px] tracking-[0.12em] px-2 py-1 rounded-full">RESULT • 4s</span>
+          <span class="absolute bottom-2 right-2 bg-black/60 backdrop-blur text-white font-mono text-[10px] px-2 py-1 rounded-full border border-white/10">9:16</span>
+        </div>
+        <div class="p-3"><h3 class="font-semibold text-white text-[13px] leading-tight">Result — 4s • 9:16</h3><p class="font-mono text-[11px] text-white/50 mt-1">green calendar • frame_1</p><a href="Solar_business_meta_ad/telugu/Meta_Ad_Telugu_MY_VOICE.mp4" class="mt-2 block text-center py-2 rounded-full border border-white/20 text-white text-[11px] font-mono hover:bg-white/10">Play master 4K</a></div>
+      </article>
+      <article class="col-span-6 lg:col-span-3 rounded-2xl overflow-hidden bg-black border border-white/10 lift shadow-[0_16px_40px_rgba(0,0,0,.35)]">
+        <div class="relative aspect-video overflow-hidden bg-[#0F172A]">
+          <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop" onerror="this.src='AI_Accelerator_Hub_Kit/optimized/long01-800.webp'" width="800" height="450" alt="System — The System That Converts, 8 min walkthrough" loading="lazy" decoding="async" class="w-full h-full object-cover object-center">
+          <span class="absolute top-2 left-2 bg-white text-ink font-mono text-[10px] tracking-[0.12em] px-2 py-1 rounded-full">SYSTEM • 8 MIN</span>
+          <span class="absolute bottom-2 right-2 bg-black/60 backdrop-blur text-white font-mono text-[10px] px-2 py-1 rounded-full border border-white/10">16:9</span>
+        </div>
+        <div class="p-3"><h3 class="font-semibold text-white text-[13px] leading-tight">System — 8 min • 16:9</h3><p class="font-mono text-[11px] text-white/50 mt-1">Vaibhav style • Telugu voice</p><a href="https://www.youtube.com/channel/UC7tChjvKFisAP_ioyksP4ng" target="_blank" rel="noopener noreferrer" class="mt-2 block text-center py-2 rounded-full bg-gold text-ink text-[11px] font-mono font-semibold">Watch on YouTube</a></div>
+      </article>
+      <article class="col-span-6 lg:col-span-3 rounded-2xl overflow-hidden bg-black border border-white/10 lift shadow-[0_16px_40px_rgba(0,0,0,.35)]">
+        <div class="relative aspect-video overflow-hidden bg-[#0F172A]">
+          <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=800&auto=format&fit=crop" onerror="this.src='AI_Accelerator_Hub_Kit/optimized/long02-800.webp'" width="800" height="450" alt="Vault Tour — 12 min enterprise walkthrough" loading="lazy" decoding="async" class="w-full h-full object-cover object-center">
+          <span class="absolute top-2 left-2 bg-white text-ink font-mono text-[10px] tracking-[0.12em] px-2 py-1 rounded-full">VAULT • 12 MIN</span>
+          <span class="absolute bottom-2 right-2 bg-black/60 backdrop-blur text-white font-mono text-[10px] px-2 py-1 rounded-full border border-white/10">16:9</span>
+        </div>
+        <div class="p-3"><h3 class="font-semibold text-white text-[13px] leading-tight">Vault Tour — 12 min</h3><p class="font-mono text-[11px] text-white/50 mt-1">frame_3 • walkthrough</p><a href="https://www.youtube.com/channel/UC7tChjvKFisAP_ioyksP4ng" target="_blank" rel="noopener noreferrer" class="mt-2 block text-center py-2 rounded-full border border-white/20 text-white text-[11px] font-mono hover:bg-white/10">Open vault</a></div>
+      </article>
+    </div>
+
+    <div class="mt-8 grid grid-cols-12 gap-6">
+      <div class="col-span-12 lg:col-span-8 rounded-2xl overflow-hidden bg-black border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,.45)]">
+        <!-- ENTERPRISE FIX: head cutoff was object-cover + center 18% on 4/5 poster; now enterprise letterbox — contain fit, no crop -->
+        <div class="aspect-video bg-[#0F172A] relative overflow-hidden flex items-center justify-center"><video controls preload="metadata" poster="AI_Accelerator_Hub_Kit/optimized/long01-800.webp" playsinline controlsList="nodownload" class="w-full h-full object-contain bg-[#0F172A]" aria-label="Master ad — your avatar + your voice, 4K — enterprise fit, full head visible"><source src="Solar_business_meta_ad/telugu/Meta_Ad_Telugu_MY_VOICE.mp4" type="video/mp4"><track kind="captions" src="Solar_business_meta_ad/english/captions.srt" srclang="en" label="English captions (SRT — convert to VTT for browser support)"><track kind="captions" src="Solar_business_meta_ad/english/captions.vtt" srclang="en" label="English captions">Your browser does not support video. <a href="Solar_business_meta_ad/telugu/Meta_Ad_Telugu_MY_VOICE.mp4" class="underline">Download master 4K</a>.</video></div>
+        <div class="p-5 bg-[#0F172A] border-t border-white/10">
+          <p class="font-mono text-[11px] tracking-[0.14em] text-gold">MASTER 4K • YOUR VOICE • 9:16 + 16:9</p>
+          <h3 class="font-semibold text-white text-[16px] mt-1">AA Accelerator Hub — Master Ad</h3>
+          <p class="text-white/60 text-[13px] mt-1">Source from Meta Business Suite — same avatar, same voice. Shorts and longs derive from this.</p>
+          <div class="mt-4 grid sm:grid-cols-2 gap-3">
+            <div class="rounded-xl bg-white/5 border border-white/10 p-3"><p class="font-mono text-[10px] tracking-[0.14em] text-white/50">ENGLISH VOICE</p><audio controls preload="none" src="Solar_business_meta_ad/english/ad_audio.mp3" class="w-full mt-2" aria-label="English ad audio"></audio></div>
+            <div class="rounded-xl bg-white/5 border border-white/10 p-3"><p class="font-mono text-[10px] tracking-[0.14em] text-white/50">TELUGU VOICE</p><audio controls preload="none" src="Solar_business_meta_ad/telugu/telugu_final_audio.m4a" class="w-full mt-2" aria-label="Telugu ad audio"></audio></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-span-12 lg:col-span-4 rounded-2xl bg-white/5 glass border border-white/10 p-6 self-start">
+        <h3 class="font-mono text-[11px] tracking-[0.14em] text-gold">SHOT LIST • 4K GRID</h3>
+        <div class="mt-3 space-y-3 text-[13px] text-white/75">
+          <p class="flex gap-3"><span class="w-8 h-8 rounded-lg bg-gold text-ink grid place-items-center font-mono text-[11px] shrink-0" aria-hidden="true">01</span><span><strong class="text-white">Short 01</strong> — Hook 0-3s + pain 3-10s</span></p>
+          <p class="flex gap-3"><span class="w-8 h-8 rounded-lg bg-white/10 border border-white/10 grid place-items-center font-mono text-[11px] shrink-0" aria-hidden="true">02</span><span><strong class="text-white">Short 02</strong> — Result 4s (calendar → green)</span></p>
+          <p class="flex gap-3"><span class="w-8 h-8 rounded-lg bg-white/10 border border-white/10 grid place-items-center font-mono text-[11px] shrink-0" aria-hidden="true">03</span><span><strong class="text-white">Long 01</strong> — System 8m</span></p>
+          <p class="flex gap-3"><span class="w-8 h-8 rounded-lg bg-white/10 border border-white/10 grid place-items-center font-mono text-[11px] shrink-0" aria-hidden="true">04</span><span><strong class="text-white">Long 02</strong> — Vault 12m</span></p>
+        </div>
+        <p class="mt-4 p-3 rounded-xl bg-gold text-ink font-mono text-[11px] text-center">All shots = your avatar (frame_0/1/3) + your voice — no AI face.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about" aria-labelledby="about-title" class="bg-ink border-b border-white/10 relative overflow-hidden">
+  <div class="orb orb-gold" style="top:auto;bottom:-200px;right:-100px;opacity:.22" aria-hidden="true"></div>
+  <div class="wrap py-14 lg:py-20 relative">
+    <div class="grid grid-cols-12 gap-8 lg:gap-10 items-center">
+      <div class="col-span-12 lg:col-span-5">
+        <div class="rounded-[20px] overflow-hidden border border-white/10 shadow-[0_24px_64px_rgba(0,0,0,.45)]">
+          <img src="AI_Accelerator_Hub_Kit/optimized/frame1-800.webp" srcset="AI_Accelerator_Hub_Kit/optimized/frame1-400.webp 400w, AI_Accelerator_Hub_Kit/optimized/frame1-800.webp 800w" sizes="(max-width:1024px)100vw,42vw" width="800" height="1000" alt="Yagna Akkisetty — founder, AA Accelerator Hub" loading="lazy" decoding="async" class="w-full aspect-[4/5] object-cover object-[center_18%]">
+        </div>
+        <p class="mt-3 font-mono text-[11px] tracking-[0.12em] text-white/40 text-center">Single hero frame • 4K optimized • No duplicate clutter</p>
+      </div>
+      <div class="col-span-12 lg:col-span-7 lg:pl-4">
+        <p class="font-mono text-[11px] tracking-[0.16em] text-gold">PERSONAL BRAND • ENTERPRISE • HUMAN</p>
+        <h2 id="about-title" class="font-display text-[42px] lg:text-[56px] leading-[0.88] text-white mt-2">Built <span class="text-white">enterprise.</span><br><span class="font-serif italic font-normal text-gold">Staying human.</span></h2>
+        <p class="mt-4 text-[16px] leading-[1.65] text-white/70 max-w-[600px]">I’m Yagna — Staying Ahead minimal meets your real 4K avatar. One system, one gold accent, honest cinema. I document the system weekly so you can stay ahead without burnout.</p>
+        <div class="mt-6 grid grid-cols-3 gap-3">
+          <div class="rounded-2xl bg-white/5 glass border border-white/10 p-4"><p class="font-mono text-[10px] tracking-[0.14em] text-gold">RESEARCH</p><p class="font-semibold text-white mt-1 text-[13px]">Vaibhav → System</p><p class="text-[12px] text-white/50 mt-1">Staying Ahead DNA</p></div>
+          <div class="rounded-2xl bg-white/5 glass border border-white/10 p-4"><p class="font-mono text-[10px] tracking-[0.14em] text-gold">AVATAR</p><p class="font-semibold text-white mt-1 text-[13px]">Frame_0 → 4K</p><p class="text-[12px] text-white/50 mt-1">Solar shoot 4K</p></div>
+          <div class="rounded-2xl bg-gold text-ink p-4 lift"><p class="font-mono text-[10px] tracking-[0.14em] opacity-60">RESULT</p><p class="font-semibold mt-1 text-[13px]">Lean Hub</p><p class="text-[12px] opacity-70 mt-1">12-col antigravity</p></div>
+        </div>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a href="https://www.youtube.com/channel/UC7tChjvKFisAP_ioyksP4ng" target="_blank" rel="noopener noreferrer" class="bg-white text-ink px-6 py-3 rounded-full text-[14px] font-semibold inline-flex items-center gap-2 hover:bg-paper">Watch on YouTube <span aria-hidden="true">▶</span></a>
+          <a href="mailto:aiachub247@gmail.com" class="glass border border-white/20 text-white px-6 py-3 rounded-full font-mono text-[11px] tracking-[0.14em] hover:bg-white/10">aiachub247@gmail.com</a>
+        </div>
+        <div class="mt-8 rounded-2xl bg-white text-ink p-5 border border-black/5">
+          <p class="font-mono text-[11px] tracking-[0.14em] text-black/40">WHAT YOU GET — EVERY MONDAY</p>
+          <div class="mt-3 grid sm:grid-cols-3 gap-4 text-[13px]">
+            <div><strong>Letter</strong><br><span class="text-black/60">4-min system you can ship.</span></div>
+            <div><strong>System</strong><br><span class="text-black/60">Template + SOP.</span></div>
+            <div><strong>Vault drop</strong><br><span class="text-black/60">1 of 47 resources.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="bg-[#05070D] border-t border-white/10">
+  <div class="wrap py-10">
+    <div class="rounded-[20px] bg-gradient-to-br from-gold via-[#D8B98C] to-[#9A7B4A] p-[1px]">
+      <div class="rounded-[19px] bg-[var(--ink)] p-6 lg:p-8 grid grid-cols-12 gap-6 items-center">
+        <div class="col-span-12 lg:col-span-7">
+          <p class="font-mono text-[11px] tracking-[0.16em] text-gold">JOIN THE LETTER • ANTIGRAVITY LIST</p>
+          <h2 class="font-display text-[28px] lg:text-[34px] leading-none text-white mt-1">Get the <span class="text-gold">AA Letter</span> every Monday</h2>
+          <p class="text-white/60 text-[13px] mt-1">One letter, one system, one vault drop. Unsubscribe anytime. Privacy respected. <span id="email-help" class="sr-only">We never share your email.</span></p>
+        </div>
+        <form action="https://formspree.io/f/mexample" method="POST" class="col-span-12 lg:col-span-5 flex w-full gap-2" novalidate onsubmit="event.preventDefault(); const e=this.email.value; if(!e||!e.includes('@')){toast('Enter valid email');return} toast('✓ Joined — check '+e); this.reset();">
+          <label for="email" class="sr-only">Email address</label>
+          <input id="email" name="email" type="email" required placeholder="your@email.com" autocomplete="email" aria-required="true" aria-describedby="email-help" class="flex-1 bg-white/10 border border-white/15 rounded-full px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/30">
+          <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
+          <button type="submit" class="bg-gold text-ink px-6 py-3 rounded-full text-[13px] font-semibold hover:bg-[#E8D5B5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white shrink-0">Join <span aria-hidden="true">→</span></button>
+        </form>
+      </div>
+    </div>
+
+    <div class="mt-8 grid grid-cols-12 gap-8">
+      <div class="col-span-12 lg:col-span-5">
+        <div class="flex items-center gap-2">
+          <img src="AI_Accelerator_Hub_Kit/optimized/avatar-400.webp" width="36" height="36" alt="" class="w-9 h-9 rounded-full ring-1 ring-gold/30" loading="lazy" decoding="async">
+          <span class="font-display tracking-[0.12em] text-white text-[14px]">AA ACCELERATOR HUB — YAGNA AKKISETTY</span>
+        </div>
+        <p class="text-white/50 text-[13px] mt-2 max-w-[520px]">Staying Ahead system, your avatar 4K, lean enterprise. One system, once a week. Antigravity grid, floating, human.</p>
+        <p class="mt-3 font-mono text-[11px] tracking-[0.12em] text-white/30">© 2026 AA ACCELERATOR HUB • BUILT FOR PERSONAL BRAND GRAVITY</p>
+      </div>
+      <nav aria-label="Footer" class="col-span-12 lg:col-span-7 grid grid-cols-3 gap-8 text-[11px] tracking-[0.12em] font-mono">
+        <div><p class="text-white mb-3">MENU</p><div class="space-y-2 text-white/50"><a href="#overview" class="block hover:text-white">Overview</a><a href="#letters" class="block hover:text-white">Letters</a><a href="#systems" class="block hover:text-white">Systems</a><a href="#vault" class="block hover:text-white">Vault 47</a><a href="#cinema" class="block hover:text-white">Cinema 4K</a></div></div>
+        <div><p class="text-white mb-3">RESEARCH</p><div class="space-y-2 text-white/50"><span class="block">Vaibhav Sisinty</span><span class="block">Sandeep Chaudhary</span><span class="block">Staying Ahead</span></div></div>
+        <div><p class="text-white mb-3">CONNECT</p><div class="space-y-2 text-white/50"><a href="mailto:aiachub247@gmail.com" class="block hover:text-white">aiachub247@gmail.com</a><a href="https://www.youtube.com/channel/UC7tChjvKFisAP_ioyksP4ng" target="_blank" rel="noopener noreferrer" class="block hover:text-white">YouTube</a><span class="block text-white/30">Hyderabad • IST</span></div></div>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<div id="toast" role="status" aria-live="polite" aria-atomic="true" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white text-ink px-4 py-2.5 rounded-full font-mono text-[12px] shadow-[0_16px_40px_rgba(0,0,0,.3)] opacity-0 pointer-events-none transition"></div>
+
+<script>
+function toast(msg){const t=document.getElementById('toast'); if(!t) return; t.textContent=msg; t.style.opacity='1'; t.style.transform='translate(-50%,0)'; setTimeout(()=>{t.style.opacity='0'},2200);}
+// Lean JS: fixed bugs — deduped toggle, mobile nav-link selector, reduced-motion safe
+const menuBtn=document.getElementById('menuBtn'),mobileNav=document.getElementById('mobileNav');
+if(menuBtn&&mobileNav){menuBtn.addEventListener('click',()=>{const hidden=mobileNav.classList.toggle('hidden');menuBtn.setAttribute('aria-expanded',String(!hidden));menuBtn.setAttribute('aria-label', hidden?'Open menu':'Close menu')});mobileNav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{mobileNav.classList.add('hidden');menuBtn.setAttribute('aria-expanded','false');menuBtn.setAttribute('aria-label','Open menu')}));document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mobileNav.classList.contains('hidden')){mobileNav.classList.add('hidden');menuBtn.setAttribute('aria-expanded','false');menuBtn.focus()}})}
+const sections=['overview','letters','systems','vault','cinema','about'];
+const navLinks=document.querySelectorAll('header nav[aria-label="Primary"] a.nav-link, #mobileNav a.nav-link');
+function setActive(id){navLinks.forEach(a=>{const is=a.getAttribute('href')==='#'+id;if(is){a.setAttribute('aria-current','page');a.classList.add('text-white');a.classList.remove('text-white/60')}else{a.removeAttribute('aria-current');a.classList.remove('text-white');a.classList.add('text-white/60')} })}
+const obs=new IntersectionObserver(entries=>{entries.forEach(ent=>{if(ent.isIntersecting)setActive(ent.target.id)})},{rootMargin:'-45% 0px -50% 0px',threshold:0});
+sections.forEach(id=>{const el=document.getElementById(id);if(el)obs.observe(el)});
+</script>
+</body>
+</html>

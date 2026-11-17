@@ -1,0 +1,87 @@
+{
+  "id": "support-reply",
+  "kind": "project",
+  "title": "Draft a support reply that keeps the facts",
+  "summary": "Build a reply from a ticket and a policy page without inventing promises.",
+  "level": 3,
+  "tool": "ChatGPT",
+  "roles": ["marketing-sales", "education-consulting", "leadership-operations"],
+  "minutes": 60,
+  "difficulty": "intermediate",
+  "outcome": "A reviewed reply that answers the ticket, cites the policy, and flags what it cannot promise.",
+  "body": "A fictional customer has asked for a refund 19 days after purchase. The policy says refunds are available within 14 days, and that damaged items are handled separately. You will build a reply that is helpful without inventing an exception.",
+  "notice": "Fictional ticket and policy only. Do not paste real customer correspondence into a chat app for this exercise.",
+  "prerequisites": [
+    "ChatGPT open and signed in.",
+    "The ticket and policy text below in the same conversation."
+  ],
+  "samples": [
+    {
+      "name": "Ticket and policy",
+      "content": "TICKET: Order 4471 arrived on 2 March. It works, but I changed my mind. I paid on 27 February and I want a refund. I have the original box.\n\nPOLICY: Refunds are available within 14 days of purchase for unused items in original packaging. Damaged or faulty items follow the returns process instead. Exceptions require a team lead decision and are not handled in the first reply."
+    }
+  ],
+  "steps": [
+    {
+      "title": "Extract the constraints",
+      "actions": [
+        "Ask for the purchase date, the request date and the number of days between them.",
+        "Ask which policy clause applies.",
+        "Confirm the arithmetic yourself."
+      ],
+      "expected": "The elapsed time is stated and matches your own calculation."
+    },
+    {
+      "title": "Draft the reply",
+      "actions": [
+        "Require: acknowledge, state the decision, cite the clause, offer the next step.",
+        "Forbid promises that are not in the policy.",
+        "Require a plain-language version at roughly an eighth-grade reading level."
+      ],
+      "expected": "The reply is under 150 words and contains no invented exception."
+    },
+    {
+      "title": "Stress it",
+      "actions": [
+        "Change the purchase date so the request falls inside 14 days.",
+        "Re-run the same prompt and compare the decision.",
+        "Change the item to 'arrived cracked' and check that the reply switches to the returns process."
+      ],
+      "expected": "All three variants change the decision correctly without changing the prompt."
+    },
+    {
+      "title": "Add the human step",
+      "actions": [
+        "Add a line that tells the agent when to escalate.",
+        "Remove any sentence that sounds like a guarantee.",
+        "Save the final reply as a reusable template."
+      ],
+      "expected": "The escalation rule names the team lead exception explicitly."
+    }
+  ],
+  "variants": {
+    "beginner": "Follow the steps in order with the full prompts visible.",
+    "intermediate": "Try each draft first, then open the reference prompt.",
+    "advanced": "Write the reply yourself, then ask the assistant to audit it against the policy."
+  },
+  "sections": [
+    {
+      "title": "Try a changed input",
+      "body": "Replace the ticket with: “Order 4471 arrived cracked. I want a replacement before Friday.”\n\n**Expected:** the reply switches to the damaged-items process and does not discuss the 14-day refund window."
+    }
+  ],
+  "checks": [
+    "The reply states the elapsed days and the applicable clause.",
+    "No exception is promised.",
+    "The damaged-item variant routes correctly.",
+    "An escalation rule is present.",
+    "The reply is under 150 words."
+  ],
+  "sources": [
+    {
+      "title": "ChatGPT capabilities overview",
+      "url": "https://help.openai.com/en/articles/9260256-chatgpt-capabilities-overview",
+      "provider": "OpenAI"
+    }
+  ]
+}

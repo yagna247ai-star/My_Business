@@ -1,0 +1,608 @@
+<div class="min-h-screen p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+  
+  <!-- Header / Navigation Bar -->
+  <header class="glass-card p-4 md:p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-emerald-400 p-0.5 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+        <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+          <i class="fa-solid fa-microphone-lines text-indigo-400 text-xl"></i>
+        </div>
+      </div>
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          Smallest AI <span class="text-indigo-400 font-normal">|</span> MyApps CRM
+          <span class="badge badge-purple">MVP Ecosystem</span>
+        </h1>
+        <p class="text-xs text-slate-400">CSV Voice Agent Dispatcher • Redis Idempotency Engine • CRM Webhook Pipelines</p>
+      </div>
+    </div>
+
+    <!-- Live Status Indicators & Actions -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 text-xs">
+        <span class="pulse-dot"></span>
+        <span class="text-slate-300">FastAPI Gateway</span>
+        <span class="text-emerald-400 font-mono">:8000</span>
+      </div>
+
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 text-xs">
+        <i class="fa-solid fa-database text-purple-400"></i>
+        <span class="text-slate-300">Redis:</span>
+        <span class="text-purple-300 font-medium">{{ redisTelemetry()?.engine || 'FakeRedis' }}</span>
+      </div>
+
+      <button (click)="isConfigModalOpen.set(true)" class="btn-secondary text-xs">
+        <i class="fa-solid fa-gear text-indigo-400"></i> Config & API Key
+      </button>
+    </div>
+  </header>
+
+  <!-- Metric Highlights Row -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="glass-card p-4 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-medium text-slate-400">Total Leads Ingested</p>
+        <p class="text-2xl font-bold text-white mt-1">{{ totalLeads() }}</p>
+      </div>
+      <div class="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+        <i class="fa-solid fa-users"></i>
+      </div>
+    </div>
+
+    <div class="glass-card p-4 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-medium text-slate-400">Calls Completed</p>
+        <p class="text-2xl font-bold text-emerald-400 mt-1">{{ completedCalls() }}</p>
+      </div>
+      <div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+        <i class="fa-solid fa-phone-volume"></i>
+      </div>
+    </div>
+
+    <div class="glass-card p-4 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-medium text-slate-400">Redis SETNX Locks</p>
+        <p class="text-2xl font-bold text-purple-400 mt-1">{{ redisTelemetry()?.total_keys || 0 }}</p>
+      </div>
+      <div class="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+    </div>
+
+    <div class="glass-card p-4 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-medium text-slate-400">Blacklisted DNC</p>
+        <p class="text-2xl font-bold text-rose-400 mt-1">{{ dncCount() }}</p>
+      </div>
+      <div class="w-10 h-10 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+        <i class="fa-solid fa-ban"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="flex items-center gap-2 border-b border-slate-800 pb-2">
+    <button (click)="activeTab.set('dispatcher')" 
+            [class]="activeTab() === 'dispatcher' ? 'btn-primary' : 'btn-secondary'">
+      <i class="fa-solid fa-paper-plane"></i> Lead CSV & Call Dispatcher
+    </button>
+
+    <button (click)="activeTab.set('crm')" 
+            [class]="activeTab() === 'crm' ? 'btn-primary' : 'btn-secondary'">
+      <i class="fa-solid fa-columns"></i> MyApps CRM Kanban Board
+    </button>
+
+    <button (click)="activeTab.set('redis')" 
+            [class]="activeTab() === 'redis' ? 'btn-primary' : 'btn-secondary'">
+      <i class="fa-solid fa-server"></i> Redis Cache Inspector
+    </button>
+
+    <button (click)="activeTab.set('devils-advocate')" 
+            [class]="activeTab() === 'devils-advocate' ? 'btn-primary' : 'btn-secondary'">
+      <i class="fa-solid fa-bug text-rose-400"></i> Devil's Advocate Audit Suite
+    </button>
+
+    <button (click)="activeTab.set('waba'); loadWabaData()" 
+            [class]="activeTab() === 'waba' ? 'btn-primary' : 'btn-secondary'">
+      <i class="fa-brands fa-whatsapp text-emerald-400 text-base"></i> WhatsApp WABA Hub
+    </button>
+  </div>
+
+  <!-- ================= TAB 1: CSV LEAD & CALL DISPATCHER ================= -->
+  <div *ngIf="activeTab() === 'dispatcher'" class="space-y-6 animate-fadeIn">
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- CSV Upload Dropzone -->
+      <div class="glass-card p-6 lg:col-span-1 space-y-4">
+        <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+          <i class="fa-solid fa-file-csv text-indigo-400"></i> Upload Lead CSV File
+        </h3>
+        <p class="text-xs text-slate-400">Select or drop lead contacts CSV. System auto-sanitizes E.164 phone numbers and removes duplicates.</p>
+
+        <label class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-900/50 hover:bg-slate-900/80 transition-all text-center group">
+          <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-400 group-hover:scale-110 transition-transform mb-2"></i>
+          <span class="text-sm font-medium text-slate-200">Click to browse or drop CSV</span>
+          <span class="text-xs text-slate-500 mt-1">Supports name, phone, business columns</span>
+          <input type="file" (change)="onFileSelected($event)" accept=".csv" class="hidden">
+        </label>
+
+        <div class="pt-2 flex justify-between items-center text-xs text-slate-400">
+          <span>Active Leads: <strong class="text-indigo-400">{{ leads().length }}</strong></span>
+          <span>Errors/Duplicates: <strong class="text-rose-400">{{ invalidLeads().length }}</strong></span>
+        </div>
+      </div>
+
+      <!-- Batch Dispatch Controller -->
+      <div class="glass-card p-6 lg:col-span-2 space-y-4 flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+              <i class="fa-solid fa-robot text-emerald-400"></i> Smallest AI Outbound Campaign
+            </h3>
+            <span class="badge badge-success" *ngIf="config().mock_mode">Mock Sandbox Active</span>
+          </div>
+          <p class="text-xs text-slate-400">Calls leads sequentially via Smallest AI voice agent API, caches results in Redis, and dispatches webhooks to update MyApps CRM pipeline stages.</p>
+
+          <!-- Progress Bar -->
+          <div class="mt-4 space-y-1">
+            <div class="flex justify-between text-xs text-slate-300">
+              <span>Campaign Progress</span>
+              <span>{{ dispatchProgress() }}%</span>
+            </div>
+            <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 transition-all duration-300" [style.width.%]="dispatchProgress()"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 pt-4 border-t border-slate-800">
+          <button (click)="startBatchDispatch()" [disabled]="isDispatching() || leads().length === 0" class="btn-primary flex-1 justify-center py-3">
+            <i class="fa-solid fa-play"></i> Launch Voice Agent Campaign
+          </button>
+          <button (click)="syncMyAppzCRMLeads()" [disabled]="isDispatching()" class="btn-primary bg-purple-600 hover:bg-purple-500 border-none flex-1 justify-center py-3">
+            <i class="fa-solid fa-cloud-arrow-down"></i> Sync & Call MyAppz CRM Leads
+          </button>
+          <button (click)="seedDefaultLeads()" class="btn-secondary">
+            <i class="fa-solid fa-rotate"></i> Reset Leads
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Lead Table & Live Call Transcripts Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Lead Queue Table -->
+      <div class="glass-card p-6 space-y-4">
+        <h3 class="text-base font-semibold text-white flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-indigo-400"></i> Ingested Lead Queue
+        </h3>
+        
+        <div class="overflow-x-auto max-h-80">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900/80 text-slate-400 sticky top-0 uppercase">
+              <tr>
+                <th class="p-2">Name</th>
+                <th class="p-2">Phone</th>
+                <th class="p-2">Business Requirement</th>
+                <th class="p-2">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800">
+              <tr *ngFor="let lead of leads()" class="hover:bg-slate-900/40">
+                <td class="p-2 font-medium text-white">{{ lead.name }}</td>
+                <td class="p-2 font-mono text-indigo-300">{{ lead.phone }}</td>
+                <td class="p-2 text-slate-400">{{ lead.business }}</td>
+                <td class="p-2">
+                  <span class="badge" 
+                        [ngClass]="{
+                          'badge-success': lead.status === 'Completed',
+                          'badge-info': lead.status === 'Ready',
+                          'badge-warning': lead.status === 'Dialing',
+                          'badge-danger': lead.status === 'Blocked' || lead.status === 'Throttled'
+                        }">
+                    {{ lead.status || 'Ready' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Live Transcripts & AI Summaries -->
+      <div class="glass-card p-6 space-y-4">
+        <h3 class="text-base font-semibold text-white flex items-center gap-2">
+          <i class="fa-solid fa-comment-dots text-emerald-400"></i> Call Transcripts & Findings
+        </h3>
+
+        <div *ngIf="callResults().length === 0" class="text-center py-12 text-slate-500 text-sm">
+          <i class="fa-solid fa-phone-slash text-3xl mb-2 text-slate-700"></i>
+          <p>No active calls yet. Click "Launch Voice Agent Campaign" to see live findings.</p>
+        </div>
+
+        <div class="space-y-4 max-h-80 overflow-y-auto pr-1">
+          <div *ngFor="let result of callResults()" class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-2">
+            <div class="flex justify-between items-start">
+              <div>
+                <h4 class="text-sm font-bold text-white">{{ result.lead_name }}</h4>
+                <p class="text-xs font-mono text-indigo-300">{{ result.phone }}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="badge" [ngClass]="{'badge-success': result.sentiment === 'Positive', 'badge-warning': result.sentiment === 'Neutral', 'badge-danger': result.sentiment === 'Negative'}">
+                  {{ result.sentiment }}
+                </span>
+                <span class="badge badge-purple">{{ result.crm_target_stage }}</span>
+              </div>
+            </div>
+
+            <p class="text-xs text-slate-300 italic bg-slate-950/60 p-2.5 rounded-lg border border-slate-800">
+              "{{ result.summary }}"
+            </p>
+
+            <div class="text-xs space-y-1">
+              <span class="font-medium text-slate-400">Action Items:</span>
+              <ul class="list-disc list-inside text-slate-300 pl-1">
+                <li *ngFor="let item of result.action_items">{{ item }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= TAB 2: MYAPPS CRM KANBAN BOARD ================= -->
+  <div *ngIf="activeTab() === 'crm'" class="space-y-6 animate-fadeIn">
+    <div class="glass-card p-6 flex justify-between items-center">
+      <div>
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-diagram-project text-indigo-400"></i> MyApps CRM Sales Pipelines
+        </h2>
+        <p class="text-xs text-slate-400">Pipeline stages are automatically updated in real-time via authenticated webhooks following call completion.</p>
+      </div>
+      <span class="badge badge-info">Live Webhook Syncer Active</span>
+    </div>
+
+    <!-- Kanban Columns -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      
+      <!-- Column: Called / In Progress -->
+      <div class="glass-card p-4 space-y-3 bg-slate-900/40">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+          <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">📞 Called</h3>
+          <span class="badge badge-info">{{ getCRMItemsByStage('Called').length }}</span>
+        </div>
+        <div class="space-y-3 max-h-[500px] overflow-y-auto">
+          <div *ngFor="let item of getCRMItemsByStage('Called')" class="p-3 rounded-lg bg-slate-800/60 border border-slate-700/50 space-y-2">
+            <h4 class="text-sm font-semibold text-white">{{ item.lead_name }}</h4>
+            <p class="text-xs font-mono text-indigo-300">{{ item.phone }}</p>
+            <p class="text-xs text-slate-400">{{ item.notes }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column: Demo Scheduled -->
+      <div class="glass-card p-4 space-y-3 bg-emerald-950/20 border-emerald-500/20">
+        <div class="flex justify-between items-center border-b border-emerald-900/50 pb-2">
+          <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">📅 Demo Scheduled</h3>
+          <span class="badge badge-success">{{ getCRMItemsByStage('Demo Scheduled').length }}</span>
+        </div>
+        <div class="space-y-3 max-h-[500px] overflow-y-auto">
+          <div *ngFor="let item of getCRMItemsByStage('Demo Scheduled')" class="p-3 rounded-lg bg-slate-900/80 border border-emerald-500/30 space-y-2">
+            <h4 class="text-sm font-semibold text-white">{{ item.lead_name }}</h4>
+            <p class="text-xs font-mono text-indigo-300">{{ item.phone }}</p>
+            <p class="text-xs text-emerald-300/90">{{ item.notes }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column: Quote Sent -->
+      <div class="glass-card p-4 space-y-3 bg-purple-950/20 border-purple-500/20">
+        <div class="flex justify-between items-center border-b border-purple-900/50 pb-2">
+          <h3 class="text-xs font-bold text-purple-400 uppercase tracking-wider">📩 Quote Sent</h3>
+          <span class="badge badge-purple">{{ getCRMItemsByStage('Quote Sent').length }}</span>
+        </div>
+        <div class="space-y-3 max-h-[500px] overflow-y-auto">
+          <div *ngFor="let item of getCRMItemsByStage('Quote Sent')" class="p-3 rounded-lg bg-slate-900/80 border border-purple-500/30 space-y-2">
+            <h4 class="text-sm font-semibold text-white">{{ item.lead_name }}</h4>
+            <p class="text-xs font-mono text-indigo-300">{{ item.phone }}</p>
+            <p class="text-xs text-purple-300/90">{{ item.notes }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column: Opted Out / DNC -->
+      <div class="glass-card p-4 space-y-3 bg-rose-950/20 border-rose-500/20">
+        <div class="flex justify-between items-center border-b border-rose-900/50 pb-2">
+          <h3 class="text-xs font-bold text-rose-400 uppercase tracking-wider">🚫 Opted Out</h3>
+          <span class="badge badge-danger">{{ getCRMItemsByStage('Opted Out').length }}</span>
+        </div>
+        <div class="space-y-3 max-h-[500px] overflow-y-auto">
+          <div *ngFor="let item of getCRMItemsByStage('Opted Out')" class="p-3 rounded-lg bg-slate-900/80 border border-rose-500/30 space-y-2">
+            <h4 class="text-sm font-semibold text-white">{{ item.lead_name }}</h4>
+            <p class="text-xs font-mono text-rose-300">{{ item.phone }}</p>
+            <p class="text-xs text-rose-300/90">{{ item.notes }}</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= TAB 3: REDIS CACHE INSPECTOR ================= -->
+  <div *ngIf="activeTab() === 'redis'" class="space-y-6 animate-fadeIn">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Telemetry Card -->
+      <div class="glass-card p-6 lg:col-span-1 space-y-4">
+        <h3 class="text-base font-semibold text-white flex items-center gap-2">
+          <i class="fa-solid fa-server text-purple-400"></i> Redis Telemetry
+        </h3>
+
+        <div class="space-y-3 text-xs">
+          <div class="flex justify-between p-2.5 rounded-lg bg-slate-900/80 border border-slate-800">
+            <span class="text-slate-400">Engine Type</span>
+            <span class="font-bold text-white">{{ redisTelemetry()?.engine }}</span>
+          </div>
+
+          <div class="flex justify-between p-2.5 rounded-lg bg-slate-900/80 border border-slate-800">
+            <span class="text-slate-400">Total Redis Keys</span>
+            <span class="font-bold text-purple-400">{{ redisTelemetry()?.total_keys }}</span>
+          </div>
+
+          <div class="flex justify-between p-2.5 rounded-lg bg-slate-900/80 border border-slate-800">
+            <span class="text-slate-400">Idempotency TTL</span>
+            <span class="font-bold text-emerald-400">86,400s (24h)</span>
+          </div>
+        </div>
+
+        <button (click)="loadConfig()" class="btn-secondary w-full justify-center text-xs">
+          <i class="fa-solid fa-arrows-rotate"></i> Refresh Redis State
+        </button>
+      </div>
+
+      <!-- Active Key Explorer -->
+      <div class="glass-card p-6 lg:col-span-2 space-y-4">
+        <h3 class="text-base font-semibold text-white flex items-center gap-2">
+          <i class="fa-solid fa-key text-indigo-400"></i> Redis Keys & Locks Explorer
+        </h3>
+
+        <div class="overflow-x-auto max-h-80">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900/80 text-slate-400 uppercase">
+              <tr>
+                <th class="p-2">Key Pattern</th>
+                <th class="p-2">Data Type</th>
+                <th class="p-2">TTL Remaining</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800">
+              <tr *ngFor="let k of redisTelemetry()?.keys_sample" class="hover:bg-slate-900/40">
+                <td class="p-2 font-mono text-indigo-300">{{ k.key }}</td>
+                <td class="p-2"><span class="badge badge-purple">{{ k.type }}</span></td>
+                <td class="p-2 text-emerald-400 font-mono">{{ k.ttl }}s</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= TAB 4: DEVIL'S ADVOCATE AUDIT SUITE ================= -->
+  <div *ngIf="activeTab() === 'devils-advocate'" class="space-y-6 animate-fadeIn">
+    
+    <div class="glass-card p-6 border-rose-500/30 bg-rose-950/10">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-shield-cat text-rose-400 text-xl"></i> Devil's Advocate Crash-Testing Suite
+          </h2>
+          <p class="text-xs text-slate-400">Stress-test real-world failure scenarios and verify ARB/NFR fault-tolerance compliance in real-time.</p>
+        </div>
+        <button (click)="fetchAuditReport()" class="btn-primary bg-rose-600 hover:bg-rose-500 border-none">
+          <i class="fa-solid fa-clipboard-check"></i> Run Full ARB & NFR Audit
+        </button>
+      </div>
+    </div>
+
+    <!-- Crash Scenario Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      
+      <!-- 1. Rate Limit 429 -->
+      <div class="glass-card p-4 space-y-3">
+        <div class="flex justify-between items-start">
+          <h4 class="text-sm font-bold text-white">1. API Rate Limit (429)</h4>
+          <span class="badge badge-warning">Token Bucket</span>
+        </div>
+        <p class="text-xs text-slate-400">Depletes API tokens to simulate Smallest AI 429 throttling and test gateway queuing.</p>
+        <button (click)="runSimulation('rate-limit')" class="btn-secondary w-full text-xs justify-center">
+          <i class="fa-solid fa-bolt text-amber-400"></i> Trigger 429 Throttle
+        </button>
+      </div>
+
+      <!-- 2. Webhook Replay -->
+      <div class="glass-card p-4 space-y-3">
+        <div class="flex justify-between items-start">
+          <h4 class="text-sm font-bold text-white">2. Webhook Replay Attack</h4>
+          <span class="badge badge-purple">Redis SETNX</span>
+        </div>
+        <p class="text-xs text-slate-400">Fires duplicate webhooks to test Redis SETNX idempotency locks and prevent double stage moves.</p>
+        <button (click)="runSimulation('webhook-replay')" class="btn-secondary w-full text-xs justify-center">
+          <i class="fa-solid fa-copy text-purple-400"></i> Fire Duplicate Webhook
+        </button>
+      </div>
+
+      <!-- 3. CRM Down 500 -->
+      <div class="glass-card p-4 space-y-3">
+        <div class="flex justify-between items-start">
+          <h4 class="text-sm font-bold text-white">3. CRM Server Downtime</h4>
+          <span class="badge badge-danger">Exponential Retry</span>
+        </div>
+        <p class="text-xs text-slate-400">Mocks CRM destination server failure and verifies audit logging for retry queue.</p>
+        <button (click)="runSimulation('crm-down')" class="btn-secondary w-full text-xs justify-center">
+          <i class="fa-solid fa-server text-rose-400"></i> Simulate CRM 500
+        </button>
+      </div>
+
+      <!-- 4. DNC Compliance -->
+      <div class="glass-card p-4 space-y-3">
+        <div class="flex justify-between items-start">
+          <h4 class="text-sm font-bold text-white">4. DNC Consent Violation</h4>
+          <span class="badge badge-danger">DNC Registry</span>
+        </div>
+        <p class="text-xs text-slate-400">Attempts outbound call to blacklisted phone number to verify privacy compliance blocking.</p>
+        <button (click)="runSimulation('dnc-violation')" class="btn-secondary w-full text-xs justify-center">
+          <i class="fa-solid fa-user-slash text-rose-400"></i> Call DNC Blacklist
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Diagnostic Terminal Output -->
+    <div class="glass-card p-6 space-y-3 bg-slate-950 font-mono text-xs text-slate-300">
+      <div class="flex justify-between items-center text-slate-400 border-b border-slate-800 pb-2 font-sans">
+        <span class="font-bold flex items-center gap-2"><i class="fa-solid fa-terminal text-emerald-400"></i> Diagnostic Output Terminal</span>
+        <span>Active Scenario: {{ activeScenario() || 'None' }}</span>
+      </div>
+
+      <div *ngIf="simulationResult()" class="space-y-2 max-h-60 overflow-y-auto">
+        <pre class="text-emerald-400 whitespace-pre-wrap">{{ simulationResult() | json }}</pre>
+      </div>
+
+      <div *ngIf="auditReport()" class="space-y-2 max-h-60 overflow-y-auto">
+        <pre class="text-indigo-300 whitespace-pre-wrap">{{ auditReport() | json }}</pre>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= TAB 5: WHATSAPP WABA MESSAGING HUB ================= -->
+  <div *ngIf="activeTab() === 'waba'" class="space-y-6 animate-fadeIn">
+    
+    <div class="glass-card p-6 border-emerald-500/30 bg-emerald-950/10 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div>
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-brands fa-whatsapp text-emerald-400 text-2xl"></i> MyApps WhatsApp Official API (WABA) Hub
+        </h2>
+        <p class="text-xs text-slate-400">Automated post-call WABA template messages (Telugu & English) dispatched directly upon call outcome completion.</p>
+      </div>
+      <span class="badge badge-success">WABA Gateway Connected</span>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Manual Dispatch Panel -->
+      <div class="glass-card p-6 space-y-4 lg:col-span-1">
+        <h3 class="text-base font-semibold text-white flex items-center gap-2">
+          <i class="fa-solid fa-paper-plane text-emerald-400"></i> Dispatch WABA Template
+        </h3>
+
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-medium text-slate-400">Recipient Phone (E.164)</label>
+            <input type="text" [(ngModel)]="wabaPhone" class="glass-input w-full mt-1 font-mono">
+          </div>
+
+          <div>
+            <label class="text-xs font-medium text-slate-400">Select WABA Approved Template</label>
+            <select [(ngModel)]="wabaSelectedTemplate" class="glass-input w-full mt-1 bg-slate-900 text-white">
+              <option value="solar_demo_confirmation_te">Solar Demo Confirmation (Telugu)</option>
+              <option value="solar_quote_details_te">Solar System Proposal Details (Telugu)</option>
+              <option value="dnc_acknowledgement_te">Do Not Call Opt-Out Ack (Telugu)</option>
+              <option value="general_nurture_te">Solar Energy Savings Guide (Telugu)</option>
+            </select>
+          </div>
+
+          <button (click)="sendWabaManual()" class="btn-primary w-full justify-center py-2.5 bg-emerald-600 hover:bg-emerald-500 border-none">
+            <i class="fa-brands fa-whatsapp"></i> Send WhatsApp Message
+          </button>
+        </div>
+      </div>
+
+      <!-- Live WABA Delivery Logs -->
+      <div class="glass-card p-6 space-y-4 lg:col-span-2">
+        <div class="flex justify-between items-center">
+          <h3 class="text-base font-semibold text-white flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-indigo-400"></i> WABA Delivery Stream & Logs
+          </h3>
+          <button (click)="loadWabaData()" class="btn-secondary text-xs">
+            <i class="fa-solid fa-arrows-rotate"></i> Refresh Stream
+          </button>
+        </div>
+
+        <div *ngIf="wabaLogs().length === 0" class="text-center py-12 text-slate-500 text-sm">
+          <i class="fa-brands fa-whatsapp text-3xl mb-2 text-slate-700"></i>
+          <p>No WhatsApp messages dispatched yet. Trigger a voice call or send a manual template.</p>
+        </div>
+
+        <div class="space-y-3 max-h-96 overflow-y-auto pr-1">
+          <div *ngFor="let log of wabaLogs()" class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-2">
+            <div class="flex justify-between items-start">
+              <div>
+                <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                  <i class="fa-brands fa-whatsapp text-emerald-400"></i> {{ log.header }}
+                </h4>
+                <p class="text-xs font-mono text-indigo-300">{{ log.phone }} • <span class="text-slate-400">{{ log.template_name }}</span></p>
+              </div>
+              <span class="badge badge-success" [ngClass]="{'badge-success': log.status === 'Delivered', 'badge-danger': log.status === 'Failed'}">
+                {{ log.status }}
+              </span>
+            </div>
+
+            <p class="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-lg border border-slate-800">
+              {{ log.formatted_text }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- API CONFIGURATION MODAL -->
+  <div *ngIf="isConfigModalOpen()" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+    <div class="glass-card max-w-lg w-full p-6 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-indigo-400"></i> System Configuration
+        </h3>
+        <button (click)="isConfigModalOpen.set(false)" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-medium text-slate-400">Smallest AI API Key</label>
+          <input type="password" [(ngModel)]="config().smallest_ai_api_key" class="glass-input w-full mt-1">
+        </div>
+
+        <div>
+          <label class="text-xs font-medium text-slate-400">Smallest AI Agent ID</label>
+          <input type="text" [(ngModel)]="config().smallest_ai_agent_id" class="glass-input w-full mt-1">
+        </div>
+
+        <div>
+          <label class="text-xs font-medium text-slate-400">MyApps CRM Webhook Destination URL</label>
+          <input type="text" [(ngModel)]="config().myapps_crm_webhook_url" class="glass-input w-full mt-1">
+        </div>
+
+        <div class="flex items-center justify-between pt-2">
+          <span class="text-xs font-medium text-slate-300">Mock Sandbox Mode</span>
+          <input type="checkbox" [(ngModel)]="config().mock_mode" class="w-4 h-4 accent-indigo-500">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+        <button (click)="isConfigModalOpen.set(false)" class="btn-secondary">Cancel</button>
+        <button (click)="saveConfig()" class="btn-primary">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+</div>

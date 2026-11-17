@@ -1,0 +1,24 @@
+name: bangi_flutter
+description: Bangi — Hermes-Powered Computer-Use Agent (Flutter: Android/iOS/macOS/Windows/Web)
+publish_to: "none"
+version: 0.5.0+1
+
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+  flutter: ">=3.16.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.0
+  web_socket_channel: ^3.0.1
+  shared_preferences: ^2.2.2
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

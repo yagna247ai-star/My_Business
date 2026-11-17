@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520" role="img" aria-labelledby="title desc">
+<title id="title">Bangi Hybrid Router — Direct API vs SOM Fallback</title>
+<desc id="desc">Flow from user prompt through BangiAgent.do_task hybrid router to Hermes direct skills or cua-driver SOM.</desc>
+<style>
+  .bg { fill: #070A12; }
+  .card { fill: #0F172A; stroke: rgba(255,255,255,0.10); stroke-width:1.2; }
+  .gold { fill: #C9A86A; }
+  .goldStroke { stroke: #C9A86A; }
+  .white { fill: #F8FAFC; }
+  .muted { fill: rgba(248,250,252,0.55); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .sans { font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; }
+  .pill { fill: rgba(201,168,106,0.14); stroke: rgba(201,168,106,0.28); }
+  .emerald { fill: #10B981; }
+  .emeraldBg { fill: rgba(16,185,129,0.14); stroke: rgba(16,185,129,0.24); }
+  .slateBg { fill: rgba(148,163,184,0.10); stroke: rgba(148,163,184,0.18); }
+</style>
+<rect class="bg" width="1100" height="520" rx="24"/>
+
+<!-- Header -->
+<text x="28" y="34" class="sans" font-size="11" letter-spacing="0.16em" fill="rgba(201,168,106,0.95)" font-weight="700">BANGI v0.4 — HYBRID ROUTER  •  ADR-003  •  DIRECT API → SOM FALLBACK</text>
+<text x="28" y="56" class="sans" font-size="13" fill="rgba(248,250,252,0.72)">Every prompt is first tried as a Hermes direct skill. Only generic desktop tasks fall through to SOM clicks.</text>
+
+<!-- Left: Input -->
+<g transform="translate(28,80)">
+  <rect width="300" height="96" rx="16" class="card"/>
+  <rect x="14" y="14" width="36" height="36" rx="10" fill="#C9A86A"/>
+  <text x="32" y="37" text-anchor="middle" class="sans" font-size="16" font-weight="900" fill="#070A12">B</text>
+  <text x="62" y="27" class="sans" font-size="12" font-weight="700" fill="#F8FAFC">User prompt</text>
+  <text x="62" y="42" class="mono" font-size="10.5" fill="rgba(248,250,252,0.62)">“check CRM / generate campaign</text>
+  <text x="62" y="54" class="mono" font-size="10.5" fill="rgba(248,250,252,0.62)">coach Yagna / apply jobs / any task”</text>
+  <rect x="14" y="68" width="272" height="18" rx="9" fill="rgba(201,168,106,0.14)" stroke="rgba(201,168,106,0.28)"/>
+  <text x="150" y="80" text-anchor="middle" class="mono" font-size="9" letter-spacing="0.10em" fill="#C9A86A" font-weight="700">POST /computer-use {prompt}</text>
+</g>
+<!-- Arrow 1 -->
+<g transform="translate(328,126)">
+  <rect x="0" y="-10" width="52" height="20" rx="10" class="gold" opacity="0.95"/>
+  <text x="26" y="4" text-anchor="middle" class="mono" font-size="9" font-weight="800" fill="#070A12">→</text>
+</g>
+
+<!-- Center: BangiAgent -->
+<g transform="translate(380,80)">
+  <rect width="340" height="96" rx="16" fill="#111A2E" stroke="rgba(201,168,106,0.35)" stroke-width="1.4"/>
+  <text x="16" y="26" class="sans" font-size="11" letter-spacing="0.12em" fill="#C9A86A" font-weight="800">BANGIAGENT.do_task(prompt)</text>
+  <text x="16" y="44" class="mono" font-size="10" fill="rgba(248,250,252,0.74)">prompt.lower() → keyword router</text>
+  <text x="16" y="58" class="mono" font-size="10" fill="rgba(248,250,252,0.74)">logs → ~/.bangi/events.jsonl (replayable)</text>
+  <g transform="translate(16,68)">
+    <rect width="78" height="18" rx="9" class="emeraldBg"/><text x="39" y="12" text-anchor="middle" class="mono" font-size="8.5" font-weight="700" fill="#6EE7B7">70% fewer tokens</text>
+    <rect x="86" width="78" height="18" rx="9" class="pill"/><text x="125" y="12" text-anchor="middle" class="mono" font-size="8.5" font-weight="700" fill="#C9A86A">hybrid</text>
+    <rect x="172" width="78" height="18" rx="9" class="slateBg"/><text x="211" y="12" text-anchor="middle" class="mono" font-size="8.5" font-weight="600" fill="rgba(248,250,252,0.72)">idempotent</text>
+  </g>
+</g>
+
+<!-- Arrows to two branches -->
+<g opacity="0.95">
+  <!-- to direct -->
+  <path d="M 520 176 C 520 210, 240 210, 240 246" stroke="#10B981" stroke-width="1.6" fill="none" stroke-dasharray="0"/>
+  <polygon points="240,248 234,238 246,238" fill="#10B981"/>
+  <!-- to SOM -->
+  <path d="M 580 176 C 580 210, 860 210, 860 246" stroke="#C9A86A" stroke-width="1.6" fill="none"/>
+  <polygon points="860,248 854,238 866,238" fill="#C9A86A"/>
+  <text x="300" y="212" class="mono" font-size="9" font-weight="700" fill="#6EE7B7">FAST PATH — direct skill exists</text>
+  <text x="690" y="212" class="mono" font-size="9" font-weight="700" fill="#C9A86A">FALLBACK — generic desktop</text>
+</g>
+
+<!-- Left branch: Direct -->
+<g transform="translate(28,256)">
+  <rect width="420" height="232" rx="16" fill="#0B1A14" stroke="rgba(16,185,129,0.28)" stroke-width="1.2"/>
+  <text x="16" y="26" class="sans" font-size="11" letter-spacing="0.11em" fill="#6EE7B7" font-weight="800">DIRECT API — HERMES SKILLS (NO DESKTOP)</text>
+  <text x="16" y="44" class="mono" font-size="9.5" fill="rgba(248,250,252,0.60)">No SOM screenshot. No pixel clicks. Instant.</text>
+  <!-- rows -->
+  <g font-size="10" class="mono">
+    <rect x="14" y="56" width="392" height="28" rx="10" fill="rgba(16,185,129,0.10)" stroke="rgba(16,185,129,0.18)"/><text x="22" y="74" fill="#F8FAFC">crm / tracker            → tracker_sync (Excel)</text><text x="384" y="74" text-anchor="end" fill="#6EE7B7" font-weight="700">/hermes/report</text>
+    <rect x="14" y="90" width="392" height="28" rx="10" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.07)"/><text x="22" y="108" fill="#F8FAFC">campaign / reel          → Mama Hermes (Reel+FB Ad)</text><text x="384" y="108" text-anchor="end" fill="rgba(248,250,252,0.55)">/hermes/campaign</text>
+    <rect x="14" y="124" width="392" height="28" rx="10" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.07)"/><text x="22" y="142" fill="#F8FAFC">coach / transcript       → 4-Pillar sales coach</text><text x="384" y="142" text-anchor="end" fill="rgba(248,250,252,0.55)">/hermes/coach</text>
+    <rect x="14" y="158" width="392" height="28" rx="10" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.07)"/><text x="22" y="176" fill="#F8FAFC">convert / contacts.csv   → lead_converter (47 cols)</text><text x="384" y="176" text-anchor="end" fill="rgba(248,250,252,0.55)">/hermes/convert</text>
+  </g>
+  <text x="16" y="214" class="mono" font-size="9" fill="rgba(110,231,183,0.85)">✓ ~0.5s  •  ~200 tokens  •  deterministic</text>
+</g>
+
+<!-- Right branch: SOM -->
+<g transform="translate(650,256)">
+  <rect width="420" height="232" rx="16" fill="#1A140B" stroke="rgba(201,168,106,0.30)" stroke-width="1.2"/>
+  <text x="16" y="26" class="sans" font-size="11" letter-spacing="0.11em" fill="#C9A86A" font-weight="800">SOM + AX TREE — CUA-DRIVER MCP</text>
+  <text x="16" y="44" class="mono" font-size="9.5" fill="rgba(248,250,252,0.60)">Pid-scoped. No cursor steal. Numbered overlays.</text>
+  <!-- mock screen -->
+  <rect x="14" y="56" width="392" height="96" rx="12" fill="#070A12" stroke="rgba(255,255,255,0.08)"/>
+  <rect x="14" y="56" width="392" height="20" rx="12" fill="rgba(255,255,255,0.06)"/>
+  <circle cx="26" cy="66" r="4" fill="#EF4444"/><circle cx="38" cy="66" r="4" fill="#F59E0B"/><circle cx="50" cy="66" r="4" fill="#10B981"/>
+  <text x="200" y="70" text-anchor="middle" class="mono" font-size="8" letter-spacing="0.08em" fill="rgba(248,250,252,0.45)">DESKTOP — SOM OVERLAY</text>
+  <!-- numbered badges -->
+  <circle cx="110" cy="108" r="13" fill="#C9A86A"/><text x="110" y="112" text-anchor="middle" class="mono" font-size="11" font-weight="900" fill="#070A12">1</text>
+  <text x="128" y="112" class="mono" font-size="9" fill="rgba(248,250,252,0.75)">Jobs</text>
+  <circle cx="210" cy="118" r="13" fill="#F8FAFC"/><text x="210" y="122" text-anchor="middle" class="mono" font-size="11" font-weight="900" fill="#070A12">2</text>
+  <text x="228" y="122" class="mono" font-size="9" fill="rgba(248,250,252,0.75)">Apply</text>
+  <circle cx="310" cy="104" r="13" fill="#F8FAFC"/><text x="310" y="108" text-anchor="middle" class="mono" font-size="11" font-weight="900" fill="#070A12">3</text>
+  <text x="328" y="108" class="mono" font-size="9" fill="rgba(248,250,252,0.75)">Submit</text>
+  <rect x="14" y="162" width="392" height="44" rx="10" fill="rgba(201,168,106,0.10)" stroke="rgba(201,168,106,0.18)"/>
+  <text x="22" y="178" class="mono" font-size="9" fill="#F8FAFC">capture() → click {element_index:1} → type → verify</text>
+  <text x="22" y="192" class="mono" font-size="9" fill="rgba(248,250,252,0.55)">POST /cua/capture  •  POST /cua/act</text>
+</g>
+
+<!-- Bottom bar -->
+<rect x="28" y="500" width="1044" height="1.2" fill="rgba(255,255,255,0.08)"/>
+<text x="28" y="514" class="mono" font-size="9" fill="rgba(248,250,252,0.42)">Bangi v0.4  •  Hybrid = direct API when possible, SOM only when needed  •  Config: hermes.mode = hybrid</text>
+<text x="1072" y="514" text-anchor="end" class="mono" font-size="9" fill="rgba(201,168,106,0.9)" font-weight="700">70+ tools  •  10 skills  •  &lt;120MB RAM</text>
+</svg>

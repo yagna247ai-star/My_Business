@@ -1,0 +1,10 @@
+# Production overlay — use with: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+services:
+  backend:
+    restart: always
+    environment:
+      - PYTHONPATH=/app:/app/backend
+  gateway:
+    restart: always
+  web:
+    restart: always

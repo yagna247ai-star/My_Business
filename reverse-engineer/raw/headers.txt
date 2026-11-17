@@ -1,0 +1,10 @@
+HTTP/2 200 
+date: Mon, 19 Oct 2026 13:10:54 GMT
+content-type: text/html; charset=utf-8
+cache-control: no-store, must-revalidate
+link: </_next/static/_vinext_fonts/geist-8ac0455e797f/geist-98bbbccb.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </_next/static/_vinext_fonts/geist-mono-00e989178794/geist-mono-013b2f2f.woff2>; rel=preload; as=font; type=font/woff2; crossorigin
+vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url, X-Vinext-Interception-Context, X-Vinext-Mounted-Slots, X-Vinext-Rsc-Render-Mode
+set-cookie: __cf_bm=aw8nIad25oG9gSMWt6_zzJPZjBeNngM4cjJxDarmjLw-1792415452.5763502-1.0.1.1-p2XHt6RMNylESSXd9c6XEoR6uy2qka83osgbxtrGtolTk6uO2Nqc8CrxzP8Vcd..kXTDh38HX6G4dyEPXPrl_fG5GPiYJewI2abzvXSGXZm8bEWf8YG_Mxgqct2anDn.; HttpOnly; SameSite=None; Secure; Path=/; Domain=chatgpt.site; Expires=Mon, 19 Oct 2026 13:40:54 GMT
+server: cloudflare
+cf-ray: a4d006829faf5d35-HYD
+

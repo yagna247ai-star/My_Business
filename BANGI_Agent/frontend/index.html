@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BANGI — Your Personal Computer-Use Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--ink:#070A12;--gold:#C9A86A}
+body{font-family:Inter,sans-serif;background:#070A12;color:#F8FAFC}
+.glass{backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.orb{position:absolute;border-radius:9999px;filter:blur(80px);opacity:.4;pointer-events:none}
+.mono{font-family:JetBrains Mono,monospace}
+</style>
+</head>
+<body class="overflow-x-hidden">
+<!-- HEADER -->
+<header class="sticky top-0 z-50 bg-[rgba(7,10,18,.7)] glass border-b border-white/10">
+  <div class="max-w-[1600px] mx-auto px-6 h-[64px] flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gold grid place-items-center text-ink font-black">B</div>
+      <div>
+        <div class="font-[Bebas_Neue] tracking-[0.14em] text-[18px] leading-none">BANGI</div>
+        <div class="mono text-[10px] tracking-[0.16em] text-white/50 -mt-1">PERSONAL COMPUTER-USE AGENT</div>
+      </div>
+      <span class="ml-3 hidden md:inline-flex items-center gap-2 bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 mono text-[10px] tracking-[0.12em] px-3 py-1 rounded-full">● LIVE • META COMPUTER-USE</span>
+    </div>
+    <nav class="hidden lg:flex gap-6 mono text-[11px] tracking-[0.14em] text-white/60">
+      <a href="#desktop" class="text-white">DESKTOP</a><a href="#jobs">JOBS</a><a href="#crm">CRM</a><a href="#tasks">TASKS</a>
+    </nav>
+    <button onclick="startBangi()" class="bg-gold text-ink px-5 py-2 rounded-full text-[13px] font-semibold hover:bg-[#E8D5B5]">Start Bangi →</button>
+  </div>
+</header>
+
+<!-- HERO + LIVE DESKTOP -->
+<section class="relative overflow-hidden">
+  <div class="orb w-[600px] h-[400px] -top-24 -right-32" style="background:radial-gradient(circle, rgba(201,168,106,.2), transparent 70%)"></div>
+  <div class="max-w-[1600px] mx-auto px-6 py-8 grid lg:grid-cols-[1.15fr_0.85fr] gap-6">
+    <div>
+      <p class="inline-flex items-center gap-2 bg-gold/10 border border-gold/20 mono text-[11px] tracking-[0.14em] text-gold px-3 py-1.5 rounded-full"><span class="w-1.5 h-1.5 bg-gold rounded-full animate-pulse"></span> Meta Computer-Use • SOM + AX Tree • Non-focus-stealing</p>
+      <h1 class="mt-4 font-[Bebas_Neue] leading-[0.85] text-[54px] lg:text-[78px]">Hi, I'm <span class="text-gold">Bangi.</span><br> I do all tasks.</h1>
+      <p class="mt-4 text-white/70 max-w-[520px] leading-relaxed">I control your computer like you do — click by element index (SOM overlays), type, scroll, screenshot. Apply jobs daily, check CRM lead status, triage email — fully autonomous.</p>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <button onclick="task('apply jobs')" class="bg-white text-ink px-6 py-3 rounded-full font-semibold">Apply jobs daily →</button>
+        <button onclick="task('check CRM lead status')" class="glass border border-white/15 px-6 py-3 rounded-full font-semibold hover:bg-white/10">Check CRM lead status</button>
+        <button onclick="task('do all tasks')" class="border border-white/10 px-6 py-3 rounded-full mono text-[12px] tracking-[0.12em]">Custom task…</button>
+      </div>
+      <div class="mt-6 grid grid-cols-3 gap-3 max-w-[520px]">
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-4"><div class="mono text-[10px] tracking-[0.14em] text-gold">JOBS TODAY</div><div class="text-[22px] font-bold">24</div><div class="mono text-[10px] text-white/50">Naukri + LinkedIn</div></div>
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-4"><div class="mono text-[10px] tracking-[0.14em] text-gold">CRM LEADS</div><div class="text-[22px] font-bold">147</div><div class="mono text-[10px] text-white/50">Hermes synced</div></div>
+        <div class="rounded-2xl bg-gold text-ink p-4"><div class="mono text-[10px] tracking-[0.12em] opacity-60">AUTOMATION</div><div class="text-[22px] font-bold">100%</div><div class="mono text-[10px] opacity-60">Computer-use</div></div>
+      </div>
+    </div>
+    <!-- LIVE DESKTOP PREVIEW (SOM) -->
+    <div id="desktop" class="rounded-[24px] overflow-hidden border border-white/15 bg-black shadow-[0_24px_64px_rgba(0,0,0,.5)] relative">
+      <div class="h-8 bg-[#0F172A] border-b border-white/10 flex items-center gap-2 px-3 mono text-[10px] tracking-[0.12em] text-white/50">
+        <span class="w-3 h-3 rounded-full bg-red-500"></span><span class="w-3 h-3 rounded-full bg-yellow-500"></span><span class="w-3 h-3 rounded-full bg-green-500"></span>
+        <span class="ml-3">BANGI DESKTOP — SOM overlay [numbered interactables] • AX tree</span>
+        <span class="ml-auto bg-gold text-ink px-2 py-0.5 rounded-full">LIVE</span>
+      </div>
+      <div class="aspect-[16/10] bg-[#0F172A] relative grid place-items-center">
+        <img id="desktopImg" src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1200&auto=format&fit=crop" alt="Desktop preview" class="w-full h-full object-cover opacity-60">
+        <!-- SOM numbered overlays demo -->
+        <span class="absolute top-[32%] left-[28%] w-7 h-7 bg-gold text-ink rounded-full grid place-items-center mono text-[12px] font-bold shadow">1</span>
+        <span class="absolute top-[48%] left-[54%] w-7 h-7 bg-white text-ink rounded-full grid place-items-center mono text-[12px] font-bold shadow">2</span>
+        <span class="absolute top-[62%] left-[38%] w-7 h-7 bg-white text-ink rounded-full grid place-items-center mono text-[12px] font-bold shadow">3</span>
+        <div class="absolute bottom-3 inset-x-3 bg-[rgba(7,10,18,.8)] glass border border-white/10 rounded-2xl p-3 flex items-center justify-between">
+          <div class="mono text-[11px] text-white/70"><span class="text-gold">●</span> Bangi is viewing your screen — click by element_index, not pixels</div>
+          <button onclick="capture()" class="bg-white text-ink px-4 py-1.5 rounded-full mono text-[11px]">Capture</button>
+        </div>
+      </div>
+      <div class="p-3 bg-[#0F172A] border-t border-white/10 mono text-[11px] tracking-[0.12em] text-white/40 flex justify-between">
+        <span>BACKEND: cua-driver MCP • pid-scoped events • no cursor steal</span><span id="status">IDLE</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JOBS + CRM -->
+<section id="jobs" class="max-w-[1600px] mx-auto px-6 py-6 grid lg:grid-cols-2 gap-6">
+  <div class="rounded-2xl bg-white text-ink p-6">
+    <h2 class="font-[Bebas_Neue] text-[28px]">Daily Jobs — Auto-Apply</h2>
+    <p class="text-[13px] text-black/60 -mt-1">Bangi opens Naukri/LinkedIn, filters by your profile, applies via computer-use (type + click index 1,2,3).</p>
+    <div class="mt-4 space-y-2 mono text-[12px]">
+      <div class="flex justify-between border border-black/10 rounded-xl px-3 py-2"><span>LinkedIn — Applied</span><span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">18 today</span></div>
+      <div class="flex justify-between border border-black/10 rounded-xl px-3 py-2"><span>Naukri — Applied</span><span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">6 today</span></div>
+      <div class="flex justify-between border border-black/10 rounded-xl px-3 py-2"><span>Pending human review</span><span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">2</span></div>
+    </div>
+    <button onclick="task('apply jobs now: Naukri LinkedIn with my resume')" class="mt-4 w-full bg-ink text-white py-3 rounded-full font-semibold">Run job applier →</button>
+  </div>
+  <div id="crm" class="rounded-2xl bg-ink border border-white/10 p-6 text-white">
+    <h2 class="font-[Bebas_Neue] text-[28px]">CRM — Lead Status</h2>
+    <p class="text-[13px] text-white/60 -mt-1">Connected to <code>RealEstate/hermes_automation</code> + <code>contacts.csv</code> — Bangi checks via computer-use or direct API.</p>
+    <div class="mt-4 grid grid-cols-3 gap-2 mono text-[11px] text-center">
+      <div class="bg-white/5 border border-white/10 rounded-xl p-3"><div class="text-[18px] font-bold">22</div>New leads</div>
+      <div class="bg-white/5 border border-white/10 rounded-xl p-3"><div class="text-[18px] font-bold">8</div>Site visits</div>
+      <div class="bg-gold text-ink rounded-xl p-3"><div class="text-[18px] font-bold">₹3.5L</div>Tokens</div>
+    </div>
+    <button onclick="task('check CRM lead status and update tracker')" class="mt-4 w-full bg-white text-ink py-3 rounded-full font-semibold">Check CRM now →</button>
+    <p class="mono text-[10px] text-white/40 mt-2">Uses Hermes skills: tracker_sync, lead_qualifier — or computer-use to open Excel/CRM web.</p>
+  </div>
+</section>
+
+<!-- TASK BAR -->
+<section id="tasks" class="max-w-[1600px] mx-auto px-6 pb-10">
+  <div class="rounded-[20px] bg-white/5 glass border border-white/10 p-4 flex flex-col lg:flex-row gap-3">
+    <input id="taskInput" placeholder="Tell Bangi: 'Apply 10 jobs, check CRM, email summary...' — any desktop task" class="flex-1 bg-white text-ink rounded-full px-5 py-3 placeholder:text-black/40 focus:outline-none">
+    <button onclick="customTask()" class="bg-gold text-ink px-6 py-3 rounded-full font-semibold shrink-0">Ask Bangi →</button>
+  </div>
+  <div id="log" class="mt-4 rounded-2xl bg-black border border-white/10 p-4 mono text-[12px] text-white/70 h-[140px] overflow-auto">Bangi ready. Try: "Do all daily tasks" — I will capture, plan, click by SOM index, and report.</div>
+</section>
+
+<script>
+const logEl=document.getElementById('log'), statusEl=document.getElementById('status');
+function append(m){ logEl.textContent+= "\n> "+m; logEl.scrollTop=logEl.scrollHeight; }
+async function task(prompt){
+  statusEl.textContent='WORKING...'; append('Bangi: '+prompt);
+  // computer-use loop: capture → SOM → click by index → verify
+  append('→ capture() SOM overlay [1:Apply button, 2:CRM tab, 3:Submit] — AX tree');
+  append('→ computer_use {action:"click", element_index:1} — pid-scoped, no focus steal');
+  append('→ verify + next step...');
+  // call backend proxy if running
+  try{
+    const r=await fetch('/computer-use', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({prompt})});
+    const j=await r.json(); append('Backend: '+ (j.output || 'queued'));
+  }catch(e){ append('Backend offline — running in demo mode. Start python backend/app.py for real desktop control.'); }
+  statusEl.textContent='IDLE'; append('✓ Done — check Jobs/CRM panels.');
+}
+function startBangi(){ task('do all daily tasks: apply jobs, check CRM lead status, summarize'); }
+function customTask(){ const v=document.getElementById('taskInput').value.trim(); if(!v) return; task(v); }
+function capture(){ append('Screenshot + SOM [1][2][3] captured via cua-driver MCP'); statusEl.textContent='CAPTURED'; setTimeout(()=>statusEl.textContent='IDLE',1200); }
+</script>
+</body>
+</html>
