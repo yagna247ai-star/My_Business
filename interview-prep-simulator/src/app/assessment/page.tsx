@@ -11,8 +11,8 @@ function pickQuestions(role: string, track: string, count = 6): Question[] {
 }
 
 export default function AssessmentPage() {
-  const [role, setRole] = useState(ROLES[0].id);
-  const [track, setTrack] = useState(TRACKS[0].id);
+  const [role, setRole] = useState<string>(ROLES[0].id);
+  const [track, setTrack] = useState<string>(TRACKS[0].id);
   const [started, setStarted] = useState(false);
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, Answer>>({});

@@ -16,8 +16,8 @@ function pick(role: string, track: string, n = 5): Question[] {
 }
 
 export default function MockPage() {
-  const [role, setRole] = useState(ROLES[0].id);
-  const [track, setTrack] = useState(TRACKS[0].id);
+  const [role, setRole] = useState<string>(ROLES[0].id);
+  const [track, setTrack] = useState<string>(TRACKS[0].id);
   const [started, setStarted] = useState(false);
   const [qs, setQs] = useState<Question[]>([]);
   const [idx, setIdx] = useState(0);
