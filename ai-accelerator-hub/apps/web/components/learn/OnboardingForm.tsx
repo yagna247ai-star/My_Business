@@ -47,7 +47,7 @@ export function OnboardingForm({ initial, initialPlan, minor }: { initial: Parti
       <div><h3 className="h3" style={{ marginBottom: 8 }}>Levels we will put extra focus on</h3><ul className="checklist">{plan.emphasis.map(e => <li key={e.levelIdx}><Check size={16} aria-hidden="true" /><span><b>Level {e.levelIdx}</b> — {e.why}</span></li>)}</ul><p className="muted xs" style={{ marginTop: 6 }}>Every level still unlocks only when you pass it. Your path changes examples and support, not the bar.</p></div>
       <div><h3 className="h3" style={{ marginBottom: 8 }}>Your AI agent options</h3><ul className="checklist">{plan.agents.map(g => <li key={g.code}><span className="badge badge-neutral">{g.rank}</span><span><b>{g.name}</b> — {g.why}{!g.allowed && <span className="field-err" style={{ display: 'block' }}>{g.blockedReason}</span>}</span></li>)}</ul></div>
       <ul className="checklist">{plan.support.map(x => <li key={x}><Check size={16} aria-hidden="true" /><span>{x}</span></li>)}</ul>
-      <div className="row gap-12 wrap"><Link className="btn btn-gold" href="/levels/L01_AI_EXPLORER">Start Level 1 <ArrowRight size={15} /></Link><Link className="btn btn-outline" href="/agent-lab">Set up your AI agent</Link><button className="btn btn-text" type="button" onClick={() => setEditing(true)}>Change my answers</button></div>
+      <div className="row gap-12 wrap"><Link className="btn btn-gold" href="/levels">Start Level 1<ArrowRight size={15} /></Link><Link className="btn btn-outline" href="/agent-lab">Set up your AI agent</Link><button className="btn btn-text" type="button" onClick={() => setEditing(true)}>Change my answers</button></div>
     </section>
   );
 
