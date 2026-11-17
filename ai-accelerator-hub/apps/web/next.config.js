@@ -70,9 +70,19 @@ const nextConfig = {
     ];
   },
   async redirects() {
+    // Friendly aliases for links shared as "journey" or as role names. Each one sends the person to the real page;
+    // /dashboard already routes staff to their own home (admin, review or settings).
+    const aliases = [
+      { source: '/journey', destination: '/levels', permanent: false },
+      { source: '/journey/:code', destination: '/levels/:code', permanent: false },
+      { source: '/learner', destination: '/dashboard', permanent: false },
+      { source: '/instructor', destination: '/dashboard', permanent: false },
+      { source: '/mentor', destination: '/dashboard', permanent: false },
+      { source: '/finance', destination: '/dashboard', permanent: false },
+    ];
     // One canonical host: www.<domain> → <domain> (keeps sign-in cookies on a single origin).
-    if (!isProd || siteHost.startsWith('www.') || siteHost.startsWith('localhost')) return [];
-    return [{ source: '/:path*', has: [{ type: 'host', value: `www.${siteHost}` }], destination: `${siteUrl}/:path*`, permanent: true }];
+    if (!isProd || siteHost.startsWith('www.') || siteHost.startsWith('localhost')) return aliases;
+    return [...aliases, { source: '/:path*', has: [{ type: 'host', value: `www.${siteHost}` }], destination: `${siteUrl}/:path*`, permanent: true }];
   },
 };
 
