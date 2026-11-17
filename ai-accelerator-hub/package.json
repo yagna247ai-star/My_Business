@@ -2,11 +2,12 @@
   "name": "ai-accelerator-hub",
   "version": "1.0.0",
   "private": true,
-  "description": "AI Accelerator Hub \u2014 Enterprise GenAI Learning, Hackathon & Workforce Transformation Platform",
+  "description": "AI Accelerator Hub — Enterprise GenAI Learning, Hackathon & Workforce Transformation Platform",
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
   },
+  "packageManager": "npm@11.17.0",
   "workspaces": [
     "apps/*",
     "packages/*"

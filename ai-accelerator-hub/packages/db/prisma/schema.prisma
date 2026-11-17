@@ -1,5 +1,5 @@
 // AI Accelerator Hub — Prisma Schema
-// Local dev: SQLite (zero infra). Prod: PostgreSQL 16 + RLS + pgvector
+// Prod + local: PostgreSQL 16 (Neon on Vercel). RLS + pgvector applied via pg/rls.sql
 // Switch provider to "postgresql" and DATABASE_URL to postgres:// for prod
 // RLS policies are applied via SQL migrations in prod (see migrations/*_rls.sql)
 
@@ -8,7 +8,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
   // For Postgres prod, change to:
   // provider = "postgresql"
