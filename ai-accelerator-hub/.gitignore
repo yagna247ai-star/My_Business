@@ -15,7 +15,6 @@ dist
 # Prisma
 packages/db/*.db
 packages/db/*.db-journal
-packages/db/prisma/migrations
 
 # Env
 .env
@@ -65,3 +64,4 @@ packages/db/prisma/*.db-journal
 # Browser-automation output
 .playwright-mcp/
 .vercel
+.env*
