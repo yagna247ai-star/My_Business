@@ -60,8 +60,10 @@ export const anthropicProvider: AiProvider = {
     return { text, tokensIn: res.usage.input_tokens, tokensOut: res.usage.output_tokens, model: res.model, refused: res.stop_reason === 'refusal' };
   },
 };
-const PROVIDERS: AiProvider[] = [anthropicProvider]; // add self-hosted / OSS adapters here (§25)
-export const activeProvider = () => PROVIDERS.find(p => p.configured()) || null;
+// Provider chain (LangChain): Anthropic, Gemini, OpenAI, xAI Grok, GLM, OpenRouter, Cerebras, or any
+// OpenAI-compatible endpoint. Configure with API keys in the environment; see lib/ai/providers/langchain.ts.
+import { langchainProvider } from '@/lib/ai/providers/langchain';
+export const activeProvider = (): AiProvider | null => (langchainProvider.configured() ? langchainProvider : null);
 
 const GUARDRAILS = `\n\nPlatform rules (always apply):
 - You are talking to a learner on AI Accelerator Hub. Be clear, kind and brief; use plain language.
