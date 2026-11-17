@@ -64,3 +64,4 @@ packages/db/prisma/*.db-journal
 *.db-journal
 # Browser-automation output
 .playwright-mcp/
+.vercel
