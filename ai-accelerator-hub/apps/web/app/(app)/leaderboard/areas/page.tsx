@@ -60,7 +60,7 @@ async function AreaStandings({ searchParams }: { searchParams: Promise<{ level?:
       </div>
       <p className="callout success champion" style={{ marginTop: 12 }}><span>🏆 Champion: <b>{s.bracket.champion}</b> wins the final fight.</span></p>
     </>}
-    <p className="muted small" style={{ marginTop: 10 }}>Learners under 18 and anyone who chooses privacy are shown as &quot;Anonymous learner&quot;. Set your area in <Link className="link" href="/settings">settings</Link>.</p>
+    <p className="muted small" style={{ marginTop: 10 }}>Learners under 18 and anyone who chooses privacy are shown as &quot;Anonymous learner&quot;. Set your area in <Link className="link" href="/settings/profile">settings</Link>.</p>
   </>);
 }
 

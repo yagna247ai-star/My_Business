@@ -53,6 +53,27 @@ Passwords are never written in docs or the repo. Keep them in a password manager
 
 Full permission matrix: `apps/web/lib/server/rbac.ts`. Data detail: [DATA_MODEL.md](./DATA_MODEL.md#1-tenancy-identity-and-access).
 
+## Settings (`/settings`)
+
+One place for admins to manage the institute. Open **Settings** in the left menu. Learners only see their own **Profile & privacy**.
+
+| Section | Path | Institution Admin | Super Admin |
+|---|---|---|---|
+| Profile & privacy | `/settings/profile` | Own photo, theme, language, area, privacy | Same |
+| Institute(s) | `/settings/institute` | Edit own institute's name and contact details | Also create, edit (short name, plan, status), deactivate and delete any institute |
+| People | `/settings/people` | Add people (new or existing account) with a role, cohort and starting password; edit name, role, cohort, status; remove from the institute | Same |
+| Cohorts | `/settings/cohorts` | Create, edit name/dates/size, new invite code, delete | Same |
+| Talent | `/settings/talent` | Post, edit, close/reopen and delete opportunities; edit a learner's headline, hide or remove a talent profile | Same |
+
+Rules worth knowing:
+- Nobody can change or remove their own membership, or touch a Super Admin, from People. Super Admin can't be granted from People.
+- Removing a person ends their membership in this institute only. Their account, other institutes and past progress are kept.
+- Deleting a cohort keeps its learners and their progress; they're just no longer in a cohort.
+- An institute can be deleted only when it's empty (no members, cohorts, journeys or orders) and you're not signed in to it. Otherwise deactivate it.
+- Admins can hide a talent profile but never make one visible: who sees a profile is the learner's own choice.
+- Every change is written to the **Audit log**.
+- Permission: `institute:manage` (Institution Admin; Super Admin has every permission).
+
 ## Admin screens
 
 All under `/admin` after signing in as staff.

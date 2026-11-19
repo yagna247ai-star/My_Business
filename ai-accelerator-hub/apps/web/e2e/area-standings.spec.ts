@@ -61,7 +61,7 @@ test('one level: crowns are per level', async ({ page }) => {
 
 test('a learner sets their area in settings', async ({ page }) => {
   await signIn(page);
-  await page.goto('/settings');
+  await page.goto('/settings/profile');
   const box = page.getByLabel('My area');
   await expect(box).toHaveValue('Hyderabad', { timeout: 60_000 });
   await box.fill('Danda');

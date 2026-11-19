@@ -107,8 +107,8 @@ export async function recordGuardianConsent(ctx: Ctx, userId: string, raw: unkno
     }
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: `guardian_consent.${input.decision}`, resourceType: 'UserSetting', resourceId: s.id, before: { guardianConsent: s.guardianConsent }, after: { guardianConsent: input.decision, method: input.method, note: input.note } });
     await notify(tx, ctx.tenantId, userId, `guardian_consent_${input.decision}`, input.decision === 'granted'
-      ? { title: 'Your guardian has approved', body: 'Community, showcase and hackathon teams are now open to you. Your talent profile stays private until you are 18.', href: '/settings', tone: 'ok' }
-      : { title: 'Guardian approval withdrawn', body: 'Community and public features are paused, and your work is private again. Your learning progress is safe.', href: '/settings', tone: 'warn' });
+      ? { title: 'Your guardian has approved', body: 'Community, showcase and hackathon teams are now open to you. Your talent profile stays private until you are 18.', href: '/settings/profile', tone: 'ok' }
+      : { title: 'Guardian approval withdrawn', body: 'Community and public features are paused, and your work is private again. Your learning progress is safe.', href: '/settings/profile', tone: 'warn' });
     return { ok: true as const, guardianConsent: input.decision };
   });
 }
@@ -134,7 +134,7 @@ export async function confirmAdult(ctx: Ctx, userId: string, raw: unknown) {
   return prisma.$transaction(async tx => {
     await tx.userSetting.update({ where: { id: s.id }, data: { ageBand: 'adult', guardianConsent: 'not_required', guardianEmail: null } });
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'age_band.adult_confirmed', resourceType: 'UserSetting', resourceId: s.id, before: { ageBand: s.ageBand, guardianConsent: s.guardianConsent }, after: { ageBand: 'adult', method: input.method, note: input.note } });
-    await notify(tx, ctx.tenantId, userId, 'age_band_adult', { title: 'Your account is now an adult account', body: 'Your privacy settings have not changed. You can choose what to share in Settings, and the talent marketplace is now open to you.', href: '/settings', tone: 'info' });
+    await notify(tx, ctx.tenantId, userId, 'age_band_adult', { title: 'Your account is now an adult account', body: 'Your privacy settings have not changed. You can choose what to share in Settings, and the talent marketplace is now open to you.', href: '/settings/profile', tone: 'info' });
     return { ok: true as const, ageBand: 'adult' as const };
   });
 }

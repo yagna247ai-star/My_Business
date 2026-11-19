@@ -55,7 +55,7 @@ test('3. learner opens the journey page and sees the level strip', async ({ page
 test('4. learner uploads a profile photo and picks the theme in settings', async ({ page }) => {
   await signIn(page, 'student@aihub.in', 'Student@12345');
   await page.waitForURL('**/dashboard');
-  await page.goto('/settings');
+  await page.goto('/settings/profile');
   await expect(page.getByRole('heading', { name: 'Profile photo' })).toBeVisible();
 
   await page.getByLabel('Choose a profile photo').setInputFiles({ name: 'me.png', mimeType: 'image/png', buffer: PNG });

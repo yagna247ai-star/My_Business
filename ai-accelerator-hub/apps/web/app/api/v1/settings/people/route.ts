@@ -1,0 +1,10 @@
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { route, body } from '@/lib/server/http';
+import { requireCtx } from '@/lib/server/context';
+import { requirePerm } from '@/lib/server/context';
+import { listMembers } from '@/lib/domain/admin';
+import { createPerson } from '@/lib/domain/settingsAdmin';
+export const GET = route(async () => ({ members: await listMembers(await requirePerm('members:read')) }));
+const schema = z.object({ name: z.string().max(100), email: z.string().max(254), role: z.string().max(40), password: z.string().max(200).optional(), cohortId: z.string().max(40).nullable().optional() });
+export const POST = route(async (req: NextRequest) => createPerson(await requireCtx(), await body(req, schema)));

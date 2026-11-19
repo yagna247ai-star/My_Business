@@ -49,7 +49,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (learner) nav.push({ href: '/career', label: 'Career', icon: 'award', group: 'Grow' });
   if (hasPerm(ctx, 'talent:discover')) nav.push({ href: '/talent', label: 'Talent', icon: 'users', group: 'Program' });
   if (hasPerm(ctx, 'billing:self')) nav.push({ href: '/billing', label: 'Plans & Billing', icon: 'card', group: 'Account' });
-  nav.push({ href: '/settings', label: 'Settings & Privacy', icon: 'settings', group: 'Account' });
+  nav.push({ href: '/settings', label: 'Settings', icon: 'settings', group: 'Account' });
 
   const me = await prisma.user.findUnique({ where: { id: ctx.userId }, select: { avatarUrl: true } });
   const overview = learner ? await journeyOverview(ctx).catch(() => null) : null;

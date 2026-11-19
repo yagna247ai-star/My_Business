@@ -122,7 +122,7 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
               {menuOpen && (
                 <div className="menu" role="menu">
                   <div className="menu-label">{user.tenant}</div>
-                  <Link role="menuitem" href="/settings"><Settings size={15} />Settings &amp; privacy</Link>
+                  <Link role="menuitem" href="/settings/profile"><Settings size={15} />Profile &amp; privacy</Link><Link role="menuitem" href="/settings"><Settings size={15} />Settings</Link>
                   <hr />
                   <button role="menuitem" type="button" onClick={() => signOut({ callbackUrl: '/login' })}><LogOut size={15} />Sign out</button>
                 </div>

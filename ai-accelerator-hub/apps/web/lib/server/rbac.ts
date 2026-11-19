@@ -23,13 +23,14 @@ export type Permission =
   | 'billing:manage'        // refunds, reconciliation, invoices
   | 'ledger:verify'
   | 'talent:discover'       // search consent-gated talent profiles
-  | 'talent:post';           // publish opportunities on behalf of an org
+  | 'talent:post'            // publish opportunities on behalf of an org
+  | 'institute:manage';     // edit the institution's own details (create/delete institutions is Super Admin only)
 
-const ALL: Permission[] = ['learn:self', 'ai:use', 'community:post', 'community:moderate', 'review:read', 'review:decide', 'cohort:read', 'cohort:manage', 'members:read', 'members:manage', 'content:manage', 'analytics:read', 'audit:read', 'billing:self', 'billing:manage', 'ledger:verify', 'talent:discover', 'talent:post'];
+const ALL: Permission[] = ['learn:self', 'ai:use', 'community:post', 'community:moderate', 'review:read', 'review:decide', 'cohort:read', 'cohort:manage', 'members:read', 'members:manage', 'content:manage', 'analytics:read', 'audit:read', 'billing:self', 'billing:manage', 'ledger:verify', 'talent:discover', 'talent:post', 'institute:manage'];
 
 export const MATRIX: Record<Role, Permission[]> = {
   super_admin: ALL,
-  tenant_admin: ['ai:use', 'community:moderate', 'review:read', 'cohort:read', 'cohort:manage', 'members:read', 'members:manage', 'content:manage', 'analytics:read', 'audit:read', 'ledger:verify', 'talent:discover', 'talent:post'],
+  tenant_admin: ['ai:use', 'community:moderate', 'review:read', 'cohort:read', 'cohort:manage', 'members:read', 'members:manage', 'content:manage', 'analytics:read', 'audit:read', 'ledger:verify', 'talent:discover', 'talent:post', 'institute:manage'],
   program_mgr: ['ai:use', 'community:moderate', 'review:read', 'cohort:read', 'cohort:manage', 'members:read', 'content:manage', 'analytics:read', 'audit:read', 'ledger:verify', 'talent:discover', 'talent:post'],
   instructor: ['ai:use', 'review:read', 'review:decide', 'cohort:read', 'members:read', 'content:manage', 'analytics:read'],
   mentor: ['ai:use', 'community:moderate', 'review:read', 'review:decide', 'cohort:read', 'members:read', 'talent:discover'],
