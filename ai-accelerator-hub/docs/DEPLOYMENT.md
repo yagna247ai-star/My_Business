@@ -16,7 +16,7 @@ How production is built, deployed, checked and rolled back. For the open configu
 Vercel runs `npm run vercel-build` in `apps/web` (`apps/web/vercel.json`), which runs in order:
 
 1. `prisma generate` — builds the database client from `packages/db/prisma/schema.prisma`.
-2. `prisma migrate deploy` — applies any new migrations in `packages/db/prisma/migrations` to production. **This runs before the new code is live, so migrations must work with the old code too** (add columns as optional, remove columns in a later release).
+2. `prisma migrate deploy` (**production builds only**, via `scripts/release-db.sh`; preview builds skip steps 2–4) — applies any new migrations in `packages/db/prisma/migrations` to production. **This runs before the new code is live, so migrations must work with the old code too** (add columns as optional, remove columns in a later release).
 3. `seed:content` — upserts the data-analytics journey content (`seed-data-analytics.ts`) into the `DEFAULT_TENANT_SLUG` institution. Idempotent.
 4. `smoke:role` — does nothing unless `SMOKE_ROLE_EMAIL` and `SMOKE_ROLE` are set for that build.
 5. `next build`.
@@ -25,22 +25,18 @@ If any step fails, the build fails and the current production deployment stays l
 
 ## How to deploy
 
-Deploys are currently made from a local checkout with the Vercel CLI. It is **not confirmed** that pushes to GitHub deploy automatically (check Vercel → Settings → Git).
+**Normal path — CI (GitHub Actions).** Open a pull request into `main`. The pipeline in `.github/workflows/ai-accelerator-hub.yml` runs secret scanning, the dependency audit, SAST, lint, type check, unit tests, the build, migrations, the drift check and the integration tests on Postgres, then deploys a Vercel preview. Merging to `main` deploys to production after your approval, runs the smoke test, and rolls back automatically if it fails. Full design: [CI_CD_DEVSECOPS_SPEC.md](./CI_CD_DEVSECOPS_SPEC.md).
+
+**From a laptop (only if CI is unavailable).** Never call `vercel deploy --prod` directly. Use:
 
 ```bash
-# once
-npm i -g vercel
-vercel login
-cd ai-accelerator-hub && vercel link      # pick team nachiketha, project ai-accelerator-hub
-
-# each release
-git status                                 # commit first: a deploy uses your working tree, committed or not
-npm run test:pure --workspace=apps/web
-vercel deploy                              # preview: check it before production
-vercel deploy --prod                       # production
+cd ai-accelerator-hub
+scripts/deploy-prod.sh          # clean+pushed tree → all checks → deploy → smoke → auto-rollback on failure
 ```
 
-Preview deployments share the Neon database URLs but **not** the app, auth and AI variables (those are set for Production only), so previews may not work fully.
+Run the checks without deploying: `scripts/ci/verify.sh` (add `TEST_DATABASE_URL=postgresql://…` for a disposable local Postgres to include integration tests and the drift check). Smoke-test any URL: `scripts/ci/smoke.sh https://…`.
+
+Preview builds never run migrations or seeds (`apps/web/scripts/release-db.sh`). Vercel's own git auto-deploy is off (`apps/web/vercel.json`).
 
 ## Release checklist
 

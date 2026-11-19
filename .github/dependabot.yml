@@ -1,0 +1,16 @@
+# Keeps dependencies and CI actions patched. Each update arrives as a pull request and must pass the full
+# ai-accelerator-hub pipeline (secrets, audit, SAST, tests, build) before it can be merged.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /ai-accelerator-hub
+    schedule: { interval: weekly, day: monday, time: "06:00", timezone: Asia/Kolkata }
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    labels: [dependencies, ai-accelerator-hub]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly, day: monday, time: "06:00", timezone: Asia/Kolkata }
+    labels: [dependencies, ci]

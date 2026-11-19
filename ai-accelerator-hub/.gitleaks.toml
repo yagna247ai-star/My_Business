@@ -1,0 +1,18 @@
+# Secret scanning for AI Accelerator Hub (CI job "Secret scan"). Default gitleaks rules, plus an allowlist of
+# EXACT known-fake test values only — never whole folders, so a real secret added to a test file is still caught.
+title = "ai-accelerator-hub"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known fake fixtures used by tests and CI builds"
+regexes = [
+  '''vercel_blob_rw_x''',
+  '''whsec_test_only''',
+  '''test-secret-test-secret-test-secret-1234''',
+  '''ci-build-secret-ci-build-secret-123456''',
+  '''local-test-secret-local-test-secret-1234''',
+  '''build-check-secret-build-check-secret-123''',
+]
+paths = ['''(^|/)node_modules/''', '''(^|/)package-lock\.json$''', '''(^|/)\.next[^/]*/''']

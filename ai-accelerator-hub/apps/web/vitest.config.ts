@@ -7,7 +7,7 @@ export default defineConfig({
     globals: true,
     include: ["lib/__tests__/**/*.test.ts", "test/**/*.test.ts"],
     globalSetup: ["./test/global-setup.ts"],
-    env: { DATABASE_URL: `file:${path.resolve(__dirname, "../../packages/db/prisma/test.db")}`, NEXTAUTH_SECRET: "test-secret-test-secret-test-secret-1234", RAZORPAY_WEBHOOK_SECRET: "whsec_test_only", ANTHROPIC_API_KEY: "", ANTHROPIC_AUTH_TOKEN: "" },
+    env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? "", DATABASE_URL_UNPOOLED: process.env.TEST_DATABASE_URL ?? "", NEXTAUTH_SECRET: "test-secret-test-secret-test-secret-1234", RAZORPAY_WEBHOOK_SECRET: "whsec_test_only", ANTHROPIC_API_KEY: "", ANTHROPIC_AUTH_TOKEN: "" },
     fileParallelism: false,
     server: { deps: { inline: ["next-auth", "@auth/core"] } },
     testTimeout: 30000,

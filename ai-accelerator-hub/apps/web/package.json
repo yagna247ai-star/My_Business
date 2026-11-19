@@ -11,9 +11,12 @@
     "test:pure": "vitest run --config vitest.pure.config.ts",
     "test:e2e": "playwright test",
     "dev:webpack": "next dev -p 3000",
-    "vercel-build": "prisma generate --schema ../../packages/db/prisma/schema.prisma && prisma migrate deploy --schema ../../packages/db/prisma/schema.prisma && npm run seed:content && npm run smoke:role && npm run build",
+    "vercel-build": "prisma generate --schema ../../packages/db/prisma/schema.prisma && sh scripts/release-db.sh && npm run build",
     "seed:content": "cd ../../packages/db && TENANT_SLUG=${DEFAULT_TENANT_SLUG:-demo} npx tsx prisma/seed-data-analytics.ts",
-    "smoke:role": "cd ../../packages/db && npx tsx prisma/smoke-role.ts"
+    "smoke:role": "cd ../../packages/db && npx tsx prisma/smoke-role.ts",
+    "typecheck": "tsc --noEmit -p .",
+    "test:db": "vitest run",
+    "lint:ci": "next lint --quiet"
   },
   "dependencies": {
     "@aihub/db": "*",
