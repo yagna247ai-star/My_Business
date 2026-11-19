@@ -1,0 +1,26 @@
+{
+  "domain": "ecommerce",
+  "size": "small",
+  "dirty": "some",
+  "seed": 42,
+  "main_table": "orders",
+  "tables": [
+    "customers",
+    "orders"
+  ],
+  "answer_key_from_clean_data": {
+    "delivered_orders": 88,
+    "delivered_revenue": 92712,
+    "return_rate_pct": 9.0,
+    "customers_with_one_delivery": 9
+  },
+  "planted_problems_in_dirty_data": {
+    "orders": {
+      "status_case": 2,
+      "amount_blank": 2,
+      "bad_date": 2,
+      "duplicate_row": 1
+    }
+  },
+  "note": "Answer keys are computed from the clean tables. Compare your dirty-data results after cleaning."
+}

@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { ArrowRight, Check, CheckCircle2, Clock, ExternalLink, LifeBuoy, RefreshCw, Target, Upload, Play } from 'lucide-react';
 import { api, ApiError } from '@/lib/client/api';
+import { FlowerBurst, GapList } from '@/components/learn/ReviewCelebration';
+import { StuckHelper } from '@/components/learn/StuckHelper';
+import { parseGaps } from '@/lib/domain/gaps';
 
 type Act = { id: string; idx: number; code: string; title: string; xp: number; state: string; config: any; data: any; authored: boolean };
 type Review = { id: string; verdict: string; avg: number | null; feedback: string | null; by: string; at: string; scores: Record<string, number>; appeal: string | null };
-type Props = { code: string; title: string; summary: string; xpTotal: number; xpEarned: number; levelState: string; activities: Act[]; latest: { id: string; state: string; submittedAt: string; url: string | null; reviews: Review[] } | null; boss: { attempts: number; max: number; result: any }; rubric: { code: string; threshold: number; bossMin: number; dims: { key: string; name: string; weight: number; l3?: string; l5?: string }[] } | null; initial?: number };
+type Props = { code: string; idx?: number; isLast?: boolean; title: string; summary: string; xpTotal: number; xpEarned: number; levelState: string; activities: Act[]; latest: { id: string; state: string; submittedAt: string; url: string | null; reviews: Review[] } | null; boss: { attempts: number; max: number; result: any }; rubric: { code: string; threshold: number; bossMin: number; dims: { key: string; name: string; weight: number; l3?: string; l5?: string }[] } | null; initial?: number };
 
 const LABEL: Record<string, string> = { completed: 'Done', available: 'Open', locked: 'Locked', in_review: 'In review', needs_changes: 'Changes requested' };
 const wc = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
@@ -25,9 +28,11 @@ export function LevelWorkspace(p: Props) {
     <section className="card card-pad" aria-labelledby="pageTitle">
       <div className="lv-head">
         <div className="ring" style={{ ['--p' as string]: Math.round((done / 6) * 100) }} role="img" aria-label={`${done} of 6 activities complete`}><span>{done}/6<small>DONE</small></span></div>
-        <div style={{ minWidth: 0 }}><div className="section-label">{p.code}</div><h1 className="h2" id="pageTitle" style={{ fontSize: 26 }}>Level 1 — {p.title}</h1><p className="text-2 small" style={{ marginTop: 4 }}>{p.summary}</p></div>
+        <div style={{ minWidth: 0 }}><div className="section-label">{p.code}</div><h1 className="h2" id="pageTitle" style={{ fontSize: 26 }}>{/^Level \d+\s+—/.test(p.title) ? p.title : `Level ${p.idx ?? 1} — ${p.title}`}</h1><p className="text-2 small" style={{ marginTop: 4 }}>{p.summary}</p></div>
         <div className="row gap-8 wrap lv-head-meta"><span className="badge badge-gold">{p.xpEarned} / {p.xpTotal} XP</span>{p.levelState === 'approved' && <span className="badge badge-success">Approved</span>}</div>
       </div>
+      {p.levelState === 'approved' && <div style={{ margin: '12px 0' }}><FlowerBurst title={p.title} xp={p.xpEarned} last={p.isLast} /></div>}
+      {p.levelState !== 'approved' && <div style={{ margin: '8px 0 12px' }}><StuckHelper code={p.code} /></div>}
       <ol className="stepper" aria-label="Activities">
         {p.activities.map(a => (
           <li key={a.idx} className={`step ${a.state}`} aria-current={a.idx === cur ? 'step' : undefined}>
@@ -144,13 +149,15 @@ function Proof({ a, code, latest, onDone }: PanelProps & { latest: Props['latest
   const fb = latest?.state === 'needs_changes' ? latest.reviews[0] : null;
   if (latest && (latest.state === 'pending' || latest.state === 'approved')) return <div className="callout ok"><CheckCircle2 size={18} /><div><b>Proof submitted {new Date(latest.submittedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</b>{latest.url && <a className="link" href={latest.url} target="_blank" rel="noopener noreferrer">{latest.url}</a>}</div></div>;
   return (<div className="stack gap-16">
-    {fb && <div className="callout warn"><RefreshCw size={18} /><div><b>Changes requested by {fb.by} · {fb.avg?.toFixed(2)} / 5</b>“{fb.feedback}” — improve your brief or reflection and resubmit. You keep all XP.</div></div>}
+    {fb && (parseGaps(fb.feedback).length > 0
+      ? <GapList gaps={parseGaps(fb.feedback)} avg={fb.avg} />
+      : <div className="callout warn"><RefreshCw size={18} /><div><b>Changes requested by {fb.by} · {fb.avg?.toFixed(2)} / 5</b>“{fb.feedback}” — improve your brief or reflection and resubmit. You keep all XP.</div></div>)}
     <div><label className="field-label" htmlFor="ev">Link to your brief (required)</label><input className="input" id="ev" type="url" placeholder="https://docs.google.com/…" value={url} onChange={e => setUrl(e.target.value)} aria-invalid={!!b.fe.evidenceUrl} />{b.fe.evidenceUrl ? <div className="field-err">{b.fe.evidenceUrl}</div> : <div className="field-hint">Accepted: {c.evidenceTypes.join(' · ')}. Make sure reviewers can view it.</div>}</div>
     <div><label className="field-label" htmlFor="demo">Demo link (optional)</label><input className="input" id="demo" type="url" value={demo} onChange={e => setDemo(e.target.value)} aria-invalid={!!b.fe.demoUrl} />{b.fe.demoUrl && <div className="field-err">{b.fe.demoUrl}</div>}</div>
     <div><label className="field-label" htmlFor="refl">Reflection (at least {c.minWords} words)</label><textarea className="textarea" id="refl" rows={6} value={refl} onChange={e => setRefl(e.target.value)} placeholder="What surprised you about the AI's answers? What did you get wrong at first, and what changed your mind?" aria-invalid={!!b.fe.reflection} />{b.fe.reflection ? <div className="field-err">{b.fe.reflection}</div> : <div className="field-hint"><span className={`wc ${wc(refl) >= c.minWords ? 'ok' : ''}`}>{wc(refl)} / {c.minWords} words</span></div>}</div>
     <fieldset style={{ border: 0, padding: 0, margin: 0 }}><legend className="field-label">Before you submit</legend><ul className="checklist">{c.checklist.map((x: string, i: number) => <li key={i}><label><input type="checkbox" checked={checks[i]} onChange={e => setChecks(cs => cs.map((v, j) => (j === i ? e.target.checked : v)))} /><span>{x}</span></label></li>)}</ul>{b.fe.checklist && <div className="field-err">{b.fe.checklist}</div>}</fieldset>
     {b.err && !Object.keys(b.fe).length && <p className="field-err" role="alert">{b.err}</p>}
-    <div className="row gap-12 wrap"><button className="btn btn-gold" type="button" disabled={b.busy} onClick={() => b.run(async () => { const r = await post(`/api/v1/levels/${code}/proof`, { evidenceUrl: url, demoUrl: demo, reflection: refl, checklist: checks }); onDone(`Proof submitted (attempt ${r.attempt})${r.xp ? ` · +${r.xp} XP` : ''}. A reviewer will score it on the rubric.`); })}><Upload size={15} />Submit for review</button><span className="muted small">A human reviewer decides — AI never grades you alone.</span></div>
+    <div className="row gap-12 wrap"><button className="btn btn-gold" type="button" disabled={b.busy} onClick={() => b.run(async () => { const r = await post(`/api/v1/levels/${code}/proof`, { evidenceUrl: url, demoUrl: demo, reflection: refl, checklist: checks }); onDone(`Proof submitted (attempt ${r.attempt})${r.xp ? ` · +${r.xp} XP` : ''}. A reviewer will score it on the rubric.`); })}><Upload size={15} />Submit for review</button><span className="muted small">Checked at once against the published rubric. Every decision is logged, and you can appeal to a mentor.</span></div>
   </div>);
 }
 
@@ -163,7 +170,7 @@ function Boss({ a, code, latest, boss, rubric, onDone }: { a: Act; code: string;
     <section className="card card-pad"><h3 className="h3" style={{ marginBottom: 10 }}>Review status</h3>
       <ol className="vtl">
         <li className={latest ? 'done' : ''}><span className="dot">{latest ? <Check size={14} /> : null}</span><div><b>Proof submitted</b><p className="muted small">{latest ? new Date(latest.submittedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST' : 'Submit in activity 5 first.'}</p></div></li>
-        <li className={latest?.state === 'pending' ? 'now' : latest?.state === 'needs_changes' ? 'warn' : latest?.state === 'approved' ? 'done' : ''}><span className="dot">{latest?.state === 'pending' ? <Clock size={14} /> : latest?.state === 'approved' ? <Check size={14} /> : null}</span><div><b>{latest?.state === 'pending' ? 'Human review — in the queue' : latest?.state === 'needs_changes' ? 'Changes requested' : latest?.state === 'approved' ? 'Approved' : 'Human review'}</b><p className="muted small">{decided ? `${decided.by} · ${decided.avg?.toFixed(2)} / 5` : 'Scored on the published rubric.'}</p></div></li>
+        <li className={latest?.state === 'pending' ? 'now' : latest?.state === 'needs_changes' ? 'warn' : latest?.state === 'approved' ? 'done' : ''}><span className="dot">{latest?.state === 'pending' ? <Clock size={14} /> : latest?.state === 'approved' ? <Check size={14} /> : null}</span><div><b>{latest?.state === 'pending' ? 'Waiting for the boss — reviewed automatically when it is done' : latest?.state === 'needs_changes' ? 'Changes requested' : latest?.state === 'approved' ? 'Approved' : 'Automatic review'}</b><p className="muted small">{decided ? `${decided.by} · ${decided.avg?.toFixed(2)} / 5` : 'Scored on the published rubric.'}</p></div></li>
         <li className={a.state === 'completed' ? 'done' : ''}><span className="dot">{a.state === 'completed' ? <Check size={14} /> : null}</span><div><b>Level complete</b><p className="muted small">Unlocks the next level.</p></div></li>
       </ol>
     </section>

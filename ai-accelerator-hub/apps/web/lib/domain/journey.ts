@@ -43,7 +43,7 @@ export function safePublicUrl(raw: string): string | null {
 
 /* ---------- state ---------- */
 export async function getEnrollment(ctx: Ctx) {
-  const e = await prisma.enrollment.findFirst({ where: { tenantId: ctx.tenantId, userId: ctx.userId, state: { in: ['active', 'completed'] } }, include: { journey: true, cohort: true } });
+  const e = await prisma.enrollment.findFirst({ where: { tenantId: ctx.tenantId, userId: ctx.userId, state: { in: ['active', 'completed'] } }, orderBy: [{ state: 'asc' }, { updatedAt: 'desc' }], include: { journey: true, cohort: true } });
   if (!e) throw forbidden('You are not enrolled in a journey in this institution.');
   return e;
 }
@@ -161,6 +161,16 @@ export async function completeActivity(ctx: Ctx, code: string, idx: number, payl
 }
 
 /* ---------- activity 5: proof ---------- */
+/** After proof or boss is saved, decide the review by template if both are in. Never fails the learner's save. */
+async function runAutoReview(tenantId: string, progressId: string) {
+  try {
+    const m = await import('./autoReview');
+    await m.autoReviewSubmission(tenantId, progressId);
+  } catch (e) {
+    console.error('auto-review failed', e);
+  }
+}
+
 export async function submitProof(ctx: Ctx, code: string, p: { evidenceUrl: string; demoUrl?: string; reflection: string; checklist: boolean[] }) {
   const { st, act, cfg } = await loadForWrite(ctx, code, 5);
   if (st.locked) throw forbidden();
@@ -174,7 +184,7 @@ export async function submitProof(ctx: Ctx, code: string, p: { evidenceUrl: stri
   if (Object.keys(errors).length) throw badRequest('Your proof needs a few fixes.', errors);
   const brief = st.activities.find(a => a.idx === 4)?.data?.brief || null;
   const attempt = st.progress.submissions.length + 1;
-  return prisma.$transaction(async tx => {
+  const out = await prisma.$transaction(async tx => {
     const sub = await tx.submission.create({ data: { tenantId: ctx.tenantId, userId: ctx.userId, progressId: st.progress.id, type: 'link', url: evidence, deployedUrl: demo, reflectionMd: p.reflection.trim(), state: 'pending', metadata: JSON.stringify({ attempt, brief, checklist: p.checklist }) } });
     await tx.activityProgress.upsert({ where: { progressId_activityId: { progressId: st.progress.id, activityId: act.id } }, update: { state: 'completed', data: JSON.stringify({ submissionId: sub.id }) }, create: { progressId: st.progress.id, activityId: act.id, userId: ctx.userId, enrollmentId: st.progress.enrollmentId, state: 'completed', xpEarned: act.xp, completedAt: new Date(), data: JSON.stringify({ submissionId: sub.id }) } });
     const xp = await awardXp(tx, { tenantId: ctx.tenantId, userId: ctx.userId, amount: act.xp, source: 'proof_submitted', idempotencyKey: `act:${st.progress.id}:${act.id}`, levelId: st.level.id, activityId: act.id });
@@ -186,6 +196,8 @@ export async function submitProof(ctx: Ctx, code: string, p: { evidenceUrl: stri
     for (const r of reviewers) await notify(tx, ctx.tenantId, r.userId, 'submission_needs_review', { title: `New proof: ${ctx.name}`, body: `${st.level.title} · attempt ${attempt}`, href: `/review/${sub.id}`, tone: 'gold' });
     return { submissionId: sub.id, attempt, xp: xp.amount };
   });
+  await runAutoReview(ctx.tenantId, st.progress.id);
+  return out;
 }
 
 /* ---------- activity 6: boss ---------- */
@@ -202,7 +214,7 @@ export async function runBoss(ctx: Ctx, code: string, answers: { choice: number;
     return { pass: choiceOk && whyOk, reason: !choiceOk ? 'Not the best tool for this situation.' : !whyOk ? `Explain why in at least ${cfg.minWhyWords} words.` : 'Correct.' };
   });
   const passed = results.filter((r: { pass: boolean }) => r.pass).length;
-  return prisma.$transaction(async tx => {
+  const out = await prisma.$transaction(async tx => {
     const bp = await tx.bossChallengeProgress.upsert({ where: { progressId: st.progress.id }, update: {}, create: { progressId: st.progress.id, state: 'in_progress', maxAttempts: cfg.attempts } });
     if (bp.attempts >= bp.maxAttempts) throw conflict('No attempts left. Your best result has been shared with your reviewer.');
     const prev = bp.harnessResult ? JSON.parse(bp.harnessResult) : { best: 0 };
@@ -212,4 +224,6 @@ export async function runBoss(ctx: Ctx, code: string, answers: { choice: number;
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'boss.attempt', resourceType: 'BossChallengeProgress', resourceId: bp.id, after: { passed, attempt: bp.attempts + 1 } });
     return { passed, total: cfg.scenarios.length, best, attemptsLeft: bp.maxAttempts - bp.attempts - 1, results };
   });
+  await runAutoReview(ctx.tenantId, st.progress.id);
+  return out;
 }

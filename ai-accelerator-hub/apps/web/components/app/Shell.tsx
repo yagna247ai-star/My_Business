@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { Crown } from '@/components/app/Crown';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useEffect, useRef, useState } from 'react';
@@ -8,7 +9,7 @@ import { api } from '@/lib/client/api';
 import { NavIcon } from './icons';
 
 export type NavItem = { href: string; label: string; icon: string; group: string; count?: number };
-type Props = { user: { name: string; roleLabel: string; tenant: string }; nav: NavItem[]; streak?: { status: string; current: number } | null; xp?: number | null; unread: number; children: React.ReactNode };
+type Props = { user: { name: string; roleLabel: string; tenant: string; avatarUrl?: string | null; crown?: string | null }; nav: NavItem[]; streak?: { status: string; current: number } | null; xp?: number | null; unread: number; children: React.ReactNode };
 type Notif = { id: string; title: string; body?: string; href?: string; tone?: string; read: boolean; at: string };
 
 const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -116,7 +117,7 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
             </div>
             <div className="user-wrap" ref={menuRef}>
               <button className="user-chip" type="button" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => { setMenuOpen(!menuOpen); setNotifOpen(false); }}>
-                <span className="avatar avatar-sm me" aria-hidden="true">{initials(user.name)}</span><span className="uname">{user.name}</span><span className="role-chip">{user.roleLabel}</span>
+                <span className={`avatar avatar-sm me${user.crown ? " crowned" : ""}`} aria-hidden="true">{user.avatarUrl ? <img src={user.avatarUrl} alt="" width={32} height={32} style={{ borderRadius: "50%", objectFit: "cover", width: "100%", height: "100%" }} /> : initials(user.name)}{user.crown && <span className="crown-mini" aria-hidden="true"><Crown size={18} /></span>}</span><span className="uname">{user.name}</span><span className="role-chip">{user.roleLabel}</span>
               </button>
               {menuOpen && (
                 <div className="menu" role="menu">

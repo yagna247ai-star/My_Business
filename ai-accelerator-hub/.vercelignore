@@ -1,0 +1,12 @@
+# Not needed to build or run the app on Vercel (docs/ stays: the content seed reads it)
+apps/web/e2e/proof
+apps/web/test-results
+apps/web/playwright-report
+**/*.db
+**/*.db-wal
+**/*.db-shm
+.claude
+.specify
+.playwright-mcp
+*.png
+!apps/web/public/**/*.png

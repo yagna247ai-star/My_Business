@@ -1,0 +1,41 @@
+sub_id,name,city,plan,activated_on,status
+1,Subscriber 001,Mumbai,Basic 1GB,2024-02-11,active
+2,Subscriber 002,Mumbai,Basic 1GB,2025-03-13,active
+3,Subscriber 003,Mumbai,Unlimited,2026-01-11,active
+4,Subscriber 004,Solapur,Unlimited,2024-05-30,active
+5,Subscriber 005,Solapur,Basic 1GB,2025-07-11,active
+6,Subscriber 006,Mumbai,Basic 1GB,2026-05-26,active
+7,Subscriber 007,Mumbai,Unlimited,2024-03-09,churned
+8,Subscriber 008,Solapur,Standard 2GB,2025-05-09,active
+9,Subscriber 009,Mumbai,Standard 2GB,2026-04-30,active
+10,Subscriber 010,Mumbai,Basic 1GB,2024-10-09,active
+11,Subscriber 011,Nashik,Basic 1GB,2025-07-01,active
+12,Subscriber 012,Nashik,Standard 2GB,2024-02-08,active
+13,Subscriber 013,Nashik,Basic 1GB,2024-01-31,active
+14,Subscriber 014,Pune,Unlimited,2024-04-21,active
+15,Subscriber 015,Pune,Basic 1GB,2025-12-21,active
+16,Subscriber 016,Mumbai,Standard 2GB,2025-11-29,active
+17,Subscriber 017,Solapur,Standard 2GB,2024-01-27,churned
+18,Subscriber 018,Mumbai,Basic 1GB,2024-12-27,active
+19,Subscriber 019,Pune,Basic 1GB,2026-06-15,churned
+20,Subscriber 020,Nashik,Unlimited,2024-09-25,active
+21,Subscriber 021,Pune,Basic 1GB,2024-12-14,active
+22,Subscriber 022,Solapur,Basic 1GB,2024-05-09,active
+23,Subscriber 023,Nashik,Basic 1GB,2024-04-11,active
+24,Subscriber 024,Pune,Basic 1GB,2024-10-29,active
+25,Subscriber 025,Nashik,Standard 2GB,2024-02-26,active
+26,Subscriber 026,Nashik,Basic 1GB,2026-05-28,active
+27,Subscriber 027,Nashik,Unlimited,2026-06-01,active
+28,Subscriber 028,Solapur,Basic 1GB,2025-09-24,active
+29,Subscriber 029,Pune,Unlimited,2026-05-16,active
+30,Subscriber 030,Mumbai,Basic 1GB,2026-05-18,active
+31,Subscriber 031,Nashik,Basic 1GB,2024-07-02,active
+32,Subscriber 032,Mumbai,Standard 2GB,2026-06-02,churned
+33,Subscriber 033,Mumbai,Standard 2GB,2024-10-10,active
+34,Subscriber 034,Mumbai,Standard 2GB,2025-05-31,active
+35,Subscriber 035,Solapur,Basic 1GB,2025-12-24,active
+36,Subscriber 036,Mumbai,Unlimited,2024-03-09,active
+37,Subscriber 037,Solapur,Unlimited,2025-07-29,active
+38,Subscriber 038,Solapur,Unlimited,2025-02-09,churned
+39,Subscriber 039,Mumbai,Standard 2GB,2024-07-17,active
+40,Subscriber 040,Solapur,Unlimited,2024-05-17,churned

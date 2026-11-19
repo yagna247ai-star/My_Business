@@ -77,6 +77,8 @@ ai-accelerator-hub/
 
 ## Quick Start (zero external deps)
 
+> **Outdated:** the schema is now Postgres-only, so the SQLite steps below no longer work. Follow [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md). The data model is explained in [docs/DATA_MODEL.md](docs/DATA_MODEL.md).
+
 ```bash
 # 1. Clone & install
 npm install

@@ -1,0 +1,28 @@
+{
+  "domain": "telecom",
+  "size": "small",
+  "dirty": "some",
+  "seed": 42,
+  "main_table": "bills",
+  "tables": [
+    "bills",
+    "subscribers"
+  ],
+  "answer_key_from_clean_data": {
+    "subscribers": 40,
+    "churned": 6,
+    "churn_pct": 15.0,
+    "total_billed": 29642,
+    "unpaid_bills": 2
+  },
+  "planted_problems_in_dirty_data": {
+    "bills": {
+      "amount_text": 2,
+      "amount_blank": 2,
+      "month_format": 2,
+      "amount_negative": 2,
+      "duplicate_row": 1
+    }
+  },
+  "note": "Answer keys are computed from the clean tables. Compare your dirty-data results after cleaning."
+}

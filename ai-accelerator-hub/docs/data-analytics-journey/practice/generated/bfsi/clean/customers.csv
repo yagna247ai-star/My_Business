@@ -1,0 +1,41 @@
+customer_id,name,city,occupation
+1,Member 001,Pune,teacher
+2,Member 002,Pune,teacher
+3,Member 003,Nashik,farmer
+4,Member 004,Pune,driver
+5,Member 005,Nashik,shop owner
+6,Member 006,Pune,farmer
+7,Member 007,Solapur,shop owner
+8,Member 008,Pune,tailor
+9,Member 009,Pune,teacher
+10,Member 010,Pune,shop owner
+11,Member 011,Nashik,tailor
+12,Member 012,Solapur,tailor
+13,Member 013,Nashik,driver
+14,Member 014,Pune,driver
+15,Member 015,Pune,shop owner
+16,Member 016,Pune,driver
+17,Member 017,Nashik,farmer
+18,Member 018,Nashik,teacher
+19,Member 019,Pune,tailor
+20,Member 020,Nashik,shop owner
+21,Member 021,Solapur,shop owner
+22,Member 022,Pune,teacher
+23,Member 023,Solapur,teacher
+24,Member 024,Pune,farmer
+25,Member 025,Pune,driver
+26,Member 026,Solapur,shop owner
+27,Member 027,Nashik,farmer
+28,Member 028,Solapur,teacher
+29,Member 029,Solapur,tailor
+30,Member 030,Solapur,tailor
+31,Member 031,Nashik,shop owner
+32,Member 032,Solapur,teacher
+33,Member 033,Nashik,driver
+34,Member 034,Solapur,tailor
+35,Member 035,Pune,driver
+36,Member 036,Nashik,farmer
+37,Member 037,Nashik,teacher
+38,Member 038,Solapur,farmer
+39,Member 039,Solapur,driver
+40,Member 040,Pune,farmer

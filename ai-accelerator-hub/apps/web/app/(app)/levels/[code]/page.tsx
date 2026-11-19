@@ -1,3 +1,4 @@
+import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { Lock } from 'lucide-react';
 import { requirePerm } from '@/lib/server/context';
@@ -16,7 +17,7 @@ async function LevelPage({ params, searchParams }: { params: Promise<{ code: str
   const a6 = st.activities.find(x => x.idx === 6);
   const rubric = a6?.config?.rubric ? await rubricFor(a6.config.rubric) : null;
   const latest = st.latest ? { id: st.latest.id, state: st.latest.state, submittedAt: st.latest.submittedAt.toISOString(), url: st.latest.url, reviews: st.latest.reviews.map(r => ({ id: r.id, verdict: r.verdict, avg: r.weightedAvg, feedback: r.feedbackMd, by: r.reviewer.name || 'Reviewer', at: r.reviewedAt.toISOString(), scores: JSON.parse(r.rubricScores || '{}'), appeal: r.appealState })) } : null;
-  return <LevelWorkspace code={code} title={st.level.title} summary={st.level.summary || ''} xpTotal={st.level.xpReward} xpEarned={st.progress.xpEarned} levelState={st.progress.state} activities={JSON.parse(JSON.stringify(st.activities))} latest={latest} boss={st.boss} rubric={rubric} initial={Number(a) || undefined} />;
+  return <LevelWorkspace code={code} idx={st.level.idx} isLast={!(await prisma.level.findFirst({ where: { journeyId: st.level.journeyId, idx: st.level.idx + 1 }, select: { id: true } }))} title={st.level.title} summary={st.level.summary || ''} xpTotal={st.level.xpReward} xpEarned={st.progress.xpEarned} levelState={st.progress.state} activities={JSON.parse(JSON.stringify(st.activities))} latest={latest} boss={st.boss} rubric={rubric} initial={Number(a) || undefined} />;
 }
 
 export default guarded(LevelPage);

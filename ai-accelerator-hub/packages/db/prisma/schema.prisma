@@ -10,6 +10,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED") // Neon direct connection for migrations (pooled URL stays for the app)
   // For Postgres prod, change to:
   // provider = "postgresql"
   // url      = env("DATABASE_URL")
@@ -68,6 +69,7 @@ model User {
   passwordHash      String? // for credentials auth (bcrypt)
   name              String?
   avatarUrl         String?
+  area              String? // city or area, for area rankings and crowns (e.g. Hyderabad)
   githubId          String?  @unique
   githubUsername    String?
   globalRole        String? // super_admin (platform-wide)

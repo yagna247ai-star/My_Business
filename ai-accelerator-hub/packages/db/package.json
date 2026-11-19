@@ -9,6 +9,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:data-analytics": "tsx prisma/seed-data-analytics.ts",
+    "db:provision-staff": "tsx prisma/provision-staff.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset --force"
   },

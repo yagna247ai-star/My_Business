@@ -1,2 +1,8 @@
 .next-prod/
 .vercel
+.env*
+
+# Playwright screenshots (generated test output)
+e2e/proof/
+test-results/
+playwright-report/

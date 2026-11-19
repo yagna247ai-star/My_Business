@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "spec-kit": {
+      "command": "/Users/apple/.local/share/spec-kit-mcp/spec-kit-mcp",
+      "args": [],
+      "env": {}
+    }
+  }
+}

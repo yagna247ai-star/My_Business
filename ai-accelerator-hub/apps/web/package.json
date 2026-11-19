@@ -8,8 +8,12 @@
     "start": "next start -p 3000",
     "lint": "next lint",
     "test": "vitest run",
+    "test:pure": "vitest run --config vitest.pure.config.ts",
     "test:e2e": "playwright test",
-    "dev:webpack": "next dev -p 3000"
+    "dev:webpack": "next dev -p 3000",
+    "vercel-build": "prisma generate --schema ../../packages/db/prisma/schema.prisma && prisma migrate deploy --schema ../../packages/db/prisma/schema.prisma && npm run seed:content && npm run smoke:role && npm run build",
+    "seed:content": "cd ../../packages/db && TENANT_SLUG=${DEFAULT_TENANT_SLUG:-demo} npx tsx prisma/seed-data-analytics.ts",
+    "smoke:role": "cd ../../packages/db && npx tsx prisma/smoke-role.ts"
   },
   "dependencies": {
     "@aihub/db": "*",
@@ -17,9 +21,11 @@
     "@langchain/anthropic": "^1.6.5",
     "@langchain/core": "^1.4.1",
     "@langchain/google-genai": "^2.3.6",
+    "@langchain/langgraph": "1.6.1",
     "@langchain/openai": "^1.8.4",
     "@prisma/client": "^5.19.0",
     "@tanstack/react-query": "^5.59.0",
+    "@vercel/blob": "^2.9.0",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "framer-motion": "^11.11.0",

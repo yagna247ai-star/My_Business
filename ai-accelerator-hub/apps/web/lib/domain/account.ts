@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { badRequest, conflict } from '@/lib/server/errors';
 import { audit, notify } from '@/lib/server/audit';
+import { defaultJourney, enrollInJourney, registrationJourneys } from './journeyAccess';
 
 export const registerSchema = z.object({
   name: z.string({ error: 'Enter your name.' }).trim().min(2, 'Enter your full name.').max(100, 'Keep your name under 100 characters.'),
@@ -16,9 +17,28 @@ export const registerSchema = z.object({
   // Read the current year per request (a module-level value would go stale across New Year on a long-running server).
   birthYear: z.coerce.number({ error: 'Enter your year of birth.' }).int('Enter a whole year, e.g. 2001.').refine(y => y >= 1920 && y <= new Date().getFullYear(), { error: 'Enter a valid year of birth.' }),
   inviteCode: z.string().trim().max(40, 'That invite code is too long.').optional().or(z.literal('')),
+  journeySlug: z.string().trim().max(60).regex(/^[a-z0-9-]*$/, 'Choose a journey from the list.').optional().or(z.literal('')),
   guardianEmail: z.string().trim().toLowerCase().email('Enter a valid parent or guardian email.').optional().or(z.literal('')),
   acceptTerms: z.literal(true, { error: 'Accept the terms and privacy notice to continue.' }),
 }).refine(v => !v.guardianEmail || v.guardianEmail !== v.email, { path: ['guardianEmail'], error: 'Use your parent or guardian’s email, not your own.' });
+
+/** Which institution a sign-up joins: the invite code's, or the public default. */
+export async function registrationTenant(inviteCode?: string): Promise<{ tenantId: string; cohortId: string | null }> {
+  if (inviteCode) {
+    const cohort = await prisma.cohort.findUnique({ where: { inviteCode: inviteCode.toUpperCase() } });
+    if (!cohort) throw badRequest('That invite code is not valid.', { inviteCode: 'Check the code with your institution.' });
+    return { tenantId: cohort.tenantId, cohortId: cohort.id };
+  }
+  const t = await prisma.tenant.findUnique({ where: { slug: process.env.DEFAULT_TENANT_SLUG || 'demo' } });
+  if (!t) throw badRequest('Public registration is not open. Ask your institution for an invite code.');
+  return { tenantId: t.id, cohortId: null };
+}
+
+/** Journeys a new learner may pick on the sign-up form (published only, default first). */
+export async function journeysForSignup(inviteCode?: string) {
+  const { tenantId } = await registrationTenant(inviteCode);
+  return registrationJourneys(prisma, tenantId);
+}
 
 export async function register(input: z.infer<typeof registerSchema>) {
   // Only the birth year is collected (data minimisation), so use the youngest age the learner could be:
@@ -29,17 +49,13 @@ export async function register(input: z.infer<typeof registerSchema>) {
   if (minor && !input.guardianEmail) throw badRequest('Learners under 18 need a parent or guardian email for consent.', { guardianEmail: 'Required for learners under 18.' });
   if (await prisma.user.findUnique({ where: { email: input.email } })) throw conflict('An account with this email already exists. Try signing in.');
 
-  let tenantId: string, cohortId: string | null = null;
-  if (input.inviteCode) {
-    const cohort = await prisma.cohort.findUnique({ where: { inviteCode: input.inviteCode.toUpperCase() } });
-    if (!cohort) throw badRequest('That invite code is not valid.', { inviteCode: 'Check the code with your institution.' });
-    tenantId = cohort.tenantId; cohortId = cohort.id;
-  } else {
-    const t = await prisma.tenant.findUnique({ where: { slug: process.env.DEFAULT_TENANT_SLUG || 'demo' } });
-    if (!t) throw badRequest('Public registration is not open. Ask your institution for an invite code.');
-    tenantId = t.id;
-  }
-  const journey = await prisma.journey.findFirst({ where: { tenantId, isPublished: true } });
+  const { tenantId, cohortId } = await registrationTenant(input.inviteCode);
+  // The learner's chosen journey, if it is published in this institution; otherwise the default chosen by a Super Admin.
+  let journey: { id: string } | null;
+  if (input.journeySlug) {
+    journey = (await registrationJourneys(prisma, tenantId)).find(j => j.slug === input.journeySlug) ?? null;
+    if (!journey) throw badRequest('That journey is not open for registration.', { journeySlug: 'Choose a journey from the list.' });
+  } else journey = await defaultJourney(prisma, tenantId);
   const l1 = journey ? await prisma.level.findFirst({ where: { journeyId: journey.id, idx: 1 } }) : null;
   const learner = await prisma.role.findUniqueOrThrow({ where: { code: 'learner' } });
   const hash = await bcrypt.hash(input.password, 11);
@@ -50,12 +66,9 @@ export async function register(input: z.infer<typeof registerSchema>) {
     await tx.userSetting.create({ data: { tenantId, userId: user.id, ageBand: minor ? 'minor' : 'adult', guardianEmail: minor ? input.guardianEmail || null : null, guardianConsent: minor ? 'pending' : 'not_required', leaderboardVisibility: minor ? 'private' : 'cohort', globalOptIn: false } });
     await tx.streak.create({ data: { tenantId, userId: user.id } });
     await tx.entitlement.create({ data: { tenantId, userId: user.id, feature: 'ai_credits', remaining: 40 } });
-    if (journey && l1) {
-      const e = await tx.enrollment.create({ data: { tenantId, userId: user.id, journeyId: journey.id, cohortId, currentLevelIdx: 1 } });
-      await tx.progress.create({ data: { tenantId, enrollmentId: e.id, levelId: l1.id, userId: user.id, state: 'available', unlockedAt: new Date() } });
-    }
+    if (journey && l1) await enrollInJourney(tx, { tenantId, userId: user.id, journeyId: journey.id, cohortId });
     await audit(tx, { tenantId, actorUserId: user.id, action: 'user.registered', resourceType: 'User', resourceId: user.id, after: { viaInvite: !!cohortId, minor } });
-    await notify(tx, tenantId, user.id, 'welcome', { title: 'Welcome to AI Accelerator Hub', body: minor ? 'Guardian consent is pending. Learning is open now; community features unlock once your guardian approves.' : 'Start with Level 1 — AI Explorer.', href: '/levels/L01_AI_EXPLORER', tone: 'gold' });
+    await notify(tx, tenantId, user.id, 'welcome', { title: 'Welcome to AI Accelerator Hub', body: minor ? 'Guardian consent is pending. Learning is open now; community features unlock once your guardian approves.' : `Start with Level 1${l1 ? ` — ${l1.title}` : ''}.`, href: l1 ? `/levels/${l1.code}` : '/levels', tone: 'gold' });
     return { userId: user.id, minor, guardianConsent: minor ? 'pending' : 'not_required' };
   }, { maxWait: 10_000, timeout: 15_000 }).catch((e: unknown) => {
     // Two submits racing past the findUnique check above: the unique index on email decides.
@@ -68,14 +81,15 @@ export async function getSettings(ctx: Ctx) {
   return prisma.userSetting.upsert({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.userId } }, update: {}, create: { tenantId: ctx.tenantId, userId: ctx.userId } });
 }
 
-export const settingsSchema = z.object({ leaderboardVisibility: z.enum(['cohort', 'private']).optional(), globalOptIn: z.boolean().optional(), quietHours: z.boolean().optional(), preferredLanguage: z.enum(['en', 'hi', 'te', 'ta', 'kn', 'ml']).optional() });
+export const settingsSchema = z.object({ leaderboardVisibility: z.enum(['cohort', 'private']).optional(), globalOptIn: z.boolean().optional(), quietHours: z.boolean().optional(), preferredLanguage: z.enum(['en', 'hi', 'te', 'ta', 'kn', 'ml']).optional(), area: z.string().trim().max(60).regex(/^[\p{L}\p{M} .'-]*$/u, 'Use letters only for your area.').optional() });
 export async function updateSettings(ctx: Ctx, input: z.infer<typeof settingsSchema>) {
   const cur = await getSettings(ctx);
   if (cur.ageBand === 'minor' && (input.globalOptIn || input.leaderboardVisibility === 'cohort') && cur.guardianConsent !== 'granted') throw badRequest('Your guardian needs to approve this setting first.');
-  const { preferredLanguage, ...rest } = input;
+  const { preferredLanguage, area, ...rest } = input;
   return prisma.$transaction(async tx => {
     const s = await tx.userSetting.update({ where: { id: cur.id }, data: rest });
     if (preferredLanguage) await tx.user.update({ where: { id: ctx.userId }, data: { preferredLanguage } });
+    if (area !== undefined) await tx.user.update({ where: { id: ctx.userId }, data: { area: area || null } });
     if (input.globalOptIn !== undefined && input.globalOptIn !== cur.globalOptIn) await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: input.globalOptIn ? 'consent.global_granted' : 'consent.global_withdrawn', resourceType: 'UserSetting', resourceId: s.id });
     if (input.leaderboardVisibility && input.leaderboardVisibility !== cur.leaderboardVisibility) await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'privacy.visibility_changed', resourceType: 'UserSetting', resourceId: s.id, after: { v: input.leaderboardVisibility } });
     return s;

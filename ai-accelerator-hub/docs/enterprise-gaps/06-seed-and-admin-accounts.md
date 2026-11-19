@@ -32,3 +32,22 @@
 3. Remove `SEED_SUPER_ADMIN_PASSWORD` and the demo passwords from any production-reachable configuration.
 4. Run the reference-data seed against production, then verify `/dashboard` and the L01 activities load.
 5. Delete or disable the demo accounts if they were created by mistake.
+
+## Super Admin created (2026-11-19)
+
+`yagna247.ai@gmail.com` was created as Super Admin in the `demo` institution with `provision-staff.ts` (audit action `staff.provisioned`). Sign-in on the custom domain was verified: login redirected to `/dashboard`, the session belonged to that email, and `/admin` returned 200. The password was chosen by the owner and shared in a chat session; rotate it with `RESET_PASSWORD=1`.
+
+## Staff and admin roles (added 2026-11-19)
+
+`packages/db/prisma/provision-staff.ts` creates the production staff accounts (Institution Admin, Program Manager, Instructor, Mentor, Reviewer, Team Lead, Finance, Support). Run it locally against the production database. It is not part of the Vercel build.
+
+```
+cd packages/db
+DATABASE_URL='<prod url>' STAFF='ops@yourco.com=tenant_admin,pm@yourco.com=program_mgr:Priya Rao' DRY_RUN=1 npm run db:provision-staff
+# then the same command without DRY_RUN=1
+```
+
+- New accounts get a random 24-character password, printed once. Existing accounts keep their password unless `RESET_PASSWORD=1`.
+- It refuses `super_admin`, `learner`, the seed demo emails, `@example.com` addresses, and CI/Vercel environments.
+- Each change is written to the audit log as `staff.provisioned`.
+- The app has no self-service password change yet, so rotate with `RESET_PASSWORD=1`.

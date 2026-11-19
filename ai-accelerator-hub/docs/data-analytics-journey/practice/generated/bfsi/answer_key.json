@@ -1,0 +1,28 @@
+{
+  "domain": "bfsi",
+  "size": "small",
+  "dirty": "some",
+  "seed": 42,
+  "main_table": "loans",
+  "tables": [
+    "customers",
+    "loans",
+    "repayments"
+  ],
+  "answer_key_from_clean_data": {
+    "total_loans": 50,
+    "total_disbursed": 3045000,
+    "open_loans": 24,
+    "overdue_open_loans": 10,
+    "total_repaid": 913326
+  },
+  "planted_problems_in_dirty_data": {
+    "loans": {
+      "amount_negative": 2,
+      "amount_blank": 2,
+      "bad_date": 2,
+      "duplicate_row": 1
+    }
+  },
+  "note": "Answer keys are computed from the clean tables. Compare your dirty-data results after cleaning."
+}

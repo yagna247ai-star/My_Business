@@ -1,0 +1,16 @@
+product_id,name,category,unit_price
+1,Rice 5kg,Grocery,320
+2,Sugar 1kg,Grocery,48
+3,Atta 10kg,Grocery,480
+4,Milk 1L,Dairy,60
+5,Curd 500g,Dairy,35
+6,Butter 100g,Dairy,55
+7,Soap bar,Personal care,40
+8,Shampoo 200ml,Personal care,180
+9,Biscuits,Snacks,30
+10,Chips,Snacks,20
+11,Tea 250g,Grocery,140
+12,Oil 1L,Grocery,165
+13,Dal 1kg,Grocery,130
+14,Paneer 200g,Dairy,90
+15,Toothpaste,Personal care,95

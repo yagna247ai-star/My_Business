@@ -1,0 +1,37 @@
+{
+  "domain": "real_estate",
+  "size": "small",
+  "dirty": "some",
+  "seed": 42,
+  "main_table": "sales",
+  "tables": [
+    "properties",
+    "sales"
+  ],
+  "answer_key_from_clean_data": {
+    "total_sales": 100,
+    "total_sale_value": 1185568773,
+    "avg_days_on_market_by_locality": {
+      "Baner": 75.6,
+      "Hadapsar": 90.2,
+      "Koregaon Park": 84.5,
+      "Wakad": 90.5
+    },
+    "avg_price_per_sqft_by_locality": {
+      "Baner": 10463.3,
+      "Hadapsar": 10650.0,
+      "Koregaon Park": 9931.8,
+      "Wakad": 10743.1
+    }
+  },
+  "planted_problems_in_dirty_data": {
+    "sales": {
+      "price_text": 2,
+      "days_blank": 2,
+      "bad_date": 2,
+      "price_negative": 2,
+      "duplicate_row": 1
+    }
+  },
+  "note": "Answer keys are computed from the clean tables. Compare your dirty-data results after cleaning."
+}

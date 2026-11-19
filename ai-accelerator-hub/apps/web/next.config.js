@@ -60,6 +60,8 @@ const nextConfig = {
   // Monorepo: trace server files from the repo root so Vercel bundles the Prisma engine and workspace packages.
   outputFileTracingRoot: path.resolve(__dirname, '../..'),
   // Server Actions only from our own origin (no wildcard).
+  // LangGraph hangs when bundled by Next; load the LangChain packages from node_modules at runtime instead.
+  serverExternalPackages: ['@langchain/langgraph', '@langchain/langgraph-checkpoint', '@langchain/core'],
   experimental: { serverActions: { allowedOrigins: [siteHost, ...(process.env.APP_ORIGIN ? [process.env.APP_ORIGIN] : [])] } },
   images: { remotePatterns: [{ protocol: 'https', hostname: 'avatars.githubusercontent.com' }] },
   async headers() {

@@ -1,0 +1,102 @@
+visit_id,patient_id,visit_date,treatment,fee,status
+1,18,2026-10-31,Filling,1500,completed
+2,30,2026-07-25,Filling,1500,completed
+3,11,2026-07-15,Extraction,1200,completed
+4,38,2026-09-19,Filling,1500,completed
+5,23,2026-09-25,Cleaning,800,completed
+6,31,2026-07-02,Filling,1500,completed
+7,49,2026-10-12,Check-up,500,completed
+8,35,2026-11-18,Root canal,4500,completed
+9,11,2026-07-02,Cleaning,800,Completed 
+10,11,2026-09-27,Filling,1500,completed
+11,24,2026-07-31,Root canal,0,no_show
+12,22,2026-07-01,Extraction,0,no_show
+13,4,2026-07-17,Extraction,0,cancelled
+14,44,2026-08-23,Extraction,1200,completed
+15,39,2026-10-31,Root canal,4500,completed
+16,6,2026-10-12,Filling,0,no_show
+17,8,2026-11-11,Check-up,500,completed
+18,17,2026-09-02,Check-up,0,no_show
+19,6,2026-08-26,Cleaning,800,completed
+20,14,2026-09-20,Root canal,4500,completed
+21,4,2026-11-17,Extraction,1200,completed
+22,22,2026-08-27,Check-up,500,completed
+23,17,2026-07-07,Cleaning,800,completed
+24,41,2026-11-16,Check-up,500,completed
+25,25,2026-07-08,Extraction,1200,completed
+26,39,2026-08-09,Root canal,4500,completed
+27,48,32-10-2026,Extraction,1200,completed
+28,1,2026-08-28,Cleaning,,completed
+29,25,2026-10-10,Cleaning,800,completed
+30,18,2026-07-10,Extraction,1200,completed
+31,43,2026-10-30,Extraction,0,cancelled
+32,23,2026-11-24,Filling,1500,completed
+33,24,2026-10-09,Extraction,1200,completed
+34,26,2026-11-13,Filling,1500,completed
+35,23,2026-08-23,Check-up,500,completed
+36,28,2026-10-13,Extraction,1200,completed
+37,46,2026-08-05,Extraction,1200,Completed 
+38,48,2026-08-26,Extraction,1200,completed
+39,26,2026-10-25,Cleaning,800,completed
+40,48,32-10-2026,Extraction,1200,completed
+41,11,2026-08-14,Check-up,500,completed
+42,40,2026-08-15,Root canal,0,no_show
+43,19,2026-09-02,Root canal,4500,completed
+44,8,2026-07-22,Cleaning,800,completed
+45,38,2026-07-20,Extraction,1200,completed
+46,17,2026-07-14,Check-up,500,completed
+47,14,2026-11-20,Check-up,500,completed
+48,25,2026-08-21,Root canal,0,no_show
+49,9,2026-07-04,Check-up,0,no_show
+50,17,2026-07-25,Extraction,1200,completed
+51,34,2026-09-17,Filling,0,no_show
+52,39,2026-11-11,Check-up,500,completed
+53,40,2026-09-29,Filling,1500,completed
+54,36,2026-09-04,Cleaning,800,completed
+55,40,2026-10-02,Extraction,1200,completed
+56,46,2026-11-17,Filling,1500,completed
+57,36,2026-10-05,Root canal,4500,completed
+58,29,2026-08-20,Root canal,4500,completed
+59,42,2026-08-26,Check-up,500,completed
+60,23,2026-07-13,Cleaning,800,completed
+61,30,2026-08-10,Filling,0,cancelled
+62,45,2026-09-14,Cleaning,0,no_show
+63,9,2026-09-05,Extraction,1200,completed
+64,1,2026-10-02,Filling,1500,completed
+65,34,2026-08-04,Cleaning,800,completed
+66,33,2026-09-14,Cleaning,800,completed
+67,23,2026-08-21,Cleaning,800,completed
+68,15,2026-10-12,Extraction,1200,completed
+69,30,2026-09-10,Check-up,500,completed
+70,46,2026-08-01,Check-up,500,completed
+71,14,2026-11-20,Cleaning,800,completed
+72,3,2026-07-22,Extraction,1200,completed
+73,23,2026-10-02,Filling,1500,completed
+74,8,2026-09-27,Cleaning,800,completed
+75,23,2026-08-17,Cleaning,800,completed
+76,26,2026-11-21,Root canal,4500,completed
+77,5,2026-08-02,Check-up,0,cancelled
+78,20,2026-09-13,Cleaning,0,cancelled
+79,20,2026-08-06,Filling,1500,completed
+80,43,2026-07-07,Extraction,1200,completed
+81,13,2026-09-23,Check-up,500,completed
+82,48,2026-08-02,Filling,1500,completed
+83,46,2026-10-08,Filling,1500,completed
+84,2,2026-09-28,Extraction,1200,completed
+85,49,2026-09-10,Filling,1500,completed
+86,11,2026-09-18,Check-up,500,completed
+87,28,2026-08-12,Filling,1500,completed
+88,40,2026-08-24,Root canal,4500,completed
+89,8,2026-07-10,Filling,1500,completed
+90,43,2026-10-25,Cleaning,800,completed
+91,12,2026-11-25,Filling,1500,completed
+92,47,2026-08-26,Cleaning,0,no_show
+93,9,2026-07-22,Filling,1500,completed
+94,29,2026-07-28,Extraction,1200,completed
+95,32,2026-09-01,Check-up,500,completed
+96,13,2026-07-22,Check-up,500,completed
+97,50,2026-09-28,Filling,0,cancelled
+98,42,2026-08-01,Cleaning,800,completed
+99,19,2026-10-29,Filling,,completed
+100,34,2026-09-20,Extraction,1200,completed
+21,4,2026-11-17,Extraction,1200,completed

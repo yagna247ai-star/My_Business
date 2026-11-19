@@ -1,8 +1,9 @@
 /**
  * Uploads (§26, §28): validate first, scan second, serve only clean files.
- * Storage is local disk in dev; S3 when STORAGE_DRIVER=s3 with credentials.
- * AV is ClamAV INSTREAM when CLAMAV_HOST is set. In production without a
- * scanner, uploads are refused (503) rather than silently unprotected.
+ * Storage is Vercel Blob (private store) when configured, local disk in dev. Local disk is refused in
+ * production: Vercel functions have no persistent, shared disk.
+ * AV is ClamAV INSTREAM when CLAMAV_HOST is set. Without a scanner in production, signature-checked
+ * images are accepted as 'validated' and everything else is refused (rules in ./uploadPolicy.ts).
  */
 import { randomUUID } from 'crypto';
 import { mkdir, writeFile, readFile as readFileBytes } from 'fs/promises';
@@ -14,13 +15,15 @@ import { hasPerm } from '@/lib/server/context';
 import { badRequest, forbidden, notConfigured, notFound } from '@/lib/server/errors';
 import { audit } from '@/lib/server/audit';
 import { readImage, sha256 } from './imageProof';
+import { scanPlan, servable, storageDriver } from './uploadPolicy';
+import { put as blobPut, get as blobGet } from '@vercel/blob';
 
 const ALLOW: Record<string, string[]> = {
   'image/png': ['png'], 'image/jpeg': ['jpg', 'jpeg'], 'image/webp': ['webp'], 'image/gif': ['gif'],
   'application/pdf': ['pdf'], 'video/mp4': ['mp4'], 'video/webm': ['webm'],
 };
 export const MAX_BYTES = Number(process.env.MAX_UPLOAD_BYTES || 10 * 1024 * 1024);
-export type AvVerdict = 'clean' | 'infected' | 'skipped';
+export type AvVerdict = 'clean' | 'infected' | 'skipped' | 'validated';
 export type Scanner = (bytes: Buffer) => Promise<AvVerdict> | AvVerdict;
 
 const cleanName = (n: string) => n.split('/').pop()!.split('\\').pop()!.toLowerCase().replace(/[^a-z0-9._-]/g, '-').replace(/-+/g, '-').slice(0, 80) || 'file';
@@ -55,15 +58,38 @@ function clamavScan(host: string, port: number, bytes: Buffer): Promise<AvVerdic
   });
 }
 
-export async function scanBytes(bytes: Buffer, scanner?: Scanner): Promise<AvVerdict> {
+/** `mime` must already be validated (and for images, signature-checked) by the caller. */
+export async function scanBytes(bytes: Buffer, scanner?: Scanner, mime = 'application/octet-stream'): Promise<AvVerdict> {
   if (scanner) return scanner(bytes);
   const host = process.env.CLAMAV_HOST;
-  if (host) return clamavScan(host, Number(process.env.CLAMAV_PORT || 3310), bytes);
-  if (process.env.NODE_ENV === 'production') throw notConfigured('av', 'Virus scanning is not configured. Uploads are disabled until a scanner is attached.');
-  return 'skipped';
+  const plan = scanPlan({ hasScanner: !!host, production: process.env.NODE_ENV === 'production', mime });
+  if (plan === 'scan') return clamavScan(host!, Number(process.env.CLAMAV_PORT || 3310), bytes);
+  if (plan === 'refuse') throw notConfigured('av', 'PDF and video uploads need virus scanning, which is not set up yet. Images (PNG, JPG, WebP, GIF) can be uploaded.');
+  return plan;
 }
 
 const localDir = () => process.env.UPLOAD_DIR || join(process.cwd(), 'uploads');
+
+function driver() {
+  const d = storageDriver(process.env);
+  if (d === 'unsupported' || (d === 'local' && process.env.NODE_ENV === 'production')) throw notConfigured('storage', 'File storage is not configured.');
+  return d;
+}
+
+async function storeBytes(key: string, mime: string, bytes: Buffer) {
+  if (driver() === 'blob') { await blobPut(key, bytes, { access: 'private', contentType: mime, addRandomSuffix: false }); return; }
+  await mkdir(localDir(), { recursive: true });
+  await writeFile(join(localDir(), key.replace(/\//g, '__')), bytes);
+}
+
+async function loadBytes(key: string, bucket: string): Promise<Buffer> {
+  if (bucket === 'vercel-blob') {
+    const r = await blobGet(key, { access: 'private' });
+    if (!r || r.statusCode !== 200 || !r.stream) throw notFound('File not found.');
+    return Buffer.from(await new Response(r.stream).arrayBuffer());
+  }
+  return readFileBytes(join(localDir(), key.replace(/\//g, '__')));
+}
 
 export async function uploadFile(ctx: Ctx, input: { filename: string; mime: string; bytes: Buffer }, opts: { scanner?: Scanner; entityType?: string; entityId?: string } = {}) {
   if (!hasPerm(ctx, 'learn:self') && !hasPerm(ctx, 'community:post')) throw forbidden();
@@ -75,14 +101,11 @@ export async function uploadFile(ctx: Ctx, input: { filename: string; mime: stri
     if (!info || info.type !== input.mime) throw badRequest('This file isn’t a real PNG, JPG or WebP image. Take a new screenshot and try again.');
     img = { sha256: sha256(input.bytes), width: info.width, height: info.height };
   }
-  const verdict = await scanBytes(input.bytes, opts.scanner);
+  const verdict = await scanBytes(input.bytes, opts.scanner, input.mime);
   const key = `t/${ctx.tenantId}/${ctx.userId}/${randomUUID()}.${extOf(name)}`;
-  if (verdict !== 'infected') {
-    if ((process.env.STORAGE_DRIVER || 'local') !== 'local') throw notConfigured('storage', 'Object storage is not configured.');
-    await mkdir(localDir(), { recursive: true });
-    await writeFile(join(localDir(), key.replace(/\//g, '__')), input.bytes);
-  }
-  const file = await prisma.file.create({ data: { tenantId: ctx.tenantId, ownerId: ctx.userId, s3Key: key, bucket: process.env.STORAGE_BUCKET || 'hub-dev', mime: input.mime, sizeBytes: input.bytes.length, avStatus: verdict, entityType: opts.entityType || null, entityId: opts.entityId || null, ...(img || {}) } });
+  const bucket = driver() === 'blob' ? 'vercel-blob' : process.env.STORAGE_BUCKET || 'hub-dev';
+  if (verdict !== 'infected') await storeBytes(key, input.mime, input.bytes);
+  const file = await prisma.file.create({ data: { tenantId: ctx.tenantId, ownerId: ctx.userId, s3Key: key, bucket, mime: input.mime, sizeBytes: input.bytes.length, avStatus: verdict, entityType: opts.entityType || null, entityId: opts.entityId || null, ...(img || {}) } });
   await audit(prisma, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: `file.upload_${verdict}`, resourceType: 'File', resourceId: file.id, after: { mime: input.mime, sizeBytes: input.bytes.length } });
   return { id: file.id, avStatus: verdict, sizeBytes: input.bytes.length, mime: input.mime, width: img?.width ?? null, height: img?.height ?? null };
 }
@@ -92,10 +115,10 @@ export async function readFile(ctx: Ctx, fileId: string) {
   if (!f) throw notFound('File not found.');
   const moderator = hasPerm(ctx, 'community:moderate');
   const labReviewer = f.entityType === 'agent_lab' && hasPerm(ctx, 'review:read'); // Agent Lab screenshots are reviewed proof
-  if (f.ownerId !== ctx.userId && !moderator && !labReviewer) throw notFound('File not found.');
-  if (f.avStatus === 'infected') throw forbidden('This file is quarantined.');
-  if (f.avStatus === 'pending') throw forbidden('This file is still being scanned.');
-  if (f.avStatus === 'skipped' && process.env.NODE_ENV === 'production') throw forbidden('This file predates virus scanning.');
-  const bytes = await readFileBytes(join(localDir(), f.s3Key.replace(/\//g, '__')));
+  const avatar = f.entityType === 'avatar'; // profile photos are visible to everyone in the same tenant, once scanned
+  if (f.ownerId !== ctx.userId && !moderator && !labReviewer && !avatar) throw notFound('File not found.');
+  const ok = servable({ avStatus: f.avStatus, mime: f.mime, production: process.env.NODE_ENV === 'production' });
+  if (!ok.ok) throw forbidden(ok.reason);
+  const bytes = await loadBytes(f.s3Key, f.bucket);
   return { bytes, mime: f.mime };
 }

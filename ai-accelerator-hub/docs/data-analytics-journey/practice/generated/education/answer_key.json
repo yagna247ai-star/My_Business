@@ -1,0 +1,25 @@
+{
+  "domain": "education",
+  "size": "small",
+  "dirty": "some",
+  "seed": 42,
+  "main_table": "attendance",
+  "tables": [
+    "attendance",
+    "fees",
+    "students"
+  ],
+  "answer_key_from_clean_data": {
+    "students": 20,
+    "students_below_75pct": 1,
+    "fee_outstanding_total": 38000
+  },
+  "planted_problems_in_dirty_data": {
+    "attendance": {
+      "present_bad_value": 9,
+      "bad_date": 8,
+      "duplicate_row": 5
+    }
+  },
+  "note": "Answer keys are computed from the clean tables. Compare your dirty-data results after cleaning."
+}

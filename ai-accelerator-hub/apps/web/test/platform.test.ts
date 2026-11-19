@@ -484,10 +484,10 @@ describe('Upload validation and AV gating (§26)', () => {
     expect(up.avStatus).toBe('infected');
     await expectErr(readFile(learner, up.id), 403);
   });
-  it('refuses uploads in production without a scanner', async () => {
+  it('refuses non-image uploads in production without a scanner', async () => {
     const prevNode = process.env.NODE_ENV, prevClam = process.env.CLAMAV_HOST;
     (process.env as Record<string, string | undefined>).NODE_ENV = 'production'; delete process.env.CLAMAV_HOST;
-    try { await expectErr(uploadFile(learner, { filename: 'a.png', mime: 'image/png', bytes: png }), 503); }
+    try { await expectErr(uploadFile(learner, { filename: 'a.pdf', mime: 'application/pdf', bytes: Buffer.from('%PDF-1.4 test') }), 503); }
     finally { (process.env as Record<string, string | undefined>).NODE_ENV = prevNode; if (prevClam !== undefined) process.env.CLAMAV_HOST = prevClam; }
   });
   it('isolates files by tenant', async () => {

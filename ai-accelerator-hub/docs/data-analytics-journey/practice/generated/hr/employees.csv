@@ -1,0 +1,52 @@
+emp_id,name,dept,salary,joined_on,left_on
+1,Worker 001,Stores,32500,2025-01-26,
+2,Worker 002,assembly ,47100,2024-01-26,
+3,Worker 003,Quality,43700,2024-10-11,
+4,Worker 004,Packing,46300,2023-10-13,
+5,Worker 005,Packing,"₹ 49,900",2021-08-20,
+6,Worker 006,Stores,39500,2020-02-10,
+7,Worker 007,Quality,43800,2023-07-05,
+8,Worker 008,Quality,33200,2023-04-02,2026-08-29
+9,Worker 009,Stores,"₹ 42,200",2021-12-14,
+10,Worker 010,Stores,51900,2021-04-27,2024-02-09
+11,Worker 011,Machining,41800,2024-08-10,
+12,Worker 012,Assembly,21700,2021-01-13,
+13,Worker 013,Assembly,42900,2025-02-11,
+14,Worker 014,Packing,36600,2024-01-01,
+15,Worker 015,Quality,41700,2020-10-11,
+16,Worker 016,Machining,46800,2020-07-06,
+17,Worker 017,Machining,35200,2019-01-29,
+18,Worker 018,Packing,36100,2025-01-03,
+19,Worker 019,Machining,23400,2024-03-31,
+20,Worker 020,Stores,49100,2023-11-15,2026-09-29
+21,Worker 021,Packing,26800,2024-11-10,
+22,Worker 022,Assembly,38000,2021-03-25,
+23,Worker 023,Packing,32100,2021-08-19,
+24,Worker 024,Packing,,2021-07-03,
+25,Worker 025,Quality,18900,2019-08-05,2020-11-03
+26,Worker 026,Machining,34600,2023-10-23,
+27,Worker 027,Stores,43000,2019-05-02,
+28,Worker 028,Stores,29300,2021-04-20,2024-02-17
+29,Worker 029,assembly ,37100,2024-01-28,
+30,Worker 030,Machining,35600,2020-09-23,
+31,Worker 031,Quality,25900,2023-12-19,
+32,Worker 032,Assembly,31700,2022-09-04,
+33,Worker 033,Quality,,2023-06-23,
+34,Worker 034,Quality,33000,2025-05-12,
+35,Worker 035,Machining,51600,2025-06-23,
+36,Worker 036,Stores,34200,2025-06-16,
+37,Worker 037,Quality,28300,2019-08-18,
+38,Worker 038,Quality,25500,2022-03-23,
+39,Worker 039,Machining,46700,2022-02-25,
+40,Worker 040,Packing,23600,2022-10-01,
+41,Worker 041,Quality,47500,2024-02-02,
+42,Worker 042,Quality,19800,2025-07-23,
+43,Worker 043,Stores,48400,2023-01-13,2025-07-17
+44,Worker 044,Machining,49000,2019-02-17,2021-04-20
+45,Worker 045,Stores,42000,2019-06-30,
+46,Worker 046,Assembly,42800,2024-11-16,
+47,Worker 047,Packing,38800,2019-04-04,2022-03-24
+48,Worker 048,Stores,29100,2020-02-23,2023-04-06
+49,Worker 049,Assembly,48700,2024-06-26,
+50,Worker 050,Machining,27300,2019-08-13,
+15,Worker 015,Quality,41700,2020-10-11,

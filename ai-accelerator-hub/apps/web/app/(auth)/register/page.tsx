@@ -1,11 +1,12 @@
 'use client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { api, ApiError } from '@/lib/client/api';
 
-type Form = { name: string; email: string; password: string; birthYear: string; inviteCode: string; guardianEmail: string; acceptTerms: boolean };
+type Form = { name: string; email: string; password: string; birthYear: string; inviteCode: string; guardianEmail: string; journeySlug: string; acceptTerms: boolean };
+type JourneyOption = { slug: string; title: string; description: string | null; levels: number; isDefault: boolean };
 type Key = keyof Form;
 const THIS_YEAR = new Date().getFullYear();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -34,16 +35,27 @@ function validate(f: Form): Partial<Record<Key, string>> {
   return e;
 }
 
-const ORDER: Key[] = ['name', 'email', 'password', 'birthYear', 'guardianEmail', 'inviteCode', 'acceptTerms'];
+const ORDER: Key[] = ['name', 'email', 'password', 'birthYear', 'guardianEmail', 'inviteCode', 'journeySlug', 'acceptTerms'];
 
 export default function RegisterPage() {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const [f, setF] = useState<Form>({ name: '', email: '', password: '', birthYear: '', inviteCode: '', guardianEmail: '', acceptTerms: false });
+  const [f, setF] = useState<Form>({ name: '', email: '', password: '', birthYear: '', inviteCode: '', guardianEmail: '', journeySlug: '', acceptTerms: false });
+  const [journeys, setJourneys] = useState<JourneyOption[] | null>(null);
+  const [journeyCode, setJourneyCode] = useState(''); // invite code the journey list was loaded for
   const [errors, setErrors] = useState<Partial<Record<Key, string>>>({});
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const [showPw, setShowPw] = useState(false);
+  // Journeys open for sign-up (published by a Super Admin). Reload when the invite code changes institution.
+  useEffect(() => {
+    let live = true;
+    const q = journeyCode ? `?inviteCode=${encodeURIComponent(journeyCode)}` : '';
+    api<{ journeys: JourneyOption[] }>(`/api/v1/register/journeys${q}`, { method: 'GET' })
+      .then(r => { if (!live) return; setJourneys(r.journeys); setF(p => ({ ...p, journeySlug: r.journeys.some(j => j.slug === p.journeySlug) ? p.journeySlug : (r.journeys.find(j => j.isDefault) ?? r.journeys[0])?.slug ?? '' })); })
+      .catch(() => { if (live) setJourneys([]); });
+    return () => { live = false; };
+  }, [journeyCode]);
   const age = youngestAge(f.birthYear);
   const minor = age !== null && age >= 13 && age < 18;
 
@@ -69,7 +81,7 @@ export default function RegisterPage() {
       await api('/api/v1/register', {
         body: {
           name: f.name.trim(), email: f.email.trim(), password: f.password, birthYear: Number(f.birthYear),
-          inviteCode: f.inviteCode.trim(), guardianEmail: minor ? f.guardianEmail.trim() : '', acceptTerms: f.acceptTerms,
+          inviteCode: f.inviteCode.trim(), guardianEmail: minor ? f.guardianEmail.trim() : '', journeySlug: f.journeySlug, acceptTerms: f.acceptTerms,
         },
       });
       router.push(`/login?registered=1&email=${encodeURIComponent(f.email.trim())}`);
@@ -97,7 +109,7 @@ export default function RegisterPage() {
   );
 
   return (
-    <AuthCard title="Create your account" subtitle="Free to start. Level 1 — AI Explorer — opens immediately.">
+    <AuthCard title="Create your account" subtitle="Free to start. Choose your journey; Level 1 opens immediately.">
       <form ref={formRef} className="stack gap-16" onSubmit={submit} noValidate aria-busy={busy}>
         {field('name', 'Full name', { ac: 'name' })}
         {field('email', 'Email', { type: 'email', ac: 'email', inputMode: 'email' })}
@@ -108,7 +120,25 @@ export default function RegisterPage() {
         })}
         {field('birthYear', 'Year of birth', { type: 'text', inputMode: 'numeric', ac: 'bday-year', hint: 'Used only to apply age-appropriate safety settings.' })}
         {minor && field('guardianEmail', 'Parent or guardian email', { type: 'email', ac: 'off', inputMode: 'email', hint: 'Required for learners under 18. Community features unlock after consent.' })}
-        {field('inviteCode', 'Institution invite code', { required: false, ac: 'off', hint: 'Optional. Joining through your college or company? Enter the code they gave you.' })}
+        <div onBlur={() => { const c = f.inviteCode.trim(); if (c !== journeyCode && (c === '' || c.length >= 4)) setJourneyCode(c); }}>
+          {field('inviteCode', 'Institution invite code', { required: false, ac: 'off', hint: 'Optional. Joining through your college or company? Enter the code they gave you.' })}
+        </div>
+        {journeys && journeys.length > 0 && (
+          <fieldset style={{ border: 0, padding: 0, margin: 0 }} aria-describedby={errors.journeySlug ? 'journeySlug-h' : undefined}>
+            <legend className="field-label">Choose your journey</legend>
+            <div className="stack gap-8" id="journeySlug">
+              {journeys.map(j => (
+                <label key={j.slug} className="card card-pad" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', borderColor: f.journeySlug === j.slug ? 'var(--gold, currentColor)' : undefined }}>
+                  <input type="radio" name="journeySlug" value={j.slug} checked={f.journeySlug === j.slug} disabled={busy} style={{ marginTop: 3, flex: 'none' }}
+                    onChange={() => { setF(p => ({ ...p, journeySlug: j.slug })); if (errors.journeySlug) setErrors(p => { const n = { ...p }; delete n.journeySlug; return n; }); }} />
+                  <span><b>{j.title}</b>{j.isDefault && <span className="badge badge-gold" style={{ marginLeft: 8 }}>Recommended</span>}
+                    <span className="small text-2" style={{ display: 'block' }}>{j.description || `${j.levels} levels`}</span></span>
+                </label>
+              ))}
+            </div>
+            {errors.journeySlug ? <div className="field-err" id="journeySlug-h" role="alert">{errors.journeySlug}</div> : <div className="field-hint">You can ask an admin to switch you later; your progress is kept.</div>}
+          </fieldset>
+        )}
         <div>
           <label className="small" htmlFor="acceptTerms" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
             <input id="acceptTerms" type="checkbox" checked={f.acceptTerms} onChange={set('acceptTerms')} disabled={busy}

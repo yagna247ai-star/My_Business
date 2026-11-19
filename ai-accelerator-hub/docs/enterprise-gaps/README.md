@@ -13,7 +13,7 @@ Each file covers one component: its current state (with code evidence), the gap,
 | 04 | [Tenant isolation and RLS](04-tenancy-rls.md) | App-layer only; RLS not applied | Partly: approve rewrite and staging test |
 | 05 | [Database and migrations](05-database-migrations.md) | Schema live, no migration history | Yes: commit migration? backups? |
 | 06 | [Seed data and admin accounts](06-seed-and-admin-accounts.md) | Not run; default passwords in source | Yes: which accounts, if any |
-| 07 | [File uploads, AV scanning, storage](07-file-uploads-and-storage.md) | Uploads refused in production | Yes: scanner and storage |
+| 07 | [File uploads, AV scanning, storage](07-file-uploads-and-storage.md) | Images live on Vercel Blob; PDF/video refused | Yes: scanner for PDF/video |
 | 08 | [Graph database (Neo4j)](08-graph-neo4j.md) | Disabled; optional | Yes: needed or not |
 | 09 | [GitHub OAuth](09-github-oauth.md) | Disabled | Yes: create OAuth app |
 | 10 | [Observability](10-observability.md) | None in code | Yes: pick a provider |

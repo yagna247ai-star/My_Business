@@ -4,9 +4,9 @@ import { Download } from 'lucide-react';
 import { api, ApiError } from '@/lib/client/api';
 
 type S = { leaderboardVisibility: string; globalOptIn: boolean; quietHours: boolean; ageBand: string; guardianConsent: string; deletionRequestedAt: string | null };
-export function SettingsForm({ initial, language }: { initial: S; language: string }) {
-  const [s, setS] = useState(initial); const [lang, setLang] = useState(language); const [msg, setMsg] = useState(''); const [err, setErr] = useState('');
-  const save = async (patch: Partial<S> & { preferredLanguage?: string }) => { setMsg(''); setErr(''); try { const r = await api<S>('/api/v1/settings', { method: 'PATCH', body: patch }); setS({ ...s, ...r }); setMsg('Saved.'); } catch (e) { setErr((e as ApiError).message); } };
+export function SettingsForm({ initial, language, area: initialArea = '' }: { initial: S; language: string; area?: string }) {
+  const [s, setS] = useState(initial); const [lang, setLang] = useState(language); const [area, setArea] = useState(initialArea); const [msg, setMsg] = useState(''); const [err, setErr] = useState('');
+  const save = async (patch: Partial<S> & { preferredLanguage?: string; area?: string }) => { setMsg(''); setErr(''); try { const r = await api<S>('/api/v1/settings', { method: 'PATCH', body: patch }); setS({ ...s, ...r }); setMsg('Saved.'); } catch (e) { setErr((e as ApiError).message); } };
   const del = async () => { if (!confirmDel) { setConfirmDel(true); return; } try { const r = await api<{ note: string }>('/api/v1/settings/delete', { body: {} }); setMsg(r.note); setS({ ...s, deletionRequestedAt: new Date().toISOString() }); } catch (e) { setErr((e as ApiError).message); } };
   const [confirmDel, setConfirmDel] = useState(false);
   const sw = (on: boolean, label: string, onClick: () => void, disabled = false) => <button className="switch" type="button" role="switch" aria-checked={on} aria-label={label} onClick={onClick} disabled={disabled} />;
@@ -18,6 +18,7 @@ export function SettingsForm({ initial, language }: { initial: S; language: stri
       <div className="set-row"><div><b>Show my name in standings</b><p>Off shows you as “Anonymous learner”. Your XP still counts.</p></div>{sw(s.leaderboardVisibility !== 'private', 'Show my name in standings', () => save({ leaderboardVisibility: s.leaderboardVisibility === 'private' ? 'cohort' : 'private' }))}</div>
       <div className="set-row"><div><b>Share progress beyond my institution</b><p>Explicit consent for cross-institution visibility. Withdraw any time.</p></div>{sw(s.globalOptIn, 'Share progress beyond my institution', () => save({ globalOptIn: !s.globalOptIn }))}</div>
       <div className="set-row"><div><b>Quiet hours</b><p>No reminders between 10 pm and 8 am IST.</p></div>{sw(s.quietHours, 'Quiet hours', () => save({ quietHours: !s.quietHours }))}</div>
+      <div className="set-row"><div><b>My area</b><p>Your city or area, for area crowns (top 3 per area). Leave blank to skip.</p></div><form style={{ display: 'flex', gap: 8 }} onSubmit={e => { e.preventDefault(); save({ area }); }}><input className="input" style={{ width: 180 }} value={area} maxLength={60} aria-label="My area" placeholder="e.g. Hyderabad" onChange={e => setArea(e.target.value)} /><button className="btn btn-soft btn-sm" type="submit">Save area</button></form></div>
       <div className="set-row"><div><b>Language</b><p>Your progress never changes when you switch.</p></div><select className="select" style={{ width: 'auto' }} value={lang} aria-label="Language" onChange={e => { setLang(e.target.value); save({ preferredLanguage: e.target.value }); }}>{[['en', 'English'], ['hi', 'हिन्दी'], ['te', 'తెలుగు'], ['ta', 'தமிழ்'], ['kn', 'ಕನ್ನಡ'], ['ml', 'മലയാളം']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
     </section>
     <section className="card card-pad" aria-labelledby="dt"><h2 className="h3" id="dt">Your data</h2>

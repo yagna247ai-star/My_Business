@@ -4,6 +4,8 @@ import { ROLE_LABEL } from '@/lib/server/rbac';
 import { prisma } from '@/lib/prisma';
 import { totalXp } from '@/lib/domain/xp';
 import { streakView } from '@/lib/domain/streak';
+import { journeyOverview } from '@/lib/domain/journey';
+import { topApprovedLevel, crownLabel } from '@/lib/domain/gamify';
 import { Shell, type NavItem } from '@/components/app/Shell';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +22,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     { href: '/agent-lab', label: 'Agent Lab', icon: 'rocket', group: 'Learn' },
     { href: '/hackathons', label: 'Hackathons', icon: 'users', group: 'Learn' },
     { href: '/achievements', label: 'Achievements', icon: 'award', group: 'Learn' },
+    { href: '/ranks', label: 'Ranks', icon: 'ranks', group: 'Community' },
     { href: '/leaderboard', label: 'Standings', icon: 'ranks', group: 'Community' },
+    { href: '/leaderboard/areas', label: 'Area crowns', icon: 'ranks', group: 'Community' },
     { href: '/feed', label: 'Feed', icon: 'compass', group: 'Community' },
     { href: '/showcase', label: 'Showcase', icon: 'award', group: 'Community' },
     { href: '/library', label: 'Open-source Library', icon: 'book', group: 'Community' },
@@ -37,6 +41,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (hasPerm(ctx, 'analytics:read')) nav.push({ href: '/admin', label: 'Cohort Analytics', icon: 'chart', group: 'Program' });
   if (hasPerm(ctx, 'members:read')) nav.push({ href: '/admin/people', label: 'People', icon: 'users', group: 'Program' });
   if (hasPerm(ctx, 'cohort:read')) nav.push({ href: '/admin/cohorts', label: 'Cohorts & Sessions', icon: 'layers', group: 'Program' });
+  if (hasPerm(ctx, 'content:manage')) nav.push({ href: '/admin/journeys', label: 'Journey Builder', icon: 'map', group: 'Program' });
+  if (hasPerm(ctx, 'cohort:manage')) nav.push({ href: '/admin/hackathons', label: 'Hackathon Builder', icon: 'users', group: 'Program' });
   if (hasPerm(ctx, 'audit:read')) nav.push({ href: '/admin/audit', label: 'Audit Log', icon: 'shield', group: 'Program' });
   if (hasPerm(ctx, 'community:moderate')) nav.push({ href: '/admin/moderation', label: 'Moderation', icon: 'shield', group: 'Program' });
   if (!learner) nav.push({ href: '/library', label: 'Open-source Library', icon: 'book', group: 'Resources' });
@@ -45,11 +51,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (hasPerm(ctx, 'billing:self')) nav.push({ href: '/billing', label: 'Plans & Billing', icon: 'card', group: 'Account' });
   nav.push({ href: '/settings', label: 'Settings & Privacy', icon: 'settings', group: 'Account' });
 
+  const me = await prisma.user.findUnique({ where: { id: ctx.userId }, select: { avatarUrl: true } });
+  const overview = learner ? await journeyOverview(ctx).catch(() => null) : null;
+  const topIdx = overview ? topApprovedLevel(overview.levels) : null;
+  const topTitle = topIdx !== null ? overview!.levels.find(l => l.idx === topIdx)?.title : undefined;
   const [unread, xp, streak] = await Promise.all([
     prisma.notification.count({ where: { tenantId: ctx.tenantId, userId: ctx.userId, channel: 'in_app', state: { not: 'read' } } }),
     learner ? totalXp(ctx.tenantId, ctx.userId) : Promise.resolve(null),
     learner ? prisma.streak.findUnique({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.userId } } }) : Promise.resolve(null),
   ]);
   const sv = learner ? streakView(streak) : null;
-  return <Shell user={{ name: ctx.name, roleLabel: ROLE_LABEL[ctx.role], tenant: ctx.tenantName }} nav={nav} unread={unread} xp={xp} streak={sv ? { status: sv.status, current: sv.current } : null}>{children}</Shell>;
+  return <Shell user={{ name: ctx.name, roleLabel: ROLE_LABEL[ctx.role], tenant: ctx.tenantName, avatarUrl: me?.avatarUrl ?? null, crown: crownLabel(topIdx, topTitle) }} nav={nav} unread={unread} xp={xp} streak={sv ? { status: sv.status, current: sv.current } : null}>{children}</Shell>;
 }

@@ -33,7 +33,7 @@ export async function learnerSummary(ctx: Ctx) {
     prisma.streak.findUnique({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.userId } } }),
     prisma.userBadge.findMany({ where: { userId: ctx.userId }, include: { badge: true }, orderBy: { earnedAt: 'desc' } }),
     listNotifications(ctx.tenantId, ctx.userId, 5),
-    prisma.enrollment.findFirst({ where: { tenantId: ctx.tenantId, userId: ctx.userId }, include: { cohort: true, journey: true } }),
+    prisma.enrollment.findFirst({ where: { tenantId: ctx.tenantId, userId: ctx.userId, state: { in: ['active', 'completed'] } }, orderBy: [{ state: 'asc' }, { updatedAt: 'desc' }], include: { cohort: true, journey: true } }),
   ]);
   const unread = await prisma.notification.count({ where: { tenantId: ctx.tenantId, userId: ctx.userId, channel: 'in_app', state: { not: 'read' } } });
   const sched = enrollment?.cohort?.schedule ? JSON.parse(enrollment.cohort.schedule) : null;

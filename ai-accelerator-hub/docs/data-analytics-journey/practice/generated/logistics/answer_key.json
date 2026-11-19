@@ -1,0 +1,24 @@
+{
+  "domain": "logistics",
+  "size": "small",
+  "dirty": "some",
+  "seed": 42,
+  "main_table": "shipments",
+  "tables": [
+    "shipments"
+  ],
+  "answer_key_from_clean_data": {
+    "total_shipments": 100,
+    "on_time_rate_pct": 57.0,
+    "total_cost": 344243
+  },
+  "planted_problems_in_dirty_data": {
+    "shipments": {
+      "status_spelling": 2,
+      "cost_blank": 2,
+      "route_spelling": 2,
+      "duplicate_row": 1
+    }
+  },
+  "note": "Answer keys are computed from the clean tables. Compare your dirty-data results after cleaning."
+}
