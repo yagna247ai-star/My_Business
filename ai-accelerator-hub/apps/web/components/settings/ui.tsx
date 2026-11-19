@@ -20,13 +20,17 @@ export function useRun() {
 
 export function Modal({ title, onClose, children, wide = false }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
   const id = useId(); const ref = useRef<HTMLDivElement>(null);
+  // Callers pass a fresh onClose on every render (e.g. `() => setForm(null)`). Keep the latest in a ref so the
+  // effect below runs once per opening: re-running it on each keystroke stole focus back to the first field.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
     ref.current?.querySelector<HTMLElement>('input,select,textarea,button')?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeRef.current(); };
     document.addEventListener('keydown', onKey);
     return () => { document.removeEventListener('keydown', onKey); prev?.focus?.(); };
-  }, [onClose]);
+  }, []);
   return (<div className="backdrop" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
     <div ref={ref} className={`dialog${wide ? ' dialog-wide' : ''}`} role="dialog" aria-modal="true" aria-labelledby={id}>
       <div className="row between gap-12" style={{ marginBottom: 14 }}><h2 id={id}>{title}</h2><button type="button" className="btn btn-text btn-sm" aria-label="Close" onClick={onClose}><X size={16} /></button></div>

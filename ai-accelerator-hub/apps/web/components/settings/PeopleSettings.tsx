@@ -1,6 +1,7 @@
 'use client';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { Pencil, UserPlus, KeyRound } from 'lucide-react';
+import { Eye, Pencil, UserPlus, KeyRound } from 'lucide-react';
 import { api } from '@/lib/client/api';
 import { ConfirmDelete, Field, Modal, fmtDate, useRun } from './ui';
 
@@ -37,13 +38,13 @@ export function PeopleSettings({ rows, roles, cohorts, meId }: { rows: Row[]; ro
     <div className="card table-wrap"><table className="tbl"><caption className="sr-only">People</caption>
       <thead><tr><th>Person</th><th>Role</th><th>Cohort</th><th>Journey</th><th>Status</th><th>Joined</th><th><span className="sr-only">Actions</span></th></tr></thead>
       <tbody>{list.length ? list.map(x => (<tr key={x.userId}>
-        <td><b>{x.name || '—'}</b>{x.userId === meId && <span className="muted xs"> (you)</span>}<div className="muted xs">{x.email}</div></td>
+        <td><Link className="bold" href={`/settings/people/${x.userId}`} style={{ color: 'inherit' }}>{x.name || '—'}</Link>{x.userId === meId && <span className="muted xs"> (you)</span>}<div className="muted xs">{x.email}</div></td>
         <td className="small">{x.roleLabel}</td>
         <td className="small">{x.cohortId ? cohortName.get(x.cohortId) ?? '—' : '—'}</td>
         <td className="small">{x.journey?.title ?? '—'}</td>
         <td><span className={`badge ${x.status === 'active' ? 'badge-success' : 'badge-warn'}`}>{x.status}</span></td>
         <td className="small">{fmtDate(x.joinedAt)}</td>
-        <td><div className="set-actions">{locked(x) ? <span className="muted xs">{x.userId === meId ? 'Use Profile' : 'Managed centrally'}</span> : <>
+        <td><div className="set-actions"><Link className="btn btn-soft btn-sm" href={`/settings/people/${x.userId}`} title="View profile" aria-label={`View profile of ${x.name || x.email}`}><Eye size={14} /></Link>{locked(x) ? <span className="muted xs">{x.userId === meId ? 'Use Profile' : 'Managed centrally'}</span> : <>
           <button className="btn btn-outline btn-sm" type="button" title="Edit" aria-label={`Edit ${x.name || x.email}`} onClick={() => setEdit({ userId: x.userId, name: x.name ?? '', role: x.role, status: x.status, cohortId: x.cohortId ?? '' })}><Pencil size={14} /></button>
           <ConfirmDelete label={`Remove ${x.name || x.email}`} confirmText="Remove" disabled={r.busy} onConfirm={() => r.run(() => api(`/api/v1/settings/people/${x.userId}`, { method: 'DELETE' }), `${x.name || x.email} removed from the institute. Their account still exists.`)} />
         </>}</div></td>

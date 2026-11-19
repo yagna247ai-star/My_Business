@@ -61,7 +61,7 @@ One place for admins to manage the institute. Open **Settings** in the left menu
 |---|---|---|---|
 | Profile & privacy | `/settings/profile` | Own photo, theme, language, area, privacy | Same |
 | Institute(s) | `/settings/institute` | Edit own institute's name and contact details | Also create, edit (short name, plan, status), deactivate and delete any institute |
-| People | `/settings/people` | Add people (new or existing account) with a role, cohort and starting password; edit name, role, cohort, status; remove from the institute | Same |
+| People | `/settings/people` | Add people (new or existing account) with a role, cohort and starting password; edit name, role, cohort, status; remove from the institute. Click a name to open their **profile**: journeys and level progress, XP, streak, badges, submissions with review results, talent profile (each view is audited; mentors and instructors can view too) | Same |
 | Cohorts | `/settings/cohorts` | Create, edit name/dates/size, new invite code, delete | Same |
 | Talent | `/settings/talent` | Post, edit, close/reopen and delete opportunities; edit a learner's headline, hide or remove a talent profile | Same |
 
