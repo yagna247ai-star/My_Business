@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { api, ApiError } from '@/lib/client/api';
@@ -15,7 +16,7 @@ export function JourneyAccess({ journeys, canEdit }: { journeys: J[]; canEdit: b
   return (
     <section className="card card-pad stack gap-12" aria-labelledby="ja">
       <h2 className="h3" id="ja">Journey access</h2>
-      <p className="muted small">New learners are enrolled in the <b>default</b> journey. Only published journeys can be the default or be assigned to people. Move individual people between journeys in <a className="link" href="/settings/people">People</a>; their progress on other journeys is kept.{!canEdit && ' Only a Super Admin can change these settings.'}</p>
+      <p className="muted small">New learners are enrolled in the <b>default</b> journey. Only published journeys can be the default or be assigned to people. Move individual people between journeys in <Link className="link" href="/settings/people">People</Link>; their progress on other journeys is kept.{!canEdit && ' Only a Super Admin can change these settings.'}</p>
       {msg && <p className="callout ok small" role="status">{msg}</p>}{err && <p className="callout warn small" role="alert">{err}</p>}
       <div className="table-wrap"><table className="tbl"><caption className="sr-only">Journeys</caption>
         <thead><tr><th>Journey</th><th>Levels</th><th>Active learners</th><th>Status</th><th>New learners</th></tr></thead>
