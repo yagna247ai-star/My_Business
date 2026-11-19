@@ -4,7 +4,18 @@ import { Crown } from '@/components/app/Crown';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useEffect, useRef, useState } from 'react';
-import { Bell, Flame, LogOut, Menu, Moon, Sun, X, Snowflake, Clock, Pause, ChevronRight, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+
+type ThemeName = 'light' | 'dark' | 'sln';
+const NEXT_THEME: Record<ThemeName, ThemeName> = { light: 'dark', dark: 'sln', sln: 'light' };
+const THEME_LABEL: Record<ThemeName, string> = { light: 'Light', dark: 'Dark', sln: 'SLN heritage' };
+const currentTheme = (): ThemeName => { const t = document.documentElement.getAttribute('data-theme'); return t === 'dark' || t === 'sln' ? t : 'light'; };
+/** Same storage and attribute as Settings → Appearance (ThemePicker) and the pre-paint script in app/layout.tsx. */
+function applyTheme(t: ThemeName) {
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem('aih_theme', t); } catch { /* private mode: applied for this page only */ }
+  window.dispatchEvent(new Event('aih-theme'));
+}
+import { Bell, Flame, LogOut, Menu, Moon, Sun, Palette, X, Snowflake, Clock, Pause, ChevronRight, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { api } from '@/lib/client/api';
 import { NavIcon } from './icons';
 
@@ -19,11 +30,12 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
   const path = usePathname(); const router = useRouter();
   const [open, setOpen] = useState(false); const [notifOpen, setNotifOpen] = useState(false); const [menuOpen, setMenuOpen] = useState(false);
   const [notes, setNotes] = useState<Notif[] | null>(null); const [unread, setUnread] = useState(unread0);
-  const [dark, setDark] = useState(false);
+  // Top-bar theme switch cycles Light → Dark → SLN heritage, so SLN is never lost by a click (it used to reset to dark/light).
+  const [theme, setTheme] = useState<ThemeName>('light');
   // Collapsed ("rail") sidebar on desktop. Stored on <html data-sidebar> (set before paint in app/layout.tsx).
   const [rail, setRail] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null); const menuRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { setDark(document.documentElement.getAttribute('data-theme') === 'dark'); setRail(document.documentElement.getAttribute('data-sidebar') === 'rail'); }, []);
+  useEffect(() => { setTheme(currentTheme()); const onTheme = () => setTheme(currentTheme()); window.addEventListener('aih-theme', onTheme); setRail(document.documentElement.getAttribute('data-sidebar') === 'rail'); return () => window.removeEventListener('aih-theme', onTheme); }, []);
   const toggleRail = () => setRail(r => {
     const next = !r;
     if (next) document.documentElement.setAttribute('data-sidebar', 'rail'); else document.documentElement.removeAttribute('data-sidebar');
@@ -49,7 +61,7 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
     document.addEventListener('mousedown', onDoc); document.addEventListener('keydown', onKey);
     return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); };
   }, []);
-  const toggleTheme = () => { const d = !dark; setDark(d); document.documentElement.setAttribute('data-theme', d ? 'dark' : 'light'); try { localStorage.setItem('aih_theme', d ? 'dark' : 'light'); } catch {} };
+  const toggleTheme = () => { const t = NEXT_THEME[theme]; setTheme(t); applyTheme(t); };
   const openNotifs = async () => { const next = !notifOpen; setNotifOpen(next); setMenuOpen(false); if (next) { const r = await api<{ items: Notif[] }>('/api/v1/notifications').catch(() => ({ items: [] })); setNotes(r.items); } };
   const markAll = async () => { await api('/api/v1/notifications', { method: 'PATCH', body: { all: true } }); setNotes(n => n?.map(x => ({ ...x, read: true })) || null); setUnread(0); };
   const matches = (href: string) => path === href || (href !== '/dashboard' && path.startsWith(href + '/'));
@@ -99,7 +111,7 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
           <div className="top-right">
             {sv && streak && <Link href="/dashboard#streak" className={`pill pill-streak ${sv.cls}`} title={`Streak: ${streak.current} (${streak.status})`}><sv.I size={15} aria-hidden="true" /><span><b>{streak.current}</b><span className="days-word"> {sv.w}</span></span></Link>}
             {typeof xp === 'number' && <Link href="/achievements" className="pill pill-rank" title="Total XP">{xp.toLocaleString('en-IN')} XP</Link>}
-            <button className="icon-btn" type="button" onClick={toggleTheme} aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}>{dark ? <Moon size={18} /> : <Sun size={18} />}</button>
+            <button className="icon-btn" type="button" onClick={toggleTheme} aria-label={`Theme: ${THEME_LABEL[theme]}. Switch to ${THEME_LABEL[NEXT_THEME[theme]]}`} title={`Theme: ${THEME_LABEL[theme]} (click for ${THEME_LABEL[NEXT_THEME[theme]]})`}>{theme === 'dark' ? <Moon size={18} /> : theme === 'sln' ? <Palette size={18} /> : <Sun size={18} />}</button>
             <div className="user-wrap" ref={bellRef}>
               <button className="icon-btn" type="button" aria-haspopup="true" aria-expanded={notifOpen} aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`} onClick={openNotifs}><Bell size={18} />{unread > 0 && <span className="count">{unread > 9 ? '9+' : unread}</span>}</button>
               {notifOpen && (

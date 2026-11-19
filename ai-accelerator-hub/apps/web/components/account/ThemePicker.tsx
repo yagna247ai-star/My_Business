@@ -13,7 +13,10 @@ const OPTIONS: { value: Choice; label: string; note: string }[] = [
 export function ThemePicker() {
   const [value, setValue] = useState<Choice>('system');
   useEffect(() => {
-    try { setValue(((localStorage.getItem('aih_theme') as Choice) || 'system')); } catch { /* private mode: keep default */ }
+    const read = () => { try { setValue(((localStorage.getItem('aih_theme') as Choice) || 'system')); } catch { /* private mode: keep default */ } };
+    read();
+    window.addEventListener('aih-theme', read); // the top-bar theme button changed it
+    return () => window.removeEventListener('aih-theme', read);
   }, []);
 
   function choose(v: Choice) {
@@ -23,6 +26,7 @@ export function ThemePicker() {
     if (v === 'sln') h.setAttribute('data-theme', 'sln');
     else if (v === 'system') h.setAttribute('data-theme', matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     else h.setAttribute('data-theme', v);
+    window.dispatchEvent(new Event('aih-theme')); // keep the top-bar theme button in step
   }
 
   return (
