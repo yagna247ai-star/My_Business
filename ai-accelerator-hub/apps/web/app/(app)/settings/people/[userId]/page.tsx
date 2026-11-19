@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
-import { requirePerm, hasPerm } from '@/lib/server/context';
+import { requirePerm } from '@/lib/server/context';
 import { guarded } from '@/lib/server/page';
 import { personProfile } from '@/lib/domain/personProfile';
 
@@ -17,7 +17,7 @@ async function PersonProfile({ params }: { params: Promise<{ userId: string }> }
   const p = await personProfile(ctx, userId);
   const active = p.journeys.find(j => j.state === 'active') ?? p.journeys[0];
   const initials = p.name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  const backHref = hasPerm(ctx, 'members:manage') ? '/settings/people' : '/admin/people';
+  const backHref = '/settings/people';
 
   return (<>
     <Link href={backHref} className="link small" style={{ marginBottom: 12 }}><ArrowLeft size={14} />Back to People</Link>

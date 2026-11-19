@@ -25,7 +25,7 @@ async function Analytics() {
       </section>
       <section className="card card-pad span-4 stack gap-12" aria-labelledby="sT"><h2 className="h3" id="sT">Streak health</h2>
         {([['active', 'Active'], ['frozen', 'Protected by freeze'], ['grace', 'At risk (grace)'], ['recovery', 'Paused — can recover'], ['new', 'Not started']] as const).map(([k, l]) => <div key={k}><div className="row between small"><span className="bold">{l}</span><span className="muted">{sh[k] || 0}</span></div><div className="bar blue" style={{ marginTop: 6 }}><i style={{ width: `${Math.max(2, ((sh[k] || 0) / total) * 100)}%` }} /></div></div>)}
-        <Link className="link small" href="/admin/people">See who needs a nudge →</Link>
+        <Link className="link small" href="/settings/people?filter=attention">See who needs a nudge →</Link>
       </section>
     </div>
   </>);

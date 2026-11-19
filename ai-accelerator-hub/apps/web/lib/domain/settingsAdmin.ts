@@ -362,7 +362,7 @@ export function settingsSections(ctx: Ctx) {
   return {
     institute: hasPerm(ctx, 'institute:manage'),
     institutes: ctx.superAdmin,
-    people: hasPerm(ctx, 'members:manage'),
+    people: hasPerm(ctx, 'members:read'),
     cohorts: hasPerm(ctx, 'cohort:manage'),
     talent: hasPerm(ctx, 'talent:post') || hasPerm(ctx, 'members:manage'),
   };
