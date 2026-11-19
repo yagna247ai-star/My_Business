@@ -5,7 +5,7 @@
 import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { badRequest, conflict, forbidden, notFound } from '@/lib/server/errors';
-import { audit, notify } from '@/lib/server/audit';
+import { audit, notify, notifyMany } from '@/lib/server/audit';
 import { awardXp } from './xp';
 import { touchStreak } from './streak';
 import { evaluateBadges } from './badges';
@@ -193,7 +193,7 @@ export async function submitProof(ctx: Ctx, code: string, p: { evidenceUrl: stri
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'submission.created', resourceType: 'Submission', resourceId: sub.id, after: { attempt, level: code } });
     await notify(tx, ctx.tenantId, ctx.userId, 'submission_received', { title: 'Proof received', body: `Attempt ${attempt} is in the review queue. Try the Boss challenge while you wait.`, href: `/levels/${code}?a=6`, tone: 'info' });
     const reviewers = await tx.membership.findMany({ where: { tenantId: ctx.tenantId, status: 'active', role: { code: { in: ['reviewer', 'mentor', 'instructor'] } } } });
-    for (const r of reviewers) await notify(tx, ctx.tenantId, r.userId, 'submission_needs_review', { title: `New proof: ${ctx.name}`, body: `${st.level.title} · attempt ${attempt}`, href: `/review/${sub.id}`, tone: 'gold' });
+    await notifyMany(tx, ctx.tenantId, reviewers.map(r => r.userId), 'submission_needs_review', { title: `New proof: ${ctx.name}`, body: `${st.level.title} · attempt ${attempt}`, href: `/review/${sub.id}`, tone: 'gold' });
     return { submissionId: sub.id, attempt, xp: xp.amount };
   });
   await runAutoReview(ctx.tenantId, st.progress.id);

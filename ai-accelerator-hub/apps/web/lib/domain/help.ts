@@ -8,7 +8,7 @@ import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { hasPerm } from '@/lib/server/context';
 import { badRequest, conflict, forbidden, notFound, tooMany } from '@/lib/server/errors';
-import { audit, notify } from '@/lib/server/audit';
+import { audit, notify, notifyMany } from '@/lib/server/audit';
 import { redact } from '@/lib/ai/coach';
 import { hasSecret } from './agentLab';
 import { childStatus } from './childSafety';
@@ -55,7 +55,7 @@ export async function createHelpRequest(ctx: Ctx, raw: unknown) {
     const r = await tx.helpRequest.create({ data: { tenantId: ctx.tenantId, learnerId: ctx.userId, runId: run.id, agent: run.agent, os: run.os, method, stepId: step.id, stepTitle: step.title, errorText: text, matchedIds: JSON.stringify(matched) } });
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'help.requested', resourceType: 'HelpRequest', resourceId: r.id, after: { agent: run.agent, os: run.os, step: step.id, matched } });
     const staff = await tx.membership.findMany({ where: { tenantId: ctx.tenantId, status: 'active', role: { code: { in: STAFF } } } });
-    for (const m of staff) await notify(tx, ctx.tenantId, m.userId, 'help_requested', { title: `Help needed: ${step.title}`, body: `${ctx.name} · ${run.agent.replace('_', ' ')} on ${run.os}`, href: '/review/help', tone: 'gold' });
+    await notifyMany(tx, ctx.tenantId, staff.map(m => m.userId), 'help_requested', { title: `Help needed: ${step.title}`, body: `${ctx.name} · ${run.agent.replace('_', ' ')} on ${run.os}`, href: '/review/help', tone: 'gold' });
     return r;
   });
   return view(r, [], new Map());
@@ -103,7 +103,7 @@ export async function replyHelp(ctx: Ctx, id: string, raw: unknown) {
     if (role === 'staff') await notify(tx, ctx.tenantId, r.learnerId, 'help_answered', { title: `A mentor replied: ${r.stepTitle}`, body: body.slice(0, 140), href: '/agent-lab', tone: 'ok' });
     else {
       const staff = await tx.helpMessage.findMany({ where: { requestId: r.id, authorRole: 'staff' }, select: { authorId: true }, distinct: ['authorId'] });
-      for (const s of staff) await notify(tx, ctx.tenantId, s.authorId, 'help_learner_replied', { title: `Learner replied: ${r.stepTitle}`, body: body.slice(0, 140), href: '/review/help', tone: 'info' });
+      await notifyMany(tx, ctx.tenantId, staff.map(s => s.authorId), 'help_learner_replied', { title: `Learner replied: ${r.stepTitle}`, body: body.slice(0, 140), href: '/review/help', tone: 'info' });
     }
   });
   return { ok: true as const };

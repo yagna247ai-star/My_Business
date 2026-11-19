@@ -13,6 +13,18 @@ export async function notify(tx: Tx, tenantId: string, userId: string, template:
   await tx.notification.create({ data: { tenantId, userId, template, payload: JSON.stringify(payload), channel: 'in_app', state: 'sent', sentAt: new Date() } });
 }
 
+/**
+ * The same notification to many people in ONE insert. Use inside transactions instead of a `for … await notify()`
+ * loop: one round trip per recipient made submit transactions exceed Prisma's 5 s limit as reviewer lists grew.
+ * Duplicate recipients get one notification.
+ */
+export async function notifyMany(tx: Tx, tenantId: string, userIds: string[], template: string, payload: NotifPayload) {
+  const ids = [...new Set(userIds)];
+  if (!ids.length) return;
+  const now = new Date(); const body = JSON.stringify(payload);
+  await tx.notification.createMany({ data: ids.map(userId => ({ tenantId, userId, template, payload: body, channel: 'in_app', state: 'sent', sentAt: now })) });
+}
+
 export async function listNotifications(tenantId: string, userId: string, take = 30) {
   const rows = await prisma.notification.findMany({ where: { tenantId, userId, channel: 'in_app' }, orderBy: { createdAt: 'desc' }, take });
   return rows.map(r => ({ id: r.id, template: r.template, read: r.state === 'read', at: r.createdAt, ...(JSON.parse(r.payload || '{}') as NotifPayload) }));

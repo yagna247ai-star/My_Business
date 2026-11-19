@@ -7,7 +7,7 @@
   --script:'Caveat','Segoe Script',cursive;
   --r-lg:20px; --r:16px; --r-sm:12px; --r-xs:10px;
   --side-w:264px; --side-rail:76px; --header-h:64px;
-  --content-max:980px;
+  --content-max:980px;--content-max-wide:1680px;
 
   /* Sidebar is dark in both themes (reference) */
   --side-bg:linear-gradient(180deg,#0C1F3F 0%,#081830 42%,#061229 100%);
@@ -168,6 +168,10 @@ img{max-width:100%;display:block}
 .only-mobile{display:none}
 main{flex:1;width:100%;max-width:calc(var(--content-max) + 56px);margin:0 auto;padding:28px 28px 120px}
 main:focus{outline:none}
+/* Collapsed side menu: the page uses the whole centre area (same layout, just wider). Capped only so lines and
+   tables stay readable on very large monitors; on laptops and normal screens this is effectively full width. */
+[data-sidebar="rail"] main{max-width:var(--content-max-wide)}
+@media (prefers-reduced-motion:no-preference){main{transition:max-width .25s ease}}
 
 /* Mobile shell */
 @media (max-width:1023px){

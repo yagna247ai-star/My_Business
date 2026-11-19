@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { AppError, badRequest, conflict, forbidden, notFound } from '@/lib/server/errors';
-import { audit, notify } from '@/lib/server/audit';
+import { audit, notify, notifyMany } from '@/lib/server/audit';
 import { awardXp } from './xp';
 import { touchStreak } from './streak';
 import { evaluateBadges } from './badges';
@@ -200,14 +200,17 @@ export async function submitRun(ctx: Ctx, id: string, opts: { acknowledge?: bool
   const weak = a.items.filter(x => !x.gateFailed && x.points < x.max); // includes partial points on a passed gate check (e.g. a small screenshot)
   if (weak.length && !opts.acknowledge) throw new AppError(409, 'ACK_REQUIRED', `Some checks are not full marks (${weak.map(x => x.id).join(', ')}). Fix them, or confirm you understand they lower your score.`);
   const checks = { version: 2, items: a.items, total: a.total, max: a.max, gatesOk: a.gatesOk, acknowledged: weak.length ? weak.map(x => x.id) : [] };
-  return prisma.$transaction(async tx => {
+  // Build the response after the commit: viewWithShot reads through the global client, and doing that inside the
+  // transaction needs a second connection while this one is held (stalls to the 5 s timeout when connections are scarce).
+  const submitted = await prisma.$transaction(async tx => {
     const up = await tx.agentLabRun.update({ where: { id: r.id }, data: { state: 'submitted', attempts: { increment: 1 }, autoChecks: JSON.stringify(checks) } });
     await touchStreak(tx, ctx.tenantId, ctx.userId);
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'agent_lab.submitted', resourceType: 'AgentLabRun', resourceId: r.id, after: { agent: r.agent, attempt: up.attempts, checks } });
     const reviewers = await tx.membership.findMany({ where: { tenantId: ctx.tenantId, status: 'active', role: { code: { in: ['reviewer', 'mentor', 'instructor'] } } } });
-    for (const m of reviewers) await notify(tx, ctx.tenantId, m.userId, 'agent_lab_needs_review', { title: `Agent Lab proof: ${ctx.name}`, body: `${AGENTS[r.agent as AgentCode].name} · attempt ${up.attempts}`, href: '/review/agent-lab', tone: 'gold' });
-    return viewWithShot(up);
+    await notifyMany(tx, ctx.tenantId, reviewers.map(m => m.userId), 'agent_lab_needs_review', { title: `Agent Lab proof: ${ctx.name}`, body: `${AGENTS[r.agent as AgentCode].name} · attempt ${up.attempts}`, href: '/review/agent-lab', tone: 'gold' });
+    return up;
   });
+  return viewWithShot(submitted);
 }
 
 /* ---------- reviewer side ---------- */

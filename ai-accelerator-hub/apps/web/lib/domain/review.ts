@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { hasPerm } from '@/lib/server/context';
 import { badRequest, conflict, forbidden, notFound } from '@/lib/server/errors';
-import { audit, notify } from '@/lib/server/audit';
+import { audit, notify, notifyMany } from '@/lib/server/audit';
 import { awardXp } from './xp';
 import { evaluateBadges } from './badges';
 import { parseCfg } from './journey';
@@ -118,7 +118,7 @@ export async function openAppeal(ctx: Ctx, reviewId: string, note: string) {
     await tx.review.update({ where: { id: r.id }, data: { appealState: 'open', appealNote: note.trim() } });
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'review.appeal_opened', resourceType: 'Review', resourceId: r.id });
     const staff = await tx.membership.findMany({ where: { tenantId: ctx.tenantId, status: 'active', role: { code: { in: ['program_mgr', 'tenant_admin'] } } } });
-    for (const m of staff) await notify(tx, ctx.tenantId, m.userId, 'appeal_opened', { title: `Appeal from ${ctx.name}`, body: note.trim().slice(0, 140), href: `/review/${r.submissionId}`, tone: 'warn' });
+    await notifyMany(tx, ctx.tenantId, staff.map(m => m.userId), 'appeal_opened', { title: `Appeal from ${ctx.name}`, body: note.trim().slice(0, 140), href: `/review/${r.submissionId}`, tone: 'warn' });
     return { ok: true };
   });
 }
