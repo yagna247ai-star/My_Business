@@ -3,6 +3,8 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { requirePerm } from '@/lib/server/context';
 import { guarded } from '@/lib/server/page';
 import { personProfile } from '@/lib/domain/personProfile';
+import { learnerTrack } from '@/lib/domain/journeyTracks';
+import { StaffTrackCard } from '@/components/settings/StaffTrackCard';
 
 export const metadata = { title: 'Person profile' };
 
@@ -14,7 +16,7 @@ const Badge = ({ s }: { s: string }) => <span className={`badge ${STATE_BADGE[s]
 async function PersonProfile({ params }: { params: Promise<{ userId: string }> }) {
   const ctx = await requirePerm('members:read');
   const { userId } = await params;
-  const p = await personProfile(ctx, userId);
+  const [p, track] = await Promise.all([personProfile(ctx, userId), learnerTrack(ctx, userId).catch(() => null)]);
   const active = p.journeys.find(j => j.state === 'active') ?? p.journeys[0];
   const initials = p.name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const backHref = '/settings/people';
@@ -39,6 +41,7 @@ async function PersonProfile({ params }: { params: Promise<{ userId: string }> }
       </div>
       <div className="small muted" style={{ textAlign: 'right' }}>Joined {fmt(p.joinedAt)}<br />Last activity {fmt(active?.lastActivity ?? null)}</div>
     </section>
+    {track && <StaffTrackCard userId={userId} name={p.name} track={track} />}
 
     <div className="kpis" style={{ margin: '18px 0' }}>
       <div className="card kpi"><div className="k">XP</div><div className="v">{p.xp.toLocaleString('en-IN')}</div><div className="d">{p.rank} · {p.tier} tier</div></div>

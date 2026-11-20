@@ -1385,3 +1385,23 @@ model HelpMessage {
   @@index([requestId, createdAt])
   @@map("help_messages")
 }
+
+// ── Journey tracks (Easy / Intermediate / Hard / Critical) ──
+// A request to move a learner to another track of the same domain. Staff create it; the learner chooses how to
+// continue (keep progress or restart). Allowed only until Module 1 is approved; points are always kept.
+model TrackChange {
+  id            String    @id @default(cuid())
+  tenantId      String
+  userId        String
+  fromJourneyId String
+  toJourneyId   String
+  requestedBy   String // user id of the staff member (or the learner)
+  reason        String?
+  state         String    @default("pending") // pending | applied | cancelled
+  mode          String? // continue | restart (chosen by the learner)
+  createdAt     DateTime  @default(now())
+  decidedAt     DateTime?
+
+  @@index([tenantId, userId, state])
+  @@map("track_changes")
+}

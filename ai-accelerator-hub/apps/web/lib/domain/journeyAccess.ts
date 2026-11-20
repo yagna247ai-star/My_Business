@@ -42,10 +42,10 @@ export async function defaultJourney(db: Db, tenantId: string) {
 
 /** Published journeys a new learner can choose, default first, with a short description for the sign-up form. */
 /** The registration form only needs the domain tag; never pass the whole config JSON to the browser. */
-function publicJourneyConfig(raw: string | null): { family: string; domain: string; name: string; problem: string } | null {
+export function publicJourneyConfig(raw: string | null): { family: string; domain: string; name: string; problem: string; track?: string } | null {
   const c = parseSettings(raw);
   return typeof c.family === 'string' && typeof c.domain === 'string'
-    ? { family: c.family, domain: c.domain, name: String(c.name ?? c.domain), problem: String(c.problem ?? '') }
+    ? { family: c.family, domain: c.domain, name: String(c.name ?? c.domain), problem: String(c.problem ?? ''), ...(typeof c.track === 'string' ? { track: c.track } : {}) }
     : null;
 }
 

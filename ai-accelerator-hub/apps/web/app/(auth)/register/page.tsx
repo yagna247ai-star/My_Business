@@ -4,9 +4,10 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { api, ApiError } from '@/lib/client/api';
+import { TrackPicker } from '@/components/learn/TrackPicker';
 
-type Form = { name: string; email: string; password: string; birthYear: string; inviteCode: string; guardianEmail: string; journeySlug: string; acceptTerms: boolean };
-type JourneyOption = { slug: string; title: string; description: string | null; levels: number; isDefault: boolean; config?: { family: string; domain: string; name: string; problem: string } | null };
+type Form = { name: string; email: string; password: string; birthYear: string; inviteCode: string; guardianEmail: string; journeySlug: string; acceptTerms: boolean; trackAck: boolean };
+type JourneyOption = { slug: string; title: string; description: string | null; levels: number; isDefault: boolean; config?: { family: string; domain: string; name: string; problem: string; track?: string } | null };
 const DOMAIN_FAMILY = 'data-analytics-domain'; // domain journeys are grouped under one "by industry" choice
 type Key = keyof Form;
 const THIS_YEAR = new Date().getFullYear();
@@ -19,7 +20,7 @@ function youngestAge(birthYear: string): number | null {
   return THIS_YEAR - y - 1;
 }
 
-function validate(f: Form): Partial<Record<Key, string>> {
+function validate(f: Form, needsTrack = false): Partial<Record<Key, string>> {
   const e: Partial<Record<Key, string>> = {};
   if (f.name.trim().length < 2) e.name = 'Enter your full name.';
   if (!EMAIL_RE.test(f.email.trim())) e.email = 'Enter a valid email address.';
@@ -32,16 +33,18 @@ function validate(f: Form): Partial<Record<Key, string>> {
     if (!EMAIL_RE.test(f.guardianEmail.trim())) e.guardianEmail = 'A parent or guardian email is required for learners under 18.';
     else if (f.guardianEmail.trim().toLowerCase() === f.email.trim().toLowerCase()) e.guardianEmail = 'Use your parent or guardian’s email, not your own.';
   }
+  if (needsTrack && !f.journeySlug) e.journeySlug = 'Choose your track.';
   if (!f.acceptTerms) e.acceptTerms = 'Accept the terms and privacy notice to continue.';
   return e;
 }
 
-const ORDER: Key[] = ['name', 'email', 'password', 'birthYear', 'guardianEmail', 'inviteCode', 'journeySlug', 'acceptTerms'];
+const ORDER: Key[] = ['name', 'email', 'password', 'birthYear', 'guardianEmail', 'inviteCode', 'journeySlug', 'trackAck', 'acceptTerms'];
 
 export default function RegisterPage() {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const [f, setF] = useState<Form>({ name: '', email: '', password: '', birthYear: '', inviteCode: '', guardianEmail: '', journeySlug: '', acceptTerms: false });
+  const [f, setF] = useState<Form>({ name: '', email: '', password: '', birthYear: '', inviteCode: '', guardianEmail: '', journeySlug: '', acceptTerms: false, trackAck: false });
+  const [domainKey, setDomainKey] = useState(''); // chosen industry domain (several journeys when it has tracks)
   const [journeys, setJourneys] = useState<JourneyOption[] | null>(null);
   const [journeyCode, setJourneyCode] = useState(''); // invite code the journey list was loaded for
   const [errors, setErrors] = useState<Partial<Record<Key, string>>>({});
@@ -75,14 +78,15 @@ export default function RegisterPage() {
     e.preventDefault();
     if (busy) return;
     setMsg('');
-    const local = validate(f);
+    const local = validate(f, !!domainKey && !f.journeySlug);
+    if (domainKey && f.journeySlug && !f.trackAck && /-critical$/.test(f.journeySlug)) local.trackAck = 'Tick the box to confirm the rules for the Critical track.';
     if (Object.keys(local).length) { setErrors(local); setMsg('Please fix the highlighted fields.'); focusFirst(local); return; }
     setErrors({}); setBusy(true);
     try {
       await api('/api/v1/register', {
         body: {
           name: f.name.trim(), email: f.email.trim(), password: f.password, birthYear: Number(f.birthYear),
-          inviteCode: f.inviteCode.trim(), guardianEmail: minor ? f.guardianEmail.trim() : '', journeySlug: f.journeySlug, acceptTerms: f.acceptTerms,
+          inviteCode: f.inviteCode.trim(), guardianEmail: minor ? f.guardianEmail.trim() : '', journeySlug: f.journeySlug, acceptTerms: f.acceptTerms, trackAck: f.trackAck,
         },
       });
       router.push(`/login?registered=1&email=${encodeURIComponent(f.email.trim())}`);
@@ -130,36 +134,49 @@ export default function RegisterPage() {
             <div className="stack gap-8" id="journeySlug">
               {(() => {
                 const pick = (slug: string) => { setF(p => ({ ...p, journeySlug: slug })); if (errors.journeySlug) setErrors(p => { const n = { ...p }; delete n.journeySlug; return n; }); };
-                const domains = journeys.filter(j => j.config?.family === DOMAIN_FAMILY).sort((a, b) => a.config!.name.localeCompare(b.config!.name));
+                const domainJourneys = journeys.filter(j => j.config?.family === DOMAIN_FAMILY);
                 const general = journeys.filter(j => j.config?.family !== DOMAIN_FAMILY);
-                const chosenDomain = domains.find(d => d.slug === f.journeySlug);
+                // One entry per industry domain; a domain with tracks has one journey per track (the Hard track names the domain).
+                const byDomain = new Map<string, JourneyOption[]>();
+                for (const j of domainJourneys) byDomain.set(j.config!.domain, [...(byDomain.get(j.config!.domain) ?? []), j]);
+                const domains = [...byDomain.entries()].map(([key, list]) => ({ key, list, main: list.find(j => !j.config!.track || j.config!.track === 'hard') ?? list[0], tracked: list.some(j => j.config!.track) }))
+                  .sort((a, b) => a.main.config!.name.localeCompare(b.main.config!.name));
+                const current = domains.find(d => d.key === domainKey) ?? domains.find(d => d.list.some(j => j.slug === f.journeySlug));
+                const domainActive = !!current && (current.list.some(j => j.slug === f.journeySlug) || (current.tracked && f.journeySlug === ''));
+                const chooseDomain = (key: string) => { const d = domains.find(x => x.key === key); if (!d) return; setDomainKey(key); setF(p => ({ ...p, trackAck: false })); pick(d.tracked ? '' : d.main.slug); };
                 return (<>
                   {general.map(j => (
                     <label key={j.slug} className="card card-pad" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', borderColor: f.journeySlug === j.slug ? 'var(--gold, currentColor)' : undefined }}>
-                      <input type="radio" name="journeySlug" value={j.slug} checked={f.journeySlug === j.slug} disabled={busy} style={{ marginTop: 3, flex: 'none' }} onChange={() => pick(j.slug)} />
+                      <input type="radio" name="journeySlug" value={j.slug} checked={f.journeySlug === j.slug && !domainActive} disabled={busy} style={{ marginTop: 3, flex: 'none' }} onChange={() => { setDomainKey(''); pick(j.slug); }} />
                       <span><b>{j.title}</b>{j.isDefault && <span className="badge badge-gold" style={{ marginLeft: 8 }}>Recommended</span>}
                         <span className="small text-2" style={{ display: 'block' }}>{j.description || `${j.levels} levels`}</span></span>
                     </label>
                   ))}
                   {domains.length > 0 && (
-                    <div className="card card-pad" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', borderColor: chosenDomain ? 'var(--gold, currentColor)' : undefined }}>
-                      <input type="radio" name="journeySlug" value="domain" aria-label="Data Analytics by industry domain" checked={!!chosenDomain} disabled={busy} style={{ marginTop: 3, flex: 'none' }} onChange={() => pick((chosenDomain ?? domains[0]).slug)} />
+                    <div className="card card-pad" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', borderColor: domainActive ? 'var(--gold, currentColor)' : undefined }}>
+                      <input type="radio" name="journeySlug" value="domain" aria-label="Data Analytics by industry domain" checked={domainActive} disabled={busy} style={{ marginTop: 3, flex: 'none' }} onChange={() => chooseDomain((current ?? domains[0]).key)} />
                       <span style={{ flex: 1, minWidth: 0 }}>
                         <b>Data Analytics by industry domain</b><span className="badge badge-info" style={{ marginLeft: 8 }}>{domains.length} domains</span>
                         <span className="small text-2" style={{ display: 'block' }}>45 days on one real enterprise problem from your industry: Databricks, Unity Catalog, bronze/silver/gold, Power BI, ML and go-live.</span>
                         <label className="field-label" htmlFor="domainSelect" style={{ marginTop: 10 }}>Your industry domain</label>
-                        <select id="domainSelect" className="select" value={chosenDomain?.slug ?? ''} disabled={busy} onChange={e => e.target.value && pick(e.target.value)}>
-                          {!chosenDomain && <option value="">Choose a domain…</option>}
-                          {domains.map(d => <option key={d.slug} value={d.slug}>{d.config!.name} — {d.config!.problem}</option>)}
+                        <select id="domainSelect" className="select" value={domainActive ? current!.key : ''} disabled={busy} onChange={e => e.target.value && chooseDomain(e.target.value)}>
+                          {!domainActive && <option value="">Choose a domain…</option>}
+                          {domains.map(d => <option key={d.key} value={d.key}>{d.main.config!.name} — {d.tracked ? '4 tracks: Easy to Critical' : d.main.config!.problem}</option>)}
                         </select>
-                        {chosenDomain && <span className="small text-2" style={{ display: 'block', marginTop: 6 }}>{chosenDomain.description}</span>}
+                        {domainActive && !current!.tracked && <span className="small text-2" style={{ display: 'block', marginTop: 6 }}>{current!.main.description}</span>}
+                        {domainActive && current!.tracked && (
+                          <TrackPicker domain={current!.key} options={current!.list.map(j => ({ slug: j.slug, track: j.config!.track ?? 'hard' }))} value={f.journeySlug} disabled={busy}
+                            onPick={slug => { setF(p => ({ ...p, journeySlug: slug, trackAck: false })); setErrors(p => { const n = { ...p }; delete n.journeySlug; delete n.trackAck; return n; }); }}
+                            ack={f.trackAck} onAck={v => { setF(p => ({ ...p, trackAck: v })); setErrors(p => { const n = { ...p }; delete n.trackAck; return n; }); }}
+                            error={errors.journeySlug || errors.trackAck} />
+                        )}
                       </span>
                     </div>
                   )}
                 </>);
               })()}
             </div>
-            {errors.journeySlug ? <div className="field-err" id="journeySlug-h" role="alert">{errors.journeySlug}</div> : <div className="field-hint">You can ask an admin to switch you later; your progress is kept.</div>}
+            {errors.journeySlug && !domainKey ? <div className="field-err" id="journeySlug-h" role="alert">{errors.journeySlug}</div> : <div className="field-hint">{domainKey ? 'Your track can change until Module 1 is complete; your points are always kept.' : 'You can ask an admin to switch you later; your progress is kept.'}</div>}
           </fieldset>
         )}
         <div>

@@ -68,6 +68,28 @@ The Data Analytics journey is generic: every learner gets the same examples. Lea
 - [ ] Playwright captures, for each of the 17 domains: registration with the domain selected, the journey map, a day page, and the dataset-check result.
 - [ ] All unit, integration and e2e tests pass; the CI pipeline is green; the guarded deploy passes the smoke test.
 
+## 6a. Problem dossiers, Ikigai ranking and difficulty tracks (v1.2, Education first)
+
+- **Problem dossier** (`lib/domain/daDomains/dossiers/education.ts`): the learner’s brief, one child’s 40-week timeline of missed signals, stakeholder voices, real public evidence with sources, unit economics and revenue impact with working, why now, what failed before, decisions to enable, raw data samples, a formal SCQA statement, success measures, and a real-world situation for each of the 45 days. Organisation and internal figures are illustrative; national facts are real and sourced.
+- **Ikigai ranking** (`dossiers/education-tracks.ts`): 8 candidate problems scored 1–5 on what the world needs, what can be paid for, what you become good at and what learners love; feasibility breaks ties. The top four become tracks.
+- **Four tracks**, each its own journey built from its own spec (`lib/domain/daDomains/tracks.ts`), so the problem statement, dataset and validation rules, day steps and solution change per track:
+
+| Track | Journey | Problem | Effort |
+|---|---|---|---|
+| Easy | `da-education-easy` | Catch-up radar for one campus | ≈ 1.5 h/day |
+| Intermediate | `da-education-intermediate` | Student 360° profile and talent finder | ≈ 2.5 h/day |
+| Hard | `da-education` (original slug; existing learners unaffected) | Early-warning prediction and counsellor allocation (with “Today in the field” on every day) | ≈ 3.5 h/day |
+| Critical | `da-education-critical` | Same-day safeguarding escalation (requires a safeguarding and data-ethics confirmation) | ≈ 4.5 h/day |
+
+**Rules (product decisions, 2026-11-20):**
+1. The learner chooses the track at sign-up; a 5-question Ikigai quiz recommends one.
+2. The track can change only until Module 1 is complete (Module 1 approved). From Module 2 to Day 45 it is fixed, for the learner and for staff.
+3. Staff can move a learner during Module 1. Allowed roles are set in **Settings → Learning tracks** (default Institution Admin, Program Manager, Instructor; Super Admin always), editable by Super Admin, Institution Admin and Program Manager.
+4. On any change the learner chooses: keep their Module 1 work, or restart Module 1. Points are always kept.
+5. Points are equal across tracks; **Standings** has a separate board per track (“<Track> track” tab).
+
+Data: new table `track_changes` (migration `0003_track_changes`). API: `GET/POST /api/v1/me/track`, `POST /api/v1/me/track/[id]`, `GET/POST /api/v1/settings/people/[userId]/track`, `GET/PUT /api/v1/settings/tracks`. Tests: `test/problem-tracks.test.ts` (unit), `test/journey-tracks.test.ts` (integration), `e2e/journey-tracks.spec.ts` (evidence).
+
 ## 7. Out of scope
 
 Automatic checking of screenshot content (a reviewer checks it), running Databricks or Power BI inside the app, real learner data (all datasets are synthetic).

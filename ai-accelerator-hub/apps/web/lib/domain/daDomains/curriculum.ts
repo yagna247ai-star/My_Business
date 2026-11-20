@@ -13,7 +13,7 @@ export type ActivityRow = { idx: number; code: string; title: string; xp: number
 export type LevelRow = { idx: number; code: string; title: string; summary: string; xp: number; days: DayPage[]; activities: ActivityRow[] };
 export type DomainJourney = {
   slug: string; title: string; description: string;
-  config: { family: string; domain: string; code: string; name: string; problem: string; catalog: string };
+  config: { family: string; domain: string; code: string; name: string; problem: string; catalog: string; track?: string };
   schemas: { dataset: DatasetSchema; silver: DatasetSchema; gold: DatasetSchema };
   levels: LevelRow[];
 };
@@ -483,11 +483,21 @@ export const MODULE_PLAN: ModuleTemplate[] = [
 
 /* ───────────── journey assembly ───────────── */
 
+/** Track deliverable for the day's module, and the day's real-world situation when the spec has one. */
+function trackBlock(d: DomainSpec, n: number): string[] {
+  const out: string[] = [];
+  const s = d.situations?.[n];
+  if (s) out.push('## Today in the field', s.scene, '', `**Why it hurts:** ${s.pain}`, '', `**Your task:** ${s.task}`, '', `**Done when:** ${s.doneWhen}`, '');
+  if (d.track) out.push(`## Your ${d.track.label} track this module`, d.track.deliverables[Math.floor((n - 1) / 5)] ?? '', '');
+  return out;
+}
+
 function dayMarkdown(d: DomainSpec, stage: string, n: number, x: ReturnType<ModuleTemplate['days'][number]>): string {
   const parts = [
     `# Day ${n} — ${x.title}`, '',
-    `**Domain:** ${d.name} · **Problem:** ${d.problem.title}`, '',
+    `**Domain:** ${d.name} · **Problem:** ${d.problem.title}${d.track ? ` · **Track:** ${d.track.label}` : ''}`, '',
     `**${stage}**`, '',
+    ...trackBlock(d, n),
     '## Goal', x.goal, '',
     `## Why it matters for ${d.name}`, x.why, '',
     '## Steps', numbered(x.steps), '',
@@ -504,7 +514,8 @@ export function buildDomainJourney(d: DomainSpec): DomainJourney {
   const c: Ctx = { d, s: schemas };
   const levels: LevelRow[] = MODULE_PLAN.map((m, i) => {
     const n = i + 1; const code = `${d.code}_M${n}_${m.suffix}`; const x = xpSplit(m.xp); const seed = `${d.slug}:${n}`;
-    const b = m.briefing(c);
+    const b0 = m.briefing(c);
+    const b = d.track ? { ...b0, outcome: `${d.track.label} track: ${d.track.deliverables[i] ?? b0.outcome}`, problem: i === 0 ? `${d.track.question} ${b0.problem}` : b0.problem } : b0;
     const bossSpec = m.boss(c);
     const days = m.days.map((fn, k) => { const day = i * 5 + k + 1; const r = fn(c); return { day, title: r.title, body: dayMarkdown(d, m.stage, day, r) }; });
     const evidenceTitle = m.evidence === 'dataset' ? `Dataset Check: ${m.layer === 'gold' ? 'Gold KPI Mart' : m.layer === 'silver' ? 'Silver Table' : 'Structured Dataset'}` : 'Screenshot Evidence';
@@ -523,9 +534,9 @@ export function buildDomainJourney(d: DomainSpec): DomainJourney {
   });
   return {
     slug: `da-${d.slug}`,
-    title: `Data Analytics · ${d.name}: ${d.problem.title}`,
-    description: `45 days, 9 modules: solve "${d.problem.title}" end to end with Databricks, Unity Catalog, the medallion architecture and Power BI.`,
-    config: { family: DOMAIN_FAMILY, domain: d.slug, code: d.code, name: d.name, problem: d.problem.title, catalog: d.catalog },
+    title: d.track ? `Data Analytics · ${d.name} · ${d.track.label}: ${d.track.title}` : `Data Analytics · ${d.name}: ${d.problem.title}`,
+    description: d.track ? `${d.track.label} track, 45 days, 9 modules: ${d.track.question}` : `45 days, 9 modules: solve "${d.problem.title}" end to end with Databricks, Unity Catalog, the medallion architecture and Power BI.`,
+    config: { family: DOMAIN_FAMILY, domain: d.track?.of ?? d.slug, code: d.code, name: d.name, problem: d.track?.title ?? d.problem.title, catalog: d.catalog, ...(d.track ? { track: d.track.level } : {}) },
     schemas, levels,
   };
 }

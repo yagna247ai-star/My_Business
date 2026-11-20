@@ -24,6 +24,25 @@ export type DomainSpec = {
   insight: string;         // an example of the kind of finding the capstone should reach
   /** Production scale, SLA, regulations, PII to mask and the SCD Type 2 dimension (lib/domain/daDomains/enterprise.ts). */
   enterprise: EnterpriseProfile;
+  /** Set when this journey is one difficulty track of a domain (e.g. Education · Easy). */
+  track?: TrackInfo;
+  /** Optional real-world situation for each day (1–45), shown at the top of the day page. */
+  situations?: Record<number, { scene: string; pain: string; task: string; doneWhen: string }>;
+};
+
+export type TrackLevelName = 'easy' | 'intermediate' | 'hard' | 'critical';
+export type TrackInfo = {
+  level: TrackLevelName;
+  /** The domain this track belongs to (e.g. 'education'). */
+  of: string;
+  label: string;
+  title: string;
+  question: string;
+  /** One deliverable per module (9). */
+  deliverables: string[];
+  solution: string;
+  effort: string;
+  gate?: string;
 };
 
 /* Column helpers keep the catalogue readable. */

@@ -50,10 +50,11 @@ describe('Domain journeys (integration)', () => {
   });
   beforeEach(() => _resetRateLimits());
 
-  it('registration offers all 17 domain journeys, each tagged with its domain', async () => {
+  it('registration offers all 17 domains (20 journeys: Education has 4 tracks), each tagged with its domain', async () => {
     const list = await registrationJourneys(prisma, learner.tenantId);
     const domains = list.filter(j => (j.config as { family?: string } | null)?.family === DOMAIN_FAMILY);
-    expect(domains).toHaveLength(17);
+    expect(domains).toHaveLength(20);
+    expect(new Set(domains.map(d => (d.config as { domain: string }).domain)).size).toBe(17);
     expect(domains.map(d => d.slug)).toContain('da-energy-utilities');
   });
 

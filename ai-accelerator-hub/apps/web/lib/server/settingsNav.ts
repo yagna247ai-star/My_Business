@@ -1,6 +1,7 @@
 import type { Ctx } from '@/lib/server/context';
 import { hasPerm } from '@/lib/server/context';
 import { settingsSections } from '@/lib/domain/settingsAdmin';
+import { canEditTrackSettings } from '@/lib/domain/trackRules';
 import type { SettingsIcon, SettingsLink } from '@/components/settings/SettingsNav';
 
 export type SettingsCard = SettingsLink & { description: string; admin: boolean };
@@ -14,6 +15,7 @@ export function settingsCards(ctx: Ctx): SettingsCard[] {
   if (s.people) out.push(c('/settings/people', 'People', 'people', 'Administration', 'Everyone, their progress and streaks; add, edit, nudge or remove people, and open any profile.', true));
   if (s.cohorts) out.push(c('/settings/cohorts', 'Cohorts', 'cohorts', 'Administration', 'Create cohorts, set dates and size, refresh invite codes, delete cohorts.', true));
   if (s.talent) out.push(c('/settings/talent', 'Talent', 'talent', 'Administration', 'Post and manage opportunities, and moderate learner talent profiles.', true));
+  if (canEditTrackSettings(ctx)) out.push(c('/settings/tracks', 'Learning tracks', 'learn', 'Program', 'Choose which staff roles can move learners between Easy, Intermediate, Hard and Critical tracks.', true));
   if (hasPerm(ctx, 'content:manage')) out.push(c('/admin/journeys', 'Journeys', 'journeys', 'Program', 'Build journeys and levels. Super Admin picks the default journey.', true));
   if (hasPerm(ctx, 'cohort:manage')) out.push(c('/admin/hackathons', 'Hackathons', 'hackathons', 'Program', 'Create and run hackathons.', true));
   if (hasPerm(ctx, 'audit:read')) out.push(c('/admin/audit', 'Audit log', 'audit', 'Program', 'See who changed what, and when.', true));

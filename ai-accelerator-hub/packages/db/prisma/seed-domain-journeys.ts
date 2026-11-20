@@ -13,7 +13,7 @@
  */
 import { PrismaClient } from '@prisma/client';
 import { createHash } from 'crypto';
-import { DOMAINS } from '../../../apps/web/lib/domain/daDomains/catalog';
+import { JOURNEY_SPECS } from '../../../apps/web/lib/domain/daDomains/tracks';
 import { buildDomainJourney, MODULE_PLAN, type DomainJourney } from '../../../apps/web/lib/domain/daDomains/curriculum';
 
 const prisma = new PrismaClient();
@@ -92,8 +92,8 @@ async function main() {
   const tenant = await prisma.tenant.upsert({ where: { slug: TENANT_SLUG }, update: {}, create: { slug: TENANT_SLUG, name: TENANT_SLUG === 'demo' ? 'Demo Institute' : TENANT_SLUG, plan: 'pro' } });
   await seedRubrics();
   const result: Record<string, number> = { created: 0, updated: 0, unchanged: 0 };
-  for (const d of DOMAINS) result[await seedJourney(tenant.id, buildDomainJourney(d))]++;
-  console.log(`✓ seed-domain-journeys (tenant ${TENANT_SLUG}): ${DOMAINS.length} domains — ${result.created} created, ${result.updated} updated, ${result.unchanged} unchanged.`);
+  for (const d of JOURNEY_SPECS) result[await seedJourney(tenant.id, buildDomainJourney(d))]++;
+  console.log(`✓ seed-domain-journeys (tenant ${TENANT_SLUG}): ${JOURNEY_SPECS.length} journeys (17 domains + Education tracks) — ${result.created} created, ${result.updated} updated, ${result.unchanged} unchanged.`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());

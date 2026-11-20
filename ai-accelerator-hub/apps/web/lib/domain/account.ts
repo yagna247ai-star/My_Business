@@ -20,6 +20,8 @@ export const registerSchema = z.object({
   journeySlug: z.string().trim().max(60).regex(/^[a-z0-9-]*$/, 'Choose a journey from the list.').optional().or(z.literal('')),
   guardianEmail: z.string().trim().toLowerCase().email('Enter a valid parent or guardian email.').optional().or(z.literal('')),
   acceptTerms: z.literal(true, { error: 'Accept the terms and privacy notice to continue.' }),
+  // Critical tracks only: the learner confirms the safeguarding and data-ethics rules before the track opens.
+  trackAck: z.boolean().optional(),
 }).refine(v => !v.guardianEmail || v.guardianEmail !== v.email, { path: ['guardianEmail'], error: 'Use your parent or guardian’s email, not your own.' });
 
 /** Which institution a sign-up joins: the invite code's, or the public default. */
@@ -55,6 +57,8 @@ export async function register(input: z.infer<typeof registerSchema>) {
   if (input.journeySlug) {
     journey = (await registrationJourneys(prisma, tenantId)).find(j => j.slug === input.journeySlug) ?? null;
     if (!journey) throw badRequest('That journey is not open for registration.', { journeySlug: 'Choose a journey from the list.' });
+    const track = (journey as { config?: { track?: string } | null }).config?.track;
+    if (track === 'critical' && !input.trackAck) throw badRequest('Confirm the safeguarding and data-ethics rules to start the Critical track.', { trackAck: 'Tick the box to confirm the rules for the Critical track.' });
   } else journey = await defaultJourney(prisma, tenantId);
   const l1 = journey ? await prisma.level.findFirst({ where: { journeyId: journey.id, idx: 1 } }) : null;
   const learner = await prisma.role.findUniqueOrThrow({ where: { code: 'learner' } });

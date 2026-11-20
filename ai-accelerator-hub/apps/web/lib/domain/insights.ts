@@ -12,8 +12,21 @@ export const RANKS = [{ name: 'Explorer', min: 0 }, { name: 'Builder', min: 200 
 export const pick = <T extends { min: number }>(a: T[], xp: number) => a.reduce((acc, t) => (xp >= t.min ? t : acc), a[0]);
 export const nextOf = <T extends { min: number }>(a: T[], xp: number) => a.find(t => t.min > xp) || null;
 
-export async function leaderboard(ctx: Ctx, scope: 'cohort' | 'tenant' = 'cohort', take = 50) {
-  const learnerMembers = await prisma.membership.findMany({ where: { tenantId: ctx.tenantId, status: 'active', role: { code: { in: ['learner', 'team_lead'] } }, ...(scope === 'cohort' && ctx.cohortId ? { cohortId: ctx.cohortId } : {}) }, include: { user: { select: { id: true, name: true } } } });
+/** The viewer's track journey, when they are on a domain journey with tracks (Easy / Intermediate / Hard / Critical). */
+export async function myTrackJourney(ctx: Ctx): Promise<{ journeyId: string; track: string } | null> {
+  const e = await prisma.enrollment.findFirst({ where: { tenantId: ctx.tenantId, userId: ctx.userId, state: 'active' }, select: { journeyId: true, journey: { select: { config: true } } } });
+  if (!e?.journey.config) return null;
+  try { const c = JSON.parse(e.journey.config); return typeof c.track === 'string' ? { journeyId: e.journeyId, track: c.track } : null; } catch { return null; }
+}
+
+/**
+ * Standings. Scope 'track' compares only learners on the same track journey (separate boards per track, by product
+ * decision); points are each learner's total XP, so points earned before a track change are kept.
+ */
+export async function leaderboard(ctx: Ctx, scope: 'cohort' | 'tenant' | 'track' = 'cohort', take = 50) {
+  const tj = scope === 'track' ? await myTrackJourney(ctx) : null;
+  const sameTrack = tj ? (await prisma.enrollment.findMany({ where: { tenantId: ctx.tenantId, journeyId: tj.journeyId, state: 'active' }, select: { userId: true } })).map(e => e.userId) : null;
+  const learnerMembers = await prisma.membership.findMany({ where: { tenantId: ctx.tenantId, status: 'active', role: { code: { in: ['learner', 'team_lead'] } }, ...(scope === 'cohort' && ctx.cohortId ? { cohortId: ctx.cohortId } : {}), ...(sameTrack ? { userId: { in: sameTrack } } : {}) }, include: { user: { select: { id: true, name: true } } } });
   const ids = learnerMembers.map(m => m.userId);
   const sums = await prisma.xpLedger.groupBy({ by: ['userId'], where: { tenantId: ctx.tenantId, userId: { in: ids } }, _sum: { amount: true } });
   const settings = await prisma.userSetting.findMany({ where: { tenantId: ctx.tenantId, userId: { in: ids } } });

@@ -5,18 +5,21 @@ import { requirePerm } from '@/lib/server/context';
 import { journeyOverview } from '@/lib/domain/journey';
 import { guarded } from '@/lib/server/page';
 import { topApprovedLevel } from '@/lib/domain/gamify';
+import { myTrack } from '@/lib/domain/journeyTracks';
+import { TrackPanel } from '@/components/learn/TrackPanel';
 
 export const metadata = { title: 'Journey' };
 const NUM = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen'];
 const words = (n: number) => NUM[n] ?? String(n);
 async function Journey() {
   const ctx = await requirePerm('learn:self');
-  const { levels } = await journeyOverview(ctx);
+  const [{ levels }, track] = await Promise.all([journeyOverview(ctx), myTrack(ctx)]);
   const top = topApprovedLevel(levels);
   const stages = [...new Map(levels.filter(l => l.stage).map(l => [l.stage!.idx, l.stage!.title])).entries()];
   return (
     <>
       <section className="ph ph-cream"><div style={{ position: 'relative' }}><span className="eyebrow">Your journey</span><h1 id="pageTitle">{words(stages.length)} stages. {words(levels.length)} levels. One portfolio.</h1><p className="desc">Levels unlock on demonstrated competence — your proof is checked against a published rubric, and you can appeal to a mentor. Time spent never unlocks a level.</p></div></section>
+      {track && <TrackPanel track={track} />}
       {stages.map(([idx, title]) => (
         <section key={idx} style={{ marginBottom: 24 }} aria-labelledby={`st-${idx}`}>
           <h2 className="h3" id={`st-${idx}`} style={{ marginBottom: 10 }}>Stage {idx} · {title}</h2>
