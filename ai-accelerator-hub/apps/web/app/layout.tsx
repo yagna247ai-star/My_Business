@@ -1,5 +1,12 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
+import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
+
+// One type system for every theme, bundled with the app (no request to Google at runtime, no font swap flash).
+// Inter: body and UI, very readable at small sizes. Plus Jakarta Sans: headings. JetBrains Mono: code.
+const sans = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-sans' });
+const display = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['600', '700', '800'], display: 'swap', variable: '--font-display' });
+const code = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500'], display: 'swap', variable: '--font-code' });
 
 export const metadata: Metadata = {
   title: { default: 'AI Accelerator Hub', template: '%s · AI Accelerator Hub' },
@@ -14,11 +21,8 @@ const themeScript = `(function(){var h=document.documentElement;try{var t=localS
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${display.variable} ${code.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>{children}</body>

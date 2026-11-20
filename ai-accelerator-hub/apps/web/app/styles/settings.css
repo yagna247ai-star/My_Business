@@ -25,7 +25,7 @@
 .dialog.dialog-wide{width:min(100%,620px);max-height:calc(100vh - 32px);overflow:auto}
 .btn-danger-soft{background:var(--danger-tint);color:var(--danger)}
 .btn-danger-soft:hover{filter:brightness(.97)}
-.kbd-code{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12.5px;padding:2px 8px;border-radius:8px;background:var(--surface-3)}
+.kbd-code{font-family:var(--font-mono);font-size:12.5px;padding:2px 8px;border-radius:8px;background:var(--surface-3)}
 @media (max-width:900px){
   .set-wrap{grid-template-columns:minmax(0,1fr);gap:16px}
   .set-nav{position:static;flex-direction:row;overflow-x:auto;padding:8px;gap:4px}

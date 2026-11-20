@@ -124,7 +124,7 @@ export function PeopleSettings({ rows, roles, cohorts, meId, canManage, journeys
           <Field label="Role" error={r.fieldErrs.role}><select className="select" value={add.role} onChange={e => setAdd({ ...add, role: e.target.value })}>{roles.map(o => <option key={o.code} value={o.code}>{o.label}</option>)}</select></Field>
           <Field label="Cohort" error={r.fieldErrs.cohortId}><select className="select" value={add.cohortId} onChange={e => setAdd({ ...add, cohortId: e.target.value })}><option value="">No cohort</option>{cohorts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
           <Field label="Starting password" error={r.fieldErrs.password} hint="Only used if this email has no account yet. 10+ characters with a letter and a number." full>
-            <span className="row gap-8"><input className="input" required minLength={10} maxLength={200} value={add.password} onChange={e => setAdd({ ...add, password: e.target.value })} style={{ fontFamily: 'JetBrains Mono, monospace' }} /><button className="btn btn-soft btn-sm" type="button" onClick={() => setAdd({ ...add, password: makePassword() })}><KeyRound size={14} />New</button></span>
+            <span className="row gap-8"><input className="input" required minLength={10} maxLength={200} value={add.password} onChange={e => setAdd({ ...add, password: e.target.value })} style={{ fontFamily: 'var(--font-mono)' }} /><button className="btn btn-soft btn-sm" type="button" onClick={() => setAdd({ ...add, password: makePassword() })}><KeyRound size={14} />New</button></span>
           </Field>
         </div>
         <p className="muted xs">Learners are enrolled in the default journey automatically.</p>
