@@ -1430,3 +1430,19 @@ model DayProgress {
   @@index([tenantId, userId])
   @@map("day_progress")
 }
+
+/// Machine translations of lesson pages, made once per language and reused. The English page stays the source:
+/// a changed source (different hash) is translated again.
+model ContentTranslation {
+  id         String   @id @default(cuid())
+  contentId  String
+  locale     String // hi | te | ta | kn | ml
+  sourceHash String // sha256 of the English body this was made from
+  body       String
+  model      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([contentId, locale])
+  @@map("content_translations")
+}

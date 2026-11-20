@@ -1,6 +1,9 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
+import { I18nProvider } from '@/components/i18n/I18nProvider';
+import { getLocale } from '@/lib/i18n/server';
+import { dictFor } from '@/lib/i18n/core';
 
 // One type system for every theme. The font files live in app/fonts (SIL OFL, see LICENSES.txt), so builds and
 // pages never call Google: no build failure when Google is unreachable, no font flash, no layout shift.
@@ -20,13 +23,15 @@ export const viewport: Viewport = { themeColor: '#081830', width: 'device-width'
 // Same for the collapsed sidebar, so it never flashes open and then snaps shut on page load.
 const themeScript = `(function(){var h=document.documentElement;try{var t=localStorage.getItem('aih_theme')||'system';if(t==='sln'){h.setAttribute('data-theme','sln');}else{var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);h.setAttribute('data-theme',d?'dark':'light')}}catch(e){h.setAttribute('data-theme','light')}try{if(localStorage.getItem('aih_sidebar')==='rail')h.setAttribute('data-sidebar','rail')}catch(e){}})()`;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // The learner's saved language (or the sign-in page choice) for the whole site; English text is the fallback.
+  const locale = await getLocale();
   return (
-    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${display.variable} ${code.variable}`}>
+    <html lang={locale} suppressHydrationWarning className={`${sans.variable} ${display.variable} ${code.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body>{children}</body>
+      <body><I18nProvider locale={locale} dict={dictFor(locale)}>{children}</I18nProvider></body>
     </html>
   );
 }

@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/client/api';
+import { useT } from '@/components/i18n/I18nProvider';
 
 type Opt = { level: string; name: string; title: string; current: boolean };
 export type TrackView = { level: string; levelName: string; title: string; changeable: boolean; options: Opt[]; pending: { id: string; level: string; name: string; title: string; reason: string | null; by: string } | null };
@@ -13,22 +14,23 @@ export type TrackView = { level: string; levelName: string; title: string; chang
 const ACK = 'I understand the Critical track rules: synthetic data only, never real disclosures; a person always decides and the system never contacts a child or family; children’s data is shown only to people who need it.';
 
 function ModeChoice({ value, onChange, disabled }: { value: 'continue' | 'restart'; onChange: (m: 'continue' | 'restart') => void; disabled: boolean }) {
+  const t = useT();
   return (
     <fieldset style={{ border: 0, padding: 0, margin: 0 }} className="stack gap-8">
-      <legend className="field-label">How do you want to continue?</legend>
+      <legend className="field-label">{t('How do you want to continue?')}</legend>
       {([['continue', 'Keep my Module 1 work', 'Activities you finished in Module 1 stay done on the new track.'], ['restart', 'Restart Module 1 from Day 1', 'Start the new track fresh. Useful if the new problem is very different.']] as const).map(([m, label, hint]) => (
         <label key={m} className="small" style={{ display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
           <input type="radio" name="trackMode" value={m} checked={value === m} onChange={() => onChange(m)} disabled={disabled} style={{ marginTop: 3, flex: 'none' }} />
-          <span><b>{label}</b><span className="text-2" style={{ display: 'block' }}>{hint}</span></span>
+          <span><b>{t(label)}</b><span className="text-2" style={{ display: 'block' }}>{t(hint)}</span></span>
         </label>
       ))}
-      <span className="small text-2">Your points are kept either way.</span>
+      <span className="small text-2">{t('Your points are kept either way.')}</span>
     </fieldset>
   );
 }
 
 export function TrackPanel({ track }: { track: TrackView }) {
-  const router = useRouter();
+  const router = useRouter(); const t = useT();
   const [open, setOpen] = useState(false);
   const [level, setLevel] = useState('');
   const [mode, setMode] = useState<'continue' | 'restart'>('continue');
@@ -47,11 +49,11 @@ export function TrackPanel({ track }: { track: TrackView }) {
   return (
     <section className="card card-pad" style={{ marginBottom: 24 }} aria-labelledby="trackTitle">
       <div style={{ display: 'flex', gap: 12, alignItems: 'baseline', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-        <div><span className="eyebrow">Your track</span><h2 className="h3" id="trackTitle" style={{ margin: '2px 0 0' }}>{track.levelName}: {track.title}</h2></div>
-        {track.changeable && !track.pending && !open && <button type="button" className="btn btn-ghost btn-sm" onClick={() => setOpen(true)}>Change track</button>}
+        <div><span className="eyebrow">{t('Your track')}</span><h2 className="h3" id="trackTitle" style={{ margin: '2px 0 0' }}>{track.levelName}: {track.title}</h2></div>
+        {track.changeable && !track.pending && !open && <button type="button" className="btn btn-ghost btn-sm" onClick={() => setOpen(true)}>{t('Change track')}</button>}
       </div>
       <p className="small text-2" style={{ margin: '6px 0 0' }}>
-        {track.changeable ? 'You can change your track until you finish Module 1. After that it stays fixed until Day 45.' : 'You finished Module 1, so your track is fixed until Day 45.'}
+        {t(track.changeable ? 'You can change your track until you finish Module 1. After that it stays fixed until Day 45.' : 'You finished Module 1, so your track is fixed until Day 45.')}
       </p>
 
       {track.pending && (
@@ -68,7 +70,7 @@ export function TrackPanel({ track }: { track: TrackView }) {
       {open && !track.pending && (
         <div className="stack gap-12" style={{ marginTop: 12 }}>
           <fieldset style={{ border: 0, padding: 0, margin: 0 }} className="stack gap-8">
-            <legend className="field-label">Choose a track</legend>
+            <legend className="field-label">{t('Choose a track')}</legend>
             {track.options.filter(o => !o.current).map(o => (
               <label key={o.level} className="small" style={{ display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
                 <input type="radio" name="newTrack" value={o.level} checked={level === o.level} onChange={() => { setLevel(o.level); setAck(false); }} disabled={busy} style={{ marginTop: 3, flex: 'none' }} />
@@ -79,8 +81,8 @@ export function TrackPanel({ track }: { track: TrackView }) {
           {level && <ModeChoice value={mode} onChange={setMode} disabled={busy} />}
           {level === 'critical' && <label className="small" style={{ display: 'flex', gap: 8 }}><input type="checkbox" id="trackAck" checked={ack} onChange={e => setAck(e.target.checked)} disabled={busy} style={{ flex: 'none', marginTop: 3 }} /><span>{ACK}</span></label>}
           <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" className="btn btn-gold btn-sm" disabled={busy || !level} onClick={() => go('/api/v1/me/track', { level, mode, ack })}>{busy ? 'Moving…' : 'Move to this track'}</button>
-            <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => { setOpen(false); setLevel(''); }}>Cancel</button>
+            <button type="button" className="btn btn-gold btn-sm" disabled={busy || !level} onClick={() => go('/api/v1/me/track', { level, mode, ack })}>{busy ? t('Moving…') : t('Move to this track')}</button>
+            <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => { setOpen(false); setLevel(''); }}>{t('Cancel')}</button>
           </div>
         </div>
       )}

@@ -596,3 +596,7 @@ button.lv-tile:hover{border-color:var(--border-strong)}
   .fab{animation:ag-float-sm 5s ease-in-out infinite}
   .fab:hover{animation-play-state:paused}
 }
+
+/* Indian scripts: letter-spacing pulls apart vowel signs and conjuncts (e.g. Telugu ే, ్), so it is turned off
+   whenever the page is not in English. Uppercase has no meaning in these scripts either. */
+html:not([lang="en"]) *{letter-spacing:normal!important}

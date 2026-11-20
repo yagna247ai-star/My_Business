@@ -9,6 +9,7 @@ import { FlowerBurst, GapList } from '@/components/learn/ReviewCelebration';
 import { StuckHelper } from '@/components/learn/StuckHelper';
 import { DatasetCheckPanel, ScreenshotPanel } from '@/components/learn/EvidencePanels';
 import { parseGaps } from '@/lib/domain/gaps';
+import { useT } from '@/components/i18n/I18nProvider';
 
 type Act = { id: string; idx: number; code: string; title: string; xp: number; state: string; config: any; data: any; authored: boolean };
 type Review = { id: string; verdict: string; avg: number | null; feedback: string | null; by: string; at: string; scores: Record<string, number>; appeal: string | null };
@@ -19,7 +20,7 @@ const LABEL: Record<string, string> = { completed: 'Done', skipped: 'Skipped', a
 const wc = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 
 export function LevelWorkspace(p: Props) {
-  const router = useRouter();
+  const router = useRouter(); const t = useT();
   const firstOpen = p.activities.find(a => ['available', 'needs_changes', 'in_review'].includes(a.state))?.idx || 1;
   const [cur, setCur] = useState(p.initial && p.activities.find(a => a.idx === p.initial && a.state !== 'locked') ? p.initial : firstOpen);
   const [flash, setFlash] = useState('');
@@ -29,7 +30,7 @@ export function LevelWorkspace(p: Props) {
   const [skipping, setSkipping] = useState(false);
   const skip = async () => {
     setSkipping(true);
-    try { const r = await api<{ advanced?: { message: string } | null }>(`/api/v1/levels/${p.code}/skip`, { body: { idx: cur } }); after(`Skipped for now: no points for this activity yet. You can come back and finish it any time.${r.advanced?.message ? ' ' + r.advanced.message : ''}`); }
+    try { const r = await api<{ advanced?: { message: string } | null }>(`/api/v1/levels/${p.code}/skip`, { body: { idx: cur } }); after(`${t('Skipped for now: no points for this activity yet. You can come back and finish it any time.')}${r.advanced?.message ? ' ' + r.advanced.message : ''}`); }
     catch (e) { setFlash((e as ApiError).message); }
     finally { setSkipping(false); }
   };
@@ -37,25 +38,25 @@ export function LevelWorkspace(p: Props) {
   return (
     <section className="card card-pad" aria-labelledby="pageTitle">
       <div className="lv-head">
-        <div className="ring" style={{ ['--p' as string]: Math.round((done / 6) * 100) }} role="img" aria-label={`${done} of 6 activities complete`}><span>{done}/6<small>DONE</small></span></div>
-        <div style={{ minWidth: 0 }}><div className="section-label">{p.code}</div><h1 className="h2" id="pageTitle" style={{ fontSize: 26 }}>{/^Level \d+\s+—/.test(p.title) ? p.title : `Level ${p.idx ?? 1} — ${p.title}`}</h1><p className="text-2 small" style={{ marginTop: 4 }}>{p.summary}</p></div>
-        <div className="row gap-8 wrap lv-head-meta"><span className="badge badge-gold">{p.xpEarned} / {p.xpTotal} XP</span>{p.levelState === 'approved' && <span className="badge badge-success">Approved</span>}</div>
+        <div className="ring" style={{ ['--p' as string]: Math.round((done / 6) * 100) }} role="img" aria-label={t('{n} of 6 activities complete', { n: done })}><span>{done}/6<small>{t('DONE')}</small></span></div>
+        <div style={{ minWidth: 0 }}><div className="section-label">{p.code}</div><h1 className="h2" id="pageTitle" style={{ fontSize: 26 }}>{/^Level \d+\s+—/.test(p.title) ? p.title : t('Level {n} — {title}', { n: p.idx ?? 1, title: p.title })}</h1><p className="text-2 small" style={{ marginTop: 4 }}>{p.summary}</p></div>
+        <div className="row gap-8 wrap lv-head-meta"><span className="badge badge-gold">{p.xpEarned} / {p.xpTotal} XP</span>{p.levelState === 'approved' && <span className="badge badge-success">{t('Approved')}</span>}</div>
       </div>
       {p.levelState === 'approved' && <div style={{ margin: '12px 0' }}><FlowerBurst title={p.title} xp={p.xpEarned} last={p.isLast} /></div>}
       {p.completion?.complete && <div className="callout ok" role="status" style={{ margin: '12px 0', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <CheckCircle2 size={18} /><span style={{ flex: 1, minWidth: 220 }}><b>Level complete.</b> {p.completion.message}</span>
-        {p.completion.next && <Link className="btn btn-gold btn-sm" href={`/levels/${p.completion.next.code}`}>Go to {p.completion.next.title} <ArrowRight size={14} /></Link>}
+        <CheckCircle2 size={18} /><span style={{ flex: 1, minWidth: 220 }}><b>{t('Level complete.')}</b> {p.completion.message}</span>
+        {p.completion.next && <Link className="btn btn-gold btn-sm" href={`/levels/${p.completion.next.code}`}>{t('Go to {title}', { title: p.completion.next.title })} <ArrowRight size={14} /></Link>}
       </div>}
-      {!p.completion?.complete && <p className="muted small" style={{ margin: '8px 0 0' }}>Finish or skip every activity and day below to open the next level. Review never blocks you: skipped work just earns no points until you finish it.</p>}
+      {!p.completion?.complete && <p className="muted small" style={{ margin: '8px 0 0' }}>{t('Finish or skip every activity and day below to open the next level. Review never blocks you: skipped work just earns no points until you finish it.')}</p>}
       {p.levelState !== 'approved' && <div style={{ margin: '8px 0 12px' }}><StuckHelper code={p.code} /></div>}
       {p.days && p.days.length > 0 && <nav aria-label="Days in this level" className="row gap-8 wrap" style={{ margin: '0 0 14px' }}>
-        {p.days.map(d => <Link key={d.day} href={`/levels/${p.code}/days/${d.day}`} className={`badge ${d.state === 'done' ? 'badge-success' : d.state === 'skipped' ? 'badge-neutral' : 'badge-gold'}`} title={d.title}>Day {d.day} · {d.state === 'done' ? `done +${d.xp}` : d.state === 'skipped' ? 'skipped' : 'to do'}</Link>)}
+        {p.days.map(d => <Link key={d.day} href={`/levels/${p.code}/days/${d.day}`} className={`badge ${d.state === 'done' ? 'badge-success' : d.state === 'skipped' ? 'badge-neutral' : 'badge-gold'}`} title={d.title}>{d.state === 'done' ? t('Day {n} · done +{xp}', { n: d.day, xp: d.xp }) : d.state === 'skipped' ? t('Day {n} · skipped', { n: d.day }) : t('Day {n} · to do', { n: d.day })}</Link>)}
       </nav>}
       <ol className="stepper" aria-label="Activities">
         {p.activities.map(a => (
           <li key={a.idx} className={`step ${a.state}`} aria-current={a.idx === cur ? 'step' : undefined}>
-            <button type="button" disabled={a.state === 'locked'} onClick={() => { setCur(a.idx); setFlash(''); }} aria-label={`Activity ${a.idx}: ${a.title}, ${LABEL[a.state] || a.state}`}>
-              <span className="sn"><i>{a.state === 'completed' ? '✓' : a.idx}</i>{LABEL[a.state] || a.state}</span><span className="st">{a.title.split(':')[0]}</span>
+            <button type="button" disabled={a.state === 'locked'} onClick={() => { setCur(a.idx); setFlash(''); }} aria-label={`${t('Activity {n}', { n: a.idx })}: ${a.title}, ${t(LABEL[a.state] || a.state)}`}>
+              <span className="sn"><i>{a.state === 'completed' ? '✓' : a.idx}</i>{t(LABEL[a.state] || a.state)}</span><span className="st">{a.title.split(':')[0]}</span>
             </button>
           </li>
         ))}
@@ -64,12 +65,12 @@ export function LevelWorkspace(p: Props) {
       <div className="panel-grid">
         <div key={cur}>
           <div className="row between wrap gap-8" style={{ marginBottom: 14 }}>
-            <div><div className="section-label">Activity {act.idx}</div><h2 className="h2">{act.title}</h2></div>
+            <div><div className="section-label">{t('Activity {n}', { n: act.idx })}</div><h2 className="h2">{act.title}</h2></div>
             <span className="badge badge-gold">+{act.xp} XP</span>
           </div>
           {act.config.personalisedFor && act.state !== 'locked' && <p className="callout info small" style={{ marginBottom: 14 }}>Personalised for your path: the situation, examples and hints match your profile. The pass rules are the same for everyone. <Link className="link" href="/onboarding">Change my path</Link></p>}
-          {act.state === 'skipped' && <p className="callout info small" style={{ marginBottom: 14 }}><SkipForward size={16} /><span>You skipped this activity. Do it any time below to earn its {act.xp} points.</span></p>}
-          {act.state === 'locked' ? <p className="text-2">Finish or skip the previous activity first.</p>
+          {act.state === 'skipped' && <p className="callout info small" style={{ marginBottom: 14 }}><SkipForward size={16} /><span>{t('You skipped this activity. Do it any time below to earn its {xp} points.', { xp: act.xp })}</span></p>}
+          {act.state === 'locked' ? <p className="text-2">{t('Finish or skip the previous activity first.')}</p>
             : act.config.kind === 'briefing' ? <Briefing a={act} code={p.code} onDone={after} />
             : act.config.kind === 'learn' ? <Learn a={act} code={p.code} onDone={after} />
             : act.config.kind === 'explore' ? <Explore a={act} code={p.code} onDone={after} />
@@ -79,16 +80,16 @@ export function LevelWorkspace(p: Props) {
             : act.config.kind === 'proof' ? <Proof a={act} code={p.code} latest={p.latest} onDone={after} />
             : act.config.kind === 'boss' ? <Boss a={act} code={p.code} latest={p.latest} boss={p.boss} rubric={p.rubric} onDone={m => after(m, false)} />
             : <p className="text-2">This activity has not been published yet.</p>}
-          {canSkip && <div className="row gap-8 wrap" style={{ marginTop: 16, alignItems: 'center' }}><button className="btn btn-ghost btn-sm" type="button" disabled={skipping} onClick={skip}><SkipForward size={15} />{skipping ? 'Skipping…' : 'Skip for now'}</button><span className="muted xs">You move on now; this activity earns its points when you come back and finish it.</span></div>}
+          {canSkip && <div className="row gap-8 wrap" style={{ marginTop: 16, alignItems: 'center' }}><button className="btn btn-ghost btn-sm" type="button" disabled={skipping} onClick={skip}><SkipForward size={15} />{skipping ? t('Skipping…') : t('Skip for now')}</button><span className="muted xs">{t('You move on now; this activity earns its points when you come back and finish it.')}</span></div>}
         </div>
         <aside className="card aside-card" aria-label="Level facts">
-          <h2 className="section-label" style={{ marginBottom: 6 }}>Level facts</h2>
-          <div className="kv"><span>Points earned</span><span>{p.xpEarned} of {p.xpTotal}</span></div>
-          <div className="kv"><span>Proof attempts</span><span>{p.latest ? p.latest.reviews.length + (p.latest.state === 'pending' ? 1 : 0) || 1 : 0}</span></div>
-          <div className="kv"><span>Boss attempts</span><span>{p.boss.attempts} of {p.boss.max}</span></div>
-          {p.rubric && <div className="kv"><span>Review pass rule (for points)</span><span>Avg ≥ {p.rubric.threshold.toFixed(1)} and Boss ≥ {p.rubric.bossMin}</span></div>}
-          <div className="kv"><span>Next level opens</span><span>When every activity and day is done or skipped</span></div>
-          <Link className="btn btn-soft btn-sm btn-block" style={{ marginTop: 14 }} href={`/coach?level=${p.code}&a=${cur}`}><LifeBuoy size={15} />Ask about this step</Link>
+          <h2 className="section-label" style={{ marginBottom: 6 }}>{t('Level facts')}</h2>
+          <div className="kv"><span>{t('Points earned')}</span><span>{t('{a} of {b}', { a: p.xpEarned, b: p.xpTotal })}</span></div>
+          <div className="kv"><span>{t('Proof attempts')}</span><span>{p.latest ? p.latest.reviews.length + (p.latest.state === 'pending' ? 1 : 0) || 1 : 0}</span></div>
+          <div className="kv"><span>{t('Boss attempts')}</span><span>{t('{a} of {b}', { a: p.boss.attempts, b: p.boss.max })}</span></div>
+          {p.rubric && <div className="kv"><span>{t('Review pass rule (for points)')}</span><span>Avg ≥ {p.rubric.threshold.toFixed(1)} and Boss ≥ {p.rubric.bossMin}</span></div>}
+          <div className="kv"><span>{t('Next level opens')}</span><span>{t('When every activity and day is done or skipped')}</span></div>
+          <Link className="btn btn-soft btn-sm btn-block" style={{ marginTop: 14 }} href={`/coach?level=${p.code}&a=${cur}`}><LifeBuoy size={15} />{t('Ask about this step')}</Link>
         </aside>
       </div>
     </section>

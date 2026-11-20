@@ -6,13 +6,14 @@ import { levelState } from '@/lib/domain/journey';
 import { rubricFor } from '@/lib/domain/review';
 import { LevelWorkspace } from '@/components/learn/LevelWorkspace';
 import { guarded } from '@/lib/server/page';
+import { getT } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
 async function LevelPage({ params, searchParams }: { params: Promise<{ code: string }>; searchParams: Promise<{ a?: string }> }) {
   const { code } = await params; const { a } = await searchParams;
   const ctx = await requirePerm('learn:self');
-  const st = await levelState(ctx, code);
-  if (st.locked) return <div className="card empty"><div className="ic-wrap"><Lock size={22} /></div><h1 className="h3">{st.level.title} is locked</h1><p className="text-2" style={{ marginTop: 6 }}>It opens when every activity and day of the previous level is done or skipped.</p><Link className="btn btn-gold btn-sm" style={{ marginTop: 14 }} href="/levels">Back to journey</Link></div>;
+  const [st, t] = await Promise.all([levelState(ctx, code), getT()]);
+  if (st.locked) return <div className="card empty"><div className="ic-wrap"><Lock size={22} /></div><h1 className="h3">{t('{title} is locked', { title: st.level.title })}</h1><p className="text-2" style={{ marginTop: 6 }}>{t('It opens when every activity and day of the previous level is done or skipped.')}</p><Link className="btn btn-gold btn-sm" style={{ marginTop: 14 }} href="/levels">{t('Back to journey')}</Link></div>;
   if (!st.level.isPublished) return <div className="card empty"><h1 className="h3">{st.level.title} is unlocked</h1><p className="text-2" style={{ marginTop: 6, maxWidth: '56ch', marginInline: 'auto' }}>Your program team publishes each level&apos;s six activities after review. You&apos;ll be notified the moment they&apos;re live — nothing here is placeholder content.</p>{st.level.description && <p className="muted small" style={{ marginTop: 8 }}>{st.level.description}</p>}<p className="small" style={{ marginTop: 10 }}><b>Topics:</b> {st.level.summary}</p><Link className="btn btn-outline btn-sm" style={{ marginTop: 14 }} href="/library">Explore the open-source library</Link></div>;
   const a6 = st.activities.find(x => x.idx === 6);
   const rubric = a6?.config?.rubric ? await rubricFor(a6.config.rubric) : null;

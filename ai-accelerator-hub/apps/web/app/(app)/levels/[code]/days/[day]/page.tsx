@@ -7,6 +7,9 @@ import { parseMarkdown, parseInline, type Block } from '@/lib/domain/lessonMarkd
 import { guarded } from '@/lib/server/page';
 import { DAY_XP, dayStepsFrom } from '@/lib/domain/levelFlowRules';
 import { DayWork } from '@/components/learn/DayWork';
+import { TranslateLesson } from '@/components/learn/TranslateLesson';
+import { getLocale, getT } from '@/lib/i18n/server';
+import { cachedLesson } from '@/lib/i18n/lessonTranslate';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,16 +39,17 @@ function Render({ block }: { block: Block }) {
   }
 }
 
-async function DayPage({ params }: { params: Promise<{ code: string; day: string }> }) {
-  const { code, day } = await params;
+async function DayPage({ params, searchParams }: { params: Promise<{ code: string; day: string }>; searchParams: Promise<{ orig?: string }> }) {
+  const { code, day } = await params; const { orig } = await searchParams;
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
   const dayNo = Number(day);
   const ctx = await requirePerm('learn:self');
   const enrollment = await getEnrollment(ctx);
   const level = await prisma.level.findFirst({ where: { tenantId: ctx.tenantId, journeyId: enrollment.journeyId, code } });
-  if (!level) return <div className="card empty"><h1 className="h3">Module not found</h1></div>;
+  if (!level) return <div className="card empty"><h1 className="h3">{t('Module not found')}</h1></div>;
   const progress = await prisma.progress.findUnique({ where: { enrollmentId_levelId: { enrollmentId: enrollment.id, levelId: level.id } } });
   if (!progress || progress.state === 'locked') {
-    return <div className="card empty"><div className="ic-wrap"><Lock size={22} /></div><h1 className="h3">{level.title} is locked</h1><p className="text-2" style={{ marginTop: 6 }}>Finish the earlier module first.</p></div>;
+    return <div className="card empty"><div className="ic-wrap"><Lock size={22} /></div><h1 className="h3">{t('{title} is locked', { title: level.title })}</h1><p className="text-2" style={{ marginTop: 6 }}>{t('Finish the earlier module first.')}</p></div>;
   }
   const content = await prisma.content.findFirst({ where: { levelId: level.id, kind: 'md', position: dayNo } });
   if (!content) return <div className="card empty"><h1 className="h3">Day {dayNo} is not in {level.title}</h1></div>;
@@ -55,25 +59,31 @@ async function DayPage({ params }: { params: Promise<{ code: string; day: string
     prisma.content.findFirst({ where: { kind: 'md', position: dayNo + 1, level: { journeyId: enrollment.journeyId, tenantId: ctx.tenantId } }, select: { position: true, level: { select: { code: true } } } }),
   ]);
   const body = (JSON.parse(content.payload || '{}').body as string) || '';
-  const blocks = parseMarkdown(body);
+  // The learner's language when a translation is cached ("Read in …" makes one); ?orig=1 shows the English page.
+  const translated = orig ? null : await cachedLesson(content.id, body, locale);
+  const blocks = parseMarkdown(translated ?? body);
+  // Steps to tick: the translated ones when the translation kept the same list, else the English ones.
+  const englishSteps = dayStepsFrom(body); const translatedSteps = translated ? dayStepsFrom(translated) : [];
+  const steps = translatedSteps.length === englishSteps.length ? translatedSteps : englishSteps;
   const mine = await prisma.dayProgress.findUnique({ where: { enrollmentId_levelId_day: { enrollmentId: enrollment.id, levelId: level.id, day: dayNo } }, select: { state: true, xpEarned: true } });
 
   return (<>
     <section className="ph ph-plain" style={{ marginBottom: 14 }}>
-      <span className="eyebrow">{level.title} · Day {dayNo} of 45</span>
+      <span className="eyebrow">{level.title} · {t('Day {n} of 45', { n: dayNo })}</span>
       <h1 id="pageTitle" className="sr-only">{content.title}</h1>
       <div className="row between wrap gap-12" style={{ marginTop: 6 }}>
         <div className="bar" style={{ flex: 1, minWidth: 200 }} aria-label={`Day ${dayNo} of 45`}><i style={{ width: `${(dayNo / 45) * 100}%` }} /></div>
-        <span className="muted small">{Math.round((dayNo / 45) * 100)}% of the 45 days</span>
+        <span className="muted small">{t('{n}% of the 45 days', { n: Math.round((dayNo / 45) * 100) })}</span>
       </div>
     </section>
+    {translated ? <p className="muted small" style={{ maxWidth: 820, marginBottom: 10 }}>{t('Machine translation. Code, SQL and Excel formulas stay in English.')} <Link className="link" href={`/levels/${code}/days/${dayNo}?orig=1`}>{t('Show the English original')}</Link></p> : <TranslateLesson code={code} day={dayNo} />}
     <article className="card card-pad" style={{ maxWidth: 820 }} aria-label={content.title || `Day ${dayNo}`}>
       {blocks.map((b, i) => <Render key={i} block={b} />)}
     </article>
-    <DayWork code={code} day={dayNo} steps={dayStepsFrom(body)} state={(mine?.state as 'done' | 'skipped' | undefined) ?? 'open'} xp={mine?.xpEarned ?? 0} dayXp={DAY_XP} next={next ? { code: next.level.code, day: next.position } : null} levelHref={`/levels/${code}`} />
+    <DayWork code={code} day={dayNo} steps={steps} state={(mine?.state as 'done' | 'skipped' | undefined) ?? 'open'} xp={mine?.xpEarned ?? 0} dayXp={DAY_XP} next={next ? { code: next.level.code, day: next.position } : null} levelHref={`/levels/${code}`} />
     <nav className="row between wrap gap-12" aria-label="Day navigation" style={{ marginTop: 18, maxWidth: 820 }}>
-      {prev ? <Link className="btn btn-outline" href={`/levels/${prev.level.code}/days/${prev.position}`}><ChevronLeft size={16} /> Day {prev.position}</Link> : <span />}
-      {next ? <Link className="btn btn-primary" href={`/levels/${next.level.code}/days/${next.position}`}>Day {next.position} <ChevronRight size={16} /></Link> : <span />}
+      {prev ? <Link className="btn btn-outline" href={`/levels/${prev.level.code}/days/${prev.position}`}><ChevronLeft size={16} /> {t('Day {n}', { n: prev.position })}</Link> : <span />}
+      {next ? <Link className="btn btn-primary" href={`/levels/${next.level.code}/days/${next.position}`}>{t('Day {n}', { n: next.position })} <ChevronRight size={16} /></Link> : <span />}
     </nav>
   </>);
 }
