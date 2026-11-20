@@ -26,9 +26,10 @@ export function canChangeLearnerTracks(a: { role: Role; superAdmin: boolean }, s
 export const canEditTrackSettings = (a: { role: Role; superAdmin: boolean }) => a.superAdmin || TRACK_SETTINGS_EDITORS.includes(a.role);
 
 /**
- * A track can change only until Module 1 is complete (its level approved, which is also what opens Module 2).
- * From Module 2 to Day 45 the track is fixed, for the learner and for staff.
+ * A track can change only until Module 1 is complete: approved by review, or finished (every activity and day
+ * done or skipped), which opens Module 2. From then to Day 45 the track is fixed, for the learner and for staff.
  */
-export function trackChangeAllowed(module1State: string | null | undefined): boolean {
-  return module1State !== 'approved';
+export function trackChangeAllowed(module1State: string | null | undefined, module1Finished = false): boolean {
+  // Fixed once Module 1 is approved, or once the learner has finished (or skipped) all of it and moved on.
+  return module1State !== 'approved' && !module1Finished;
 }

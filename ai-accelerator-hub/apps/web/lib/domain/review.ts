@@ -85,7 +85,7 @@ export async function decide(ctx: Ctx, id: string, scores: Record<string, number
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: `review.${verdict}`, resourceType: 'Submission', resourceId: id, after: { avg, scores, learner: s.userId } });
     if (verdict === 'needs_changes') {
       await tx.progress.update({ where: { id: s.progressId }, data: { state: 'in_progress' } });
-      await notify(tx, ctx.tenantId, s.userId, 'review_decided', { title: `Changes requested on ${level.title}`, body: `${ctx.name}: “${feedback.trim().slice(0, 140)}” You keep all XP and can resubmit.`, href: `/levels/${level.code}?a=5`, tone: 'warn' });
+      await notify(tx, ctx.tenantId, s.userId, 'review_decided', { title: `Changes requested on ${level.title}`, body: `${ctx.name}: “${feedback.trim().slice(0, 140)}” You keep all XP and can resubmit for the review points. This never blocks the next level.`, href: `/levels/${level.code}?a=5`, tone: 'warn' });
       return { reviewId: review.id, avg, verdict };
     }
     // Approved: complete A6, award XP split, unlock next level
@@ -97,10 +97,14 @@ export async function decide(ctx: Ctx, id: string, scores: Record<string, number
     await tx.progress.update({ where: { id: s.progressId }, data: { state: 'approved', completedAt: new Date(), xpEarned: { increment: base.amount + bonus.amount } } });
     const next = await tx.level.findFirst({ where: { tenantId: ctx.tenantId, journeyId: level.journeyId, idx: level.idx + 1 } });
     if (next) {
-      await tx.progress.upsert({ where: { enrollmentId_levelId: { enrollmentId: s.progress.enrollmentId, levelId: next.id } }, update: { state: 'available', unlockedAt: new Date() }, create: { tenantId: ctx.tenantId, enrollmentId: s.progress.enrollmentId, levelId: next.id, userId: s.userId, state: 'available', unlockedAt: new Date() } });
-      await tx.unlockEvent.create({ data: { tenantId: ctx.tenantId, userId: s.userId, levelId: next.id, reason: 'prerequisite_met' } });
-      await tx.enrollment.update({ where: { id: s.progress.enrollmentId }, data: { currentLevelIdx: next.idx } });
-      await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'level.unlocked', resourceType: 'Level', resourceId: next.id, after: { learner: s.userId, idx: next.idx } });
+      // With free progression the learner may already be working on the next level: never reset it.
+      const cur = await tx.progress.findUnique({ where: { enrollmentId_levelId: { enrollmentId: s.progress.enrollmentId, levelId: next.id } }, select: { state: true } });
+      if (!cur || cur.state === 'locked') {
+        await tx.progress.upsert({ where: { enrollmentId_levelId: { enrollmentId: s.progress.enrollmentId, levelId: next.id } }, update: { state: 'available', unlockedAt: new Date() }, create: { tenantId: ctx.tenantId, enrollmentId: s.progress.enrollmentId, levelId: next.id, userId: s.userId, state: 'available', unlockedAt: new Date() } });
+        await tx.unlockEvent.create({ data: { tenantId: ctx.tenantId, userId: s.userId, levelId: next.id, reason: 'prerequisite_met' } });
+        await tx.enrollment.updateMany({ where: { id: s.progress.enrollmentId, currentLevelIdx: { lt: next.idx } }, data: { currentLevelIdx: next.idx } });
+        await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'level.unlocked', resourceType: 'Level', resourceId: next.id, after: { learner: s.userId, idx: next.idx } });
+      }
     }
     const badges = await evaluateBadges(tx, ctx.tenantId, s.userId);
     await notify(tx, ctx.tenantId, s.userId, 'review_decided', { title: `${level.title} approved — ${avg.toFixed(2)} / 5`, body: `+${base.amount + bonus.amount} XP${next ? ` · ${next.title} is unlocked` : ''}${feedback ? ` · “${feedback.trim().slice(0, 100)}”` : ''}`, href: `/levels/${level.code}?a=6`, tone: 'ok' });

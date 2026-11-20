@@ -57,7 +57,7 @@ export function templateReview(input: ReviewInput, weights: Record<string, numbe
   const reasons = missing.map(m => m.item);
   const feedback = verdict === 'approved'
     ? 'Approved automatically by the rubric template.'
-    : `Not yet. ${reasons.join(' ')} Fix these and resubmit. You keep your XP.`;
+    : `Not yet. ${reasons.join(' ')} Fix these and resubmit to earn the review points. You keep your XP, and this never stops you moving to the next level.`;
   return { scores, avg, verdict, feedback, missing: verdict === 'approved' ? [] : missing };
 }
 

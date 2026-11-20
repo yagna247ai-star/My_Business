@@ -5,6 +5,8 @@ import { requirePerm } from '@/lib/server/context';
 import { getEnrollment } from '@/lib/domain/journey';
 import { parseMarkdown, parseInline, type Block } from '@/lib/domain/lessonMarkdown';
 import { guarded } from '@/lib/server/page';
+import { DAY_XP, dayStepsFrom } from '@/lib/domain/levelFlowRules';
+import { DayWork } from '@/components/learn/DayWork';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +56,7 @@ async function DayPage({ params }: { params: Promise<{ code: string; day: string
   ]);
   const body = (JSON.parse(content.payload || '{}').body as string) || '';
   const blocks = parseMarkdown(body);
+  const mine = await prisma.dayProgress.findUnique({ where: { enrollmentId_levelId_day: { enrollmentId: enrollment.id, levelId: level.id, day: dayNo } }, select: { state: true, xpEarned: true } });
 
   return (<>
     <section className="ph ph-plain" style={{ marginBottom: 14 }}>
@@ -67,6 +70,7 @@ async function DayPage({ params }: { params: Promise<{ code: string; day: string
     <article className="card card-pad" style={{ maxWidth: 820 }} aria-label={content.title || `Day ${dayNo}`}>
       {blocks.map((b, i) => <Render key={i} block={b} />)}
     </article>
+    <DayWork code={code} day={dayNo} steps={dayStepsFrom(body)} state={(mine?.state as 'done' | 'skipped' | undefined) ?? 'open'} xp={mine?.xpEarned ?? 0} dayXp={DAY_XP} next={next ? { code: next.level.code, day: next.position } : null} levelHref={`/levels/${code}`} />
     <nav className="row between wrap gap-12" aria-label="Day navigation" style={{ marginTop: 18, maxWidth: 820 }}>
       {prev ? <Link className="btn btn-outline" href={`/levels/${prev.level.code}/days/${prev.position}`}><ChevronLeft size={16} /> Day {prev.position}</Link> : <span />}
       {next ? <Link className="btn btn-primary" href={`/levels/${next.level.code}/days/${next.position}`}>Day {next.position} <ChevronRight size={16} /></Link> : <span />}

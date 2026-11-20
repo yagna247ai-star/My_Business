@@ -25,7 +25,7 @@ async function Journey() {
           <h2 className="h3" id={`st-${idx}`} style={{ marginBottom: 10 }}>Stage {idx} · {title}</h2>
           <div className="lv-grid">{levels.filter(l => l.stage?.idx === idx).map(l => {
             const locked = l.state === 'locked';
-            const status = l.state === 'approved' ? <><CheckCircle2 size={14} />Approved</> : locked ? <><Lock size={14} />After Level {l.idx - 1} is approved</> : !l.published ? <><Unlock size={14} />Unlocked · content coming</> : <><Clock size={14} />{l.state.replace('_', ' ')}</>;
+            const status = l.state === 'approved' ? <><CheckCircle2 size={14} />Approved</> : locked ? <><Lock size={14} />After Level {l.idx - 1} is complete</> : !l.published ? <><Unlock size={14} />Unlocked · content coming</> : <><Clock size={14} />{l.state.replace('_', ' ')}</>;
             const inner = <><span className="code lv-code">L{String(l.idx).padStart(2, '0')} · {l.xp} XP</span><span className="nm">{l.title}{l.idx === top ? <> <span className="crown-tag" aria-label="Your top approved level"><Crown size={16} /> Top level</span></> : null}</span><span className="muted xs">{(l.summary || '').split(' · ').slice(0, 3).join(' · ')}</span><span className="st">{status}</span></>;
             return locked ? <div key={l.idx} className="lv-tile locked" aria-label={`Level ${l.idx} ${l.title}, locked`}>{inner}</div> : <Link key={l.idx} href={`/levels/${l.code}`} className="lv-tile current lift">{inner}</Link>;
           })}</div>

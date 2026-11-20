@@ -13,6 +13,7 @@ import { resolveConfig } from './personalise';
 import { personaOf } from './profile';
 import { createHash } from 'crypto';
 import { readTable, validateDataset, DatasetError, type DatasetReport, type DatasetSchema } from './daDomains/datasetCheck';
+import { DAY_XP, dayStepsFrom, finished, levelComplete, levelPoints, moveOnMessage } from './levelFlowRules';
 
 /* ---------- config helpers ---------- */
 type AnyCfg = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -68,15 +69,21 @@ export async function levelState(ctx: Ctx, code: string) {
   const persona = await personaOf(ctx.tenantId, ctx.userId);
   const latest = progress.submissions[0] || null;
   const acts = level.activities.map((a, i) => {
-    const rec = ap.get(a.id); const prevDone = i === 0 || ap.get(level.activities[i - 1].id)?.state === 'completed';
-    let state: string = rec?.state === 'completed' ? 'completed' : prevDone ? 'available' : 'locked';
-    if (a.idx === 6 && state !== 'completed' && latest) state = latest.state === 'needs_changes' ? 'needs_changes' : latest.state === 'pending' ? 'in_review' : state;
+    // Skipping counts as finishing: the next activity opens, and the skipped one can still be done later for its points.
+    const rec = ap.get(a.id); const prevDone = i === 0 || finished(ap.get(level.activities[i - 1].id)?.state);
+    let state: string = rec?.state === 'completed' ? 'completed' : rec?.state === 'skipped' ? 'skipped' : prevDone ? 'available' : 'locked';
+    if (a.idx === 6 && !finished(state) && latest) state = latest.state === 'needs_changes' ? 'needs_changes' : latest.state === 'pending' ? 'in_review' : state;
     if (a.idx === 5 && latest?.state === 'needs_changes') state = 'available';
     const cfg = resolveConfig(parseCfg(a.config), persona);
     return { id: a.id, idx: a.idx, code: a.code, title: a.title, xp: a.xpReward, state, config: publicConfig(cfg), data: rec?.data ? JSON.parse(rec.data) : null, authored: cfg.kind && cfg.kind !== 'unauthored' };
   });
   const boss = progress.bossProgress;
-  return { level, locked: false as const, persona, progress, activities: acts, latest, boss: boss ? { attempts: boss.attempts, max: boss.maxAttempts, result: boss.harnessResult ? JSON.parse(boss.harnessResult) : null } : { attempts: 0, max: 3, result: null } };
+  const days = await levelDays(level.id, e.id);
+  const complete = levelComplete({ activities: level.activities.map(a => ({ idx: a.idx, state: ap.get(a.id)?.state })), bossAttempts: boss?.attempts ?? 0, days });
+  const next = complete ? await prisma.level.findFirst({ where: { journeyId: level.journeyId, idx: level.idx + 1 }, select: { code: true, title: true } }) : null;
+  const total = levelPoints(level.xpReward, days.length);
+  const completion = { complete, earned: progress.xpEarned, total, next, message: complete ? moveOnMessage(progress.xpEarned, total, next?.title ?? null) : null };
+  return { level, locked: false as const, persona, progress, activities: acts, latest, days, completion, boss: boss ? { attempts: boss.attempts, max: boss.maxAttempts, result: boss.harnessResult ? JSON.parse(boss.harnessResult) : null } : { attempts: 0, max: 3, result: null } };
 }
 
 async function loadForWrite(ctx: Ctx, code: string, idx: number) {
@@ -91,6 +98,11 @@ async function loadForWrite(ctx: Ctx, code: string, idx: number) {
 }
 
 async function markComplete(ctx: Ctx, st: Extract<Awaited<ReturnType<typeof levelState>>, { locked: false }>, act: { id: string; idx: number; xp: number; code: string }, data: unknown) {
+  const r = await markCompleteTx(ctx, st, act, data);
+  const advanced = await advanceIfComplete(ctx.tenantId, st.progress.id);
+  return { ...r, advanced };
+}
+async function markCompleteTx(ctx: Ctx, st: Extract<Awaited<ReturnType<typeof levelState>>, { locked: false }>, act: { id: string; idx: number; xp: number; code: string }, data: unknown) {
   return prisma.$transaction(async tx => {
     const already = await tx.activityProgress.findUnique({ where: { progressId_activityId: { progressId: st.progress.id, activityId: act.id } } });
     const first = already?.state !== 'completed';
@@ -231,15 +243,15 @@ export async function submitProof(ctx: Ctx, code: string, p: { evidenceUrl: stri
     return { submissionId: sub.id, attempt, xp: xp.amount };
   });
   await runAutoReview(ctx.tenantId, st.progress.id);
-  return out;
+  const advanced = await advanceIfComplete(ctx.tenantId, st.progress.id);
+  return { ...out, advanced };
 }
 
 /* ---------- activity 6: boss ---------- */
 export async function runBoss(ctx: Ctx, code: string, answers: { choice: number; why: string }[]) {
   const { st, cfg } = await loadForWrite(ctx, code, 6);
   if (st.locked) throw forbidden();
-  if (!st.latest) throw forbidden('Submit your proof (activity 5) before the Boss challenge.');
-  if (st.latest.state === 'approved') throw conflict('This level is already approved.');
+  if (st.latest?.state === 'approved') throw conflict('This level is already approved.');
   if (!Array.isArray(answers) || answers.length !== cfg.scenarios.length) throw badRequest(`Answer all ${cfg.scenarios.length} scenarios.`);
   const results = cfg.scenarios.map((s: AnyCfg, i: number) => {
     const a = answers[i] || { choice: -1, why: '' };
@@ -259,5 +271,115 @@ export async function runBoss(ctx: Ctx, code: string, answers: { choice: number;
     return { passed, total: cfg.scenarios.length, best, attemptsLeft: bp.maxAttempts - bp.attempts - 1, results };
   });
   await runAutoReview(ctx.tenantId, st.progress.id);
-  return out;
+  const advanced = await advanceIfComplete(ctx.tenantId, st.progress.id);
+  return { ...out, advanced };
+}
+
+/* ---------- free progression: skip, day pages, and opening the next level ---------- */
+
+/** The day pages of a level and the learner's state on each: open | done | skipped. */
+export async function levelDays(levelId: string, enrollmentId: string) {
+  const [pages, rows] = await Promise.all([
+    prisma.content.findMany({ where: { levelId, kind: 'md' }, select: { position: true, title: true }, orderBy: { position: 'asc' } }),
+    prisma.dayProgress.findMany({ where: { enrollmentId, levelId }, select: { day: true, state: true, xpEarned: true } }),
+  ]);
+  const by = new Map(rows.map(r => [r.day, r]));
+  return pages.map(p => ({ day: p.position, title: p.title ?? `Day ${p.position}`, state: by.get(p.position)?.state ?? 'open', xp: by.get(p.position)?.xpEarned ?? 0 }));
+}
+
+/**
+ * Open the next level once every activity and day of this one is done or skipped. Review never blocks this.
+ * Idempotent: safe to call after every save. Never resets a level the learner has already opened.
+ */
+export async function advanceIfComplete(tenantId: string, progressId: string): Promise<{ next: string | null; message: string } | null> {
+  const p = await prisma.progress.findUnique({ where: { id: progressId }, include: { level: { include: { activities: { select: { id: true, idx: true } } } }, activityProgress: { select: { activityId: true, state: true } }, bossProgress: { select: { attempts: true } } } });
+  if (!p) return null;
+  const st = new Map(p.activityProgress.map(a => [a.activityId, a.state]));
+  const days = await levelDays(p.levelId, p.enrollmentId);
+  if (!levelComplete({ activities: p.level.activities.map(a => ({ idx: a.idx, state: st.get(a.id) })), bossAttempts: p.bossProgress?.attempts ?? 0, days })) return null;
+  const next = await prisma.level.findFirst({ where: { tenantId, journeyId: p.level.journeyId, idx: p.level.idx + 1 } });
+  const total = levelPoints(p.level.xpReward, days.length);
+  const message = moveOnMessage(p.xpEarned, total, next?.title ?? null);
+  const opened = await prisma.$transaction(async tx => {
+    if (!p.completedAt) await tx.progress.update({ where: { id: p.id }, data: { completedAt: new Date() } });
+    if (!next) return false;
+    const cur = await tx.progress.findUnique({ where: { enrollmentId_levelId: { enrollmentId: p.enrollmentId, levelId: next.id } }, select: { state: true } });
+    if (cur && cur.state !== 'locked') return false;
+    await tx.progress.upsert({ where: { enrollmentId_levelId: { enrollmentId: p.enrollmentId, levelId: next.id } }, update: { state: 'available', unlockedAt: new Date() }, create: { tenantId, enrollmentId: p.enrollmentId, levelId: next.id, userId: p.userId, state: 'available', unlockedAt: new Date() } });
+    await tx.unlockEvent.create({ data: { tenantId, userId: p.userId, levelId: next.id, reason: 'level_completed' } });
+    await tx.enrollment.updateMany({ where: { id: p.enrollmentId, currentLevelIdx: { lt: next.idx } }, data: { currentLevelIdx: next.idx } });
+    await audit(tx, { tenantId, actorUserId: p.userId, action: 'level.unlocked', resourceType: 'Level', resourceId: next.id, after: { idx: next.idx, earned: p.xpEarned, total, by: 'completion' } });
+    await notify(tx, tenantId, p.userId, 'level_completed', { title: `${p.level.title} complete: ${p.xpEarned} of ${total} points`, body: message, href: `/levels/${next.code}`, tone: 'ok' });
+    return true;
+  });
+  return { next: opened && next ? next.code : null, message };
+}
+
+/** Skip an activity for now: no points, the next activity opens, and it can still be done later for its points. */
+export async function skipActivity(ctx: Ctx, code: string, idx: number) {
+  const { st, act } = await loadForWrite(ctx, code, idx);
+  if (st.locked) throw forbidden();
+  if (act.state === 'completed') throw conflict('This activity is already done.');
+  if (idx === 5 && st.latest && (st.latest.state === 'pending' || st.latest.state === 'approved')) throw conflict('Your proof is already submitted.');
+  await prisma.$transaction(async tx => {
+    await tx.activityProgress.upsert({ where: { progressId_activityId: { progressId: st.progress.id, activityId: act.id } }, update: { state: 'skipped' }, create: { progressId: st.progress.id, activityId: act.id, userId: ctx.userId, enrollmentId: st.progress.enrollmentId, state: 'skipped', xpEarned: 0 } });
+    await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'activity.skipped', resourceType: 'Activity', resourceId: act.id, after: { code: act.code, level: code } });
+  });
+  const advanced = await advanceIfComplete(ctx.tenantId, st.progress.id);
+  return { skipped: true, advanced };
+}
+
+async function loadDay(ctx: Ctx, code: string, day: number) {
+  if (ctx.role !== 'learner' && ctx.role !== 'team_lead') throw forbidden('Only learners can complete days.');
+  if (!Number.isInteger(day) || day < 1 || day > 400) throw badRequest('Unknown day.');
+  const st = await levelState(ctx, code);
+  if (st.locked) throw forbidden('This level is locked.');
+  const page = await prisma.content.findFirst({ where: { levelId: st.level.id, kind: 'md', position: day } });
+  if (!page) throw notFound(`Day ${day} is not in this level.`);
+  const prev = await prisma.dayProgress.findUnique({ where: { enrollmentId_levelId_day: { enrollmentId: st.progress.enrollmentId, levelId: st.level.id, day } } });
+  return { st, page, prev };
+}
+
+/** Mark a day done: every step ticked and one screenshot of the learner's own work. Earns DAY_XP once. */
+export async function completeDay(ctx: Ctx, code: string, day: number, p: { steps?: unknown; fileId?: unknown }) {
+  const { st, page, prev } = await loadDay(ctx, code, day);
+  const steps = dayStepsFrom(String(parseCfg(page.payload).body || ''));
+  const ticks = Array.isArray(p.steps) ? p.steps : [];
+  if (steps.length && (ticks.length !== steps.length || !ticks.every(x => x === true))) throw badRequest('Tick every step you completed.', { steps: 'Tick every step, or skip the day.' });
+  const fileId = typeof p.fileId === 'string' ? p.fileId : '';
+  const f = fileId ? await prisma.file.findFirst({ where: { id: fileId, tenantId: ctx.tenantId, ownerId: ctx.userId } }) : null;
+  if (!f || !f.mime.startsWith('image/')) throw badRequest('Upload a screenshot of your work (PNG, JPG or WebP).', { fileId: 'Upload your screenshot for this day.' });
+  if (f.avStatus === 'infected') throw badRequest('That file failed the security check. Upload a different screenshot.');
+  if (f.entityType !== 'level_evidence' || f.entityId !== code) throw badRequest('Upload the screenshot from this day’s page.', { fileId: 'Upload it here, on this day.' });
+  if ((f.width ?? 0) < 640 || (f.height ?? 0) < 360) throw badRequest(`The screenshot is too small to read (${f.width ?? '?'}×${f.height ?? '?'}). Use at least 640×360 pixels.`, { fileId: 'Too small to read.' });
+  const first = prev?.state !== 'done';
+  const xp = await prisma.$transaction(async tx => {
+    await tx.dayProgress.upsert({ where: { enrollmentId_levelId_day: { enrollmentId: st.progress.enrollmentId, levelId: st.level.id, day } }, update: { state: 'done', steps: JSON.stringify(ticks), fileId: f.id, ...(first ? { completedAt: new Date() } : {}) }, create: { tenantId: ctx.tenantId, enrollmentId: st.progress.enrollmentId, levelId: st.level.id, userId: ctx.userId, day, state: 'done', steps: JSON.stringify(ticks), fileId: f.id, completedAt: new Date() } });
+    let amount = 0;
+    if (first) {
+      const r = await awardXp(tx, { tenantId: ctx.tenantId, userId: ctx.userId, amount: DAY_XP, source: 'day_complete', idempotencyKey: `day:${st.progress.id}:${day}`, levelId: st.level.id, metadata: { day } });
+      if (r.awarded) {
+        amount = r.amount;
+        await tx.dayProgress.update({ where: { enrollmentId_levelId_day: { enrollmentId: st.progress.enrollmentId, levelId: st.level.id, day } }, data: { xpEarned: amount } });
+        await tx.progress.update({ where: { id: st.progress.id }, data: { xpEarned: { increment: amount }, state: st.progress.state === 'available' ? 'in_progress' : undefined } });
+      }
+      await touchStreak(tx, ctx.tenantId, ctx.userId);
+    }
+    await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'day.completed', resourceType: 'Level', resourceId: st.level.id, after: { day, fileId: f.id, xp: amount } });
+    return amount;
+  });
+  const advanced = await advanceIfComplete(ctx.tenantId, st.progress.id);
+  return { done: true, xp, first, advanced };
+}
+
+/** Skip a day for now: no points. It can still be completed later for its points. */
+export async function skipDay(ctx: Ctx, code: string, day: number) {
+  const { st, prev } = await loadDay(ctx, code, day);
+  if (prev?.state === 'done') throw conflict('This day is already done.');
+  await prisma.$transaction(async tx => {
+    await tx.dayProgress.upsert({ where: { enrollmentId_levelId_day: { enrollmentId: st.progress.enrollmentId, levelId: st.level.id, day } }, update: { state: 'skipped' }, create: { tenantId: ctx.tenantId, enrollmentId: st.progress.enrollmentId, levelId: st.level.id, userId: ctx.userId, day, state: 'skipped' } });
+    await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'day.skipped', resourceType: 'Level', resourceId: st.level.id, after: { day } });
+  });
+  const advanced = await advanceIfComplete(ctx.tenantId, st.progress.id);
+  return { skipped: true, advanced };
 }

@@ -37,13 +37,13 @@ async function trackState(tenantId: string, userId: string) {
     .filter(x => x.c.family === FAMILY && x.c.domain === domain && isTrackLevel(x.c.track))
     .map(x => ({ level: x.c.track as TrackLevel, journeyId: x.j.id, title: String(x.c.problem ?? x.j.title) }))
     .sort((a, b) => ['easy', 'intermediate', 'hard', 'critical'].indexOf(a.level) - ['easy', 'intermediate', 'hard', 'critical'].indexOf(b.level));
-  const m1 = await prisma.progress.findFirst({ where: { enrollmentId: enr.id, level: { idx: 1 } }, select: { state: true } });
+  const m1 = await prisma.progress.findFirst({ where: { enrollmentId: enr.id, level: { idx: 1 } }, select: { state: true, completedAt: true } });
   const pending = await prisma.trackChange.findFirst({ where: { tenantId, userId, state: 'pending' }, orderBy: { createdAt: 'desc' } });
   const by = pending ? await prisma.user.findUnique({ where: { id: pending.requestedBy }, select: { name: true } }) : null;
   const pendingTo = pending ? options.find(o => o.journeyId === pending.toJourneyId) : null;
   return {
     enrollmentId: enr.id, journeyId: enr.journeyId, domain, level: cfg.track as TrackLevel, title: String(cfg.problem ?? enr.journey.title),
-    options, module1State: m1?.state ?? null, changeable: trackChangeAllowed(m1?.state),
+    options, module1State: m1?.state ?? null, changeable: trackChangeAllowed(m1?.state, !!m1?.completedAt),
     pending: pending && pendingTo ? { id: pending.id, level: pendingTo.level, title: pendingTo.title, reason: pending.reason, by: by?.name ?? 'Your program team' } : null,
   };
 }
@@ -79,7 +79,8 @@ async function applyMove(tx: Tx, a: { tenantId: string; userId: string; fromEnro
   if (!toL1) return toEnrollmentId;
   // Both modes start Module 1 of the new track clean; "continue" then carries over the Module 1 activities already done.
   await tx.activityProgress.deleteMany({ where: { progressId: toL1.id } });
-  await tx.progress.update({ where: { id: toL1.id }, data: { state: 'available' } });
+  await tx.dayProgress.deleteMany({ where: { enrollmentId: toEnrollmentId, levelId: toL1.levelId } });
+  await tx.progress.update({ where: { id: toL1.id }, data: { state: 'available', completedAt: null } });
   if (a.mode === 'continue') {
     const done = await tx.activityProgress.findMany({ where: { enrollmentId: a.fromEnrollmentId, state: 'completed', progress: { level: { idx: 1 } } }, include: { activity: { select: { idx: true } } } });
     // One batched insert. xpEarned 0: the points were already awarded once and stay in the ledger.
@@ -88,6 +89,10 @@ async function applyMove(tx: Tx, a: { tenantId: string; userId: string; fromEnro
       return target ? [{ progressId: toL1.id, activityId: target.id, userId: a.userId, enrollmentId: toEnrollmentId, state: 'completed', xpEarned: 0, data: JSON.stringify({ carriedFromTrackChange: true }), completedAt: d.completedAt ?? new Date() }] : [];
     });
     if (rows.length) await tx.activityProgress.createMany({ data: rows });
+    const fromL1 = await tx.progress.findFirst({ where: { enrollmentId: a.fromEnrollmentId, level: { idx: 1 } }, select: { levelId: true } });
+    const days = fromL1 ? await tx.dayProgress.findMany({ where: { enrollmentId: a.fromEnrollmentId, levelId: fromL1.levelId, state: 'done' } }) : [];
+    // Day pages finished in Module 1 stay done too (no new points: they were awarded once).
+    if (days.length) await tx.dayProgress.createMany({ data: days.map(d => ({ tenantId: a.tenantId, enrollmentId: toEnrollmentId, levelId: toL1.levelId, userId: a.userId, day: d.day, state: 'done', steps: d.steps, fileId: d.fileId, xpEarned: 0, completedAt: d.completedAt })), skipDuplicates: true });
     if (rows.length) await tx.progress.update({ where: { id: toL1.id }, data: { state: 'in_progress' } });
   }
   return toEnrollmentId;

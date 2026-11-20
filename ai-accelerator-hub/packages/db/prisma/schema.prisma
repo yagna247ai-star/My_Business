@@ -563,6 +563,7 @@ model Enrollment {
   journey  Journey    @relation(fields: [journeyId], references: [id])
   cohort   Cohort?    @relation(fields: [cohortId], references: [id])
   progress Progress[]
+  days     DayProgress[]
 
   @@unique([tenantId, userId, journeyId])
   @@index([tenantId, userId])
@@ -1404,4 +1405,28 @@ model TrackChange {
 
   @@index([tenantId, userId, state])
   @@map("track_changes")
+}
+
+/// One row per learner per day page: the day's steps were done with a screenshot, or skipped.
+/// A skipped day earns no points and can still be completed later for its points.
+model DayProgress {
+  id           String    @id @default(cuid())
+  tenantId     String
+  enrollmentId String
+  levelId      String
+  userId       String
+  day          Int
+  state        String // done | skipped
+  steps        String? // JSON boolean[]: the steps the learner ticked
+  fileId       String? // the day's screenshot (File, entityType level_evidence)
+  xpEarned     Int       @default(0)
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, levelId, day])
+  @@index([tenantId, userId])
+  @@map("day_progress")
 }
