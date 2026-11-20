@@ -1,12 +1,13 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
-import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 
-// One type system for every theme, bundled with the app (no request to Google at runtime, no font swap flash).
+// One type system for every theme. The font files live in app/fonts (SIL OFL, see LICENSES.txt), so builds and
+// pages never call Google: no build failure when Google is unreachable, no font flash, no layout shift.
 // Inter: body and UI, very readable at small sizes. Plus Jakarta Sans: headings. JetBrains Mono: code.
-const sans = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-sans' });
-const display = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['600', '700', '800'], display: 'swap', variable: '--font-display' });
-const code = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500'], display: 'swap', variable: '--font-code' });
+const sans = localFont({ src: './fonts/inter.woff2', weight: '100 900', display: 'swap', variable: '--font-sans' });
+const display = localFont({ src: './fonts/plus-jakarta-sans.woff2', weight: '200 800', display: 'swap', variable: '--font-display' });
+const code = localFont({ src: './fonts/jetbrains-mono.woff2', weight: '100 800', display: 'swap', variable: '--font-code' });
 
 export const metadata: Metadata = {
   title: { default: 'AI Accelerator Hub', template: '%s · AI Accelerator Hub' },
