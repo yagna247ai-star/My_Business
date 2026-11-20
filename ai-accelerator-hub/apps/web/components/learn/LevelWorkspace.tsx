@@ -7,6 +7,7 @@ import { ArrowRight, Check, CheckCircle2, Clock, ExternalLink, LifeBuoy, Refresh
 import { api, ApiError } from '@/lib/client/api';
 import { FlowerBurst, GapList } from '@/components/learn/ReviewCelebration';
 import { StuckHelper } from '@/components/learn/StuckHelper';
+import { DatasetCheckPanel, ScreenshotPanel } from '@/components/learn/EvidencePanels';
 import { parseGaps } from '@/lib/domain/gaps';
 
 type Act = { id: string; idx: number; code: string; title: string; xp: number; state: string; config: any; data: any; authored: boolean };
@@ -55,6 +56,8 @@ export function LevelWorkspace(p: Props) {
             : act.config.kind === 'learn' ? <Learn a={act} code={p.code} onDone={after} />
             : act.config.kind === 'explore' ? <Explore a={act} code={p.code} onDone={after} />
             : act.config.kind === 'build' ? <Build a={act} code={p.code} onDone={after} />
+            : act.config.kind === 'dataset' ? <DatasetCheckPanel a={act} code={p.code} onDone={m => after(m, false)} /* stay: the learner reads the green report, then moves on */ />
+            : act.config.kind === 'screenshot' ? <ScreenshotPanel a={act} code={p.code} onDone={after} />
             : act.config.kind === 'proof' ? <Proof a={act} code={p.code} latest={p.latest} onDone={after} />
             : act.config.kind === 'boss' ? <Boss a={act} code={p.code} latest={p.latest} boss={p.boss} rubric={p.rubric} onDone={m => after(m, false)} />
             : <p className="text-2">This activity has not been published yet.</p>}

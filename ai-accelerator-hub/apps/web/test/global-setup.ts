@@ -32,4 +32,5 @@ export default function setup() {
   // `node --import tsx/esm` runs the same seeds without the pipe. Behaviour is identical.
   execSync('node --import tsx/esm prisma/seed.ts', { cwd, env, stdio: 'pipe' });
   execSync('node --import tsx/esm prisma/seed-v3.ts', { cwd, env, stdio: 'pipe' });
+  execSync('node --import tsx/esm prisma/seed-domain-journeys.ts', { cwd, env, stdio: 'pipe' }); // 17 domain journeys
 }

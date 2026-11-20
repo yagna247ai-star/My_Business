@@ -41,15 +41,24 @@ export async function defaultJourney(db: Db, tenantId: string) {
 }
 
 /** Published journeys a new learner can choose, default first, with a short description for the sign-up form. */
+/** The registration form only needs the domain tag; never pass the whole config JSON to the browser. */
+function publicJourneyConfig(raw: string | null): { family: string; domain: string; name: string; problem: string } | null {
+  const c = parseSettings(raw);
+  return typeof c.family === 'string' && typeof c.domain === 'string'
+    ? { family: c.family, domain: c.domain, name: String(c.name ?? c.domain), problem: String(c.problem ?? '') }
+    : null;
+}
+
 export async function registrationJourneys(db: Db, tenantId: string) {
   const [tenant, journeys] = await Promise.all([
     db.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } }),
-    db.journey.findMany({ where: { tenantId, isPublished: true, levels: { some: { idx: 1 } } }, select: { id: true, slug: true, title: true, description: true, isPublished: true, createdAt: true, _count: { select: { levels: true } } } }),
+    db.journey.findMany({ where: { tenantId, isPublished: true, levels: { some: { idx: 1 } } }, select: { id: true, slug: true, title: true, description: true, isPublished: true, createdAt: true, config: true, _count: { select: { levels: true } } } }),
   ]);
   const slug = parseSettings(tenant?.settings).defaultJourneySlug;
   const def = pickDefaultJourney(journeys, typeof slug === 'string' ? slug : null);
   return journeys
-    .map(j => ({ id: j.id, slug: j.slug, title: j.title, description: j.description, levels: j._count.levels, isDefault: j.id === def?.id }))
+    // `config` carries the domain tag for domain journeys ({ family, domain, name, problem }); only safe, public fields.
+    .map(j => ({ id: j.id, slug: j.slug, title: j.title, description: j.description, levels: j._count.levels, isDefault: j.id === def?.id, config: publicJourneyConfig(j.config) }))
     .sort((a, b) => Number(b.isDefault) - Number(a.isDefault) || a.title.localeCompare(b.title));
 }
 

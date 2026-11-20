@@ -99,6 +99,8 @@ There are two journeys: **Data Analytics** and **AI**. Only a Super Admin can ch
 - **Moving someone:** People → Journey column. Their old journey is paused, not deleted, so progress returns if they are moved back.
 - **Unpublishing** a journey hides it from sign-up and assignment. Existing learners on it keep their place. The default journey can't be unpublished; make another one the default first.
 - Learners who joined before 2026-11-19 stay on the AI journey.
+- **Domain journeys (17):** "Data Analytics by industry domain" on the sign-up form lists 17 domains (Education, BFSI, Insurance, Healthcare, Pharma, Retail, FMCG, Manufacturing, Automotive, Energy & Utilities, Telecom, Logistics, Agriculture, Government, Media, Travel, Real Estate). Each is its own journey (`da-<domain>`): 45 days, 9 modules, one enterprise problem from problem framing to Databricks, Unity Catalog, bronze/silver/gold, Power BI, ML and go-live. They appear in Journey builder like any journey (publish, unpublish, make default). Content is generated from `apps/web/lib/domain/daDomains/` and seeded on every production build (`seed:domains`); spec: [DOMAIN_ANALYTICS_JOURNEYS_SPEC.md](./DOMAIN_ANALYTICS_JOURNEYS_SPEC.md).
+- **Validated evidence:** dataset steps check an uploaded CSV/Excel in memory (columns, types, key, nulls, categories, ranges, personal data) and award XP only when every check passes; screenshot steps accept the learner's own image for that step (min 800×450) and reviewers can open it. Points flow into ranks and standings automatically.
 
 ### First-day setup checklist
 

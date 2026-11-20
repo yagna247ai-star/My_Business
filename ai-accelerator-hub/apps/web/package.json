@@ -16,7 +16,8 @@
     "smoke:role": "cd ../../packages/db && npx tsx prisma/smoke-role.ts",
     "typecheck": "tsc --noEmit -p .",
     "test:db": "vitest run",
-    "lint:ci": "next lint --quiet"
+    "lint:ci": "next lint --quiet",
+    "seed:domains": "cd ../../packages/db && TENANT_SLUG=${DEFAULT_TENANT_SLUG:-demo} npx tsx prisma/seed-domain-journeys.ts"
   },
   "dependencies": {
     "@aihub/db": "*",

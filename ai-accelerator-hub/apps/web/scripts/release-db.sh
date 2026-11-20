@@ -11,4 +11,5 @@ fi
 echo "release-db: production — applying migrations"
 npx prisma migrate deploy --schema "$SCHEMA"
 npm run seed:content
+npm run seed:domains   # 17 domain journeys; skips unchanged domains (content hash)
 npm run smoke:role

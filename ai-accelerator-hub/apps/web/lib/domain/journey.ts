@@ -11,6 +11,8 @@ import { touchStreak } from './streak';
 import { evaluateBadges } from './badges';
 import { resolveConfig } from './personalise';
 import { personaOf } from './profile';
+import { createHash } from 'crypto';
+import { readTable, validateDataset, DatasetError, type DatasetReport, type DatasetSchema } from './daDomains/datasetCheck';
 
 /* ---------- config helpers ---------- */
 type AnyCfg = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -157,7 +159,39 @@ export async function completeActivity(ctx: Ctx, code: string, idx: number, payl
     const brief = { tool: payload.tool, fields: Object.fromEntries(cfg.fields.map((x: AnyCfg) => [x.key, String(f[x.key]).trim()])), iterations: its.slice(0, cfg.iterations).map(x => ({ prompt: String(x.prompt).trim(), output: String(x.output).trim(), change: String(x.change || '').trim() })) };
     return markComplete(ctx, st, act, { brief, savedAt: new Date().toISOString() });
   }
+  if (cfg.kind === 'screenshot') {
+    // Evidence screenshot (domain journeys): the learner's own image, uploaded for this step, big enough to read.
+    const fileId = typeof payload.fileId === 'string' ? payload.fileId : '';
+    const f = fileId ? await prisma.file.findFirst({ where: { id: fileId, tenantId: ctx.tenantId, ownerId: ctx.userId } }) : null;
+    if (!f || !f.mime.startsWith('image/')) throw badRequest('Upload your screenshot (PNG, JPG or WebP) first.', { fileId: 'Upload your own screenshot for this step.' });
+    if (f.avStatus === 'infected') throw badRequest('That file failed the security check. Upload a different screenshot.');
+    if (f.entityType !== 'level_evidence' || f.entityId !== code) throw badRequest('Upload the screenshot from this step’s page.', { fileId: 'Upload it here, on this step.' });
+    const minW = Number(cfg.minWidth) || 800, minH = Number(cfg.minHeight) || 450;
+    if ((f.width ?? 0) < minW || (f.height ?? 0) < minH) throw badRequest(`The screenshot is too small to read (${f.width ?? '?'}×${f.height ?? '?'}). Use at least ${minW}×${minH} pixels.`, { fileId: 'Too small to read.' });
+    const ticks = Array.isArray(payload.checklist) ? payload.checklist : [];
+    if (ticks.length !== cfg.checklist.length || !ticks.every((x: unknown) => x === true)) throw badRequest('Confirm every item in the checklist.', { checklist: 'Tick every item.' });
+    return markComplete(ctx, st, act, { fileId: f.id, width: f.width, height: f.height, submittedAt: new Date().toISOString() });
+  }
+  if (cfg.kind === 'dataset') throw badRequest('Upload your CSV or Excel file to the dataset check.');
   throw badRequest('Unsupported activity.');
+}
+
+/* ---------- dataset check (domain journeys): validate an uploaded CSV/XLSX in memory, never store it ---------- */
+export async function checkDataset(ctx: Ctx, code: string, idx: number, filename: string, bytes: Buffer): Promise<{ passed: boolean; report?: DatasetReport; error?: string; xp?: number; first?: boolean }> {
+  const { st, act, cfg } = await loadForWrite(ctx, code, idx);
+  if (st.locked) throw forbidden();
+  if (cfg.kind !== 'dataset') throw badRequest('This step does not take a dataset.');
+  let report: DatasetReport;
+  try {
+    report = validateDataset(readTable(bytes, filename), cfg.schema as DatasetSchema);
+  } catch (e) {
+    if (e instanceof DatasetError) return { passed: false, error: e.message };
+    throw e;
+  }
+  if (!report.passed) return { passed: false, report };
+  const sha256 = createHash('sha256').update(bytes).digest('hex');
+  const r = await markComplete(ctx, st, act, { dataset: cfg.schema.name, filename: filename.slice(0, 120), sha256, rows: report.rows, columns: report.columns, checkedAt: new Date().toISOString() });
+  return { passed: true, report, xp: r.xp, first: r.first };
 }
 
 /* ---------- activity 5: proof ---------- */

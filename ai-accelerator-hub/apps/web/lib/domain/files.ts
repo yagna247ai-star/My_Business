@@ -114,7 +114,7 @@ export async function readFile(ctx: Ctx, fileId: string) {
   const f = await prisma.file.findFirst({ where: { id: fileId, tenantId: ctx.tenantId } });
   if (!f) throw notFound('File not found.');
   const moderator = hasPerm(ctx, 'community:moderate');
-  const labReviewer = f.entityType === 'agent_lab' && hasPerm(ctx, 'review:read'); // Agent Lab screenshots are reviewed proof
+  const labReviewer = (f.entityType === 'agent_lab' || f.entityType === 'level_evidence') && hasPerm(ctx, 'review:read'); // Agent Lab and domain-journey screenshots are reviewed proof
   const avatar = f.entityType === 'avatar'; // profile photos are visible to everyone in the same tenant, once scanned
   if (f.ownerId !== ctx.userId && !moderator && !labReviewer && !avatar) throw notFound('File not found.');
   const ok = servable({ avStatus: f.avStatus, mime: f.mime, production: process.env.NODE_ENV === 'production' });

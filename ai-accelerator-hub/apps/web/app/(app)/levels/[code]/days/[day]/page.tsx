@@ -20,8 +20,8 @@ function Render({ block }: { block: Block }) {
     }
     case 'p': return <p style={{ margin: '8px 0', lineHeight: 1.6 }}><Inline text={block.text} /></p>;
     case 'quote': return <blockquote className="card" style={{ margin: '12px 0', padding: '10px 14px', borderLeft: '4px solid var(--primary)', background: 'var(--gold-tint)' }}><Inline text={block.text} /></blockquote>;
-    case 'ul': return <ul style={{ margin: '8px 0', paddingLeft: 22, lineHeight: 1.6 }}>{block.items.map((x, i) => <li key={i}><Inline text={x} /></li>)}</ul>;
-    case 'ol': return <ol style={{ margin: '8px 0', paddingLeft: 22, lineHeight: 1.6 }}>{block.items.map((x, i) => <li key={i}><Inline text={x} /></li>)}</ol>;
+    case 'ul': return <ul style={{ margin: '8px 0', paddingLeft: 22, lineHeight: 1.6, listStyle: 'disc' }}>{block.items.map((x, i) => <li key={i}><Inline text={x} /></li>)}</ul>;
+    case 'ol': return <ol style={{ margin: '8px 0', paddingLeft: 26, lineHeight: 1.6, listStyle: 'decimal' }}>{block.items.map((x, i) => <li key={i}><Inline text={x} /></li>)}</ol>;
     case 'table': return (
       <div style={{ overflowX: 'auto', margin: '12px 0' }}>
         <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 14 }}>

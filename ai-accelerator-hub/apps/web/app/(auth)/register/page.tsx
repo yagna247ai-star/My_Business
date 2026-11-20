@@ -6,7 +6,8 @@ import { AuthCard } from '@/components/auth/AuthCard';
 import { api, ApiError } from '@/lib/client/api';
 
 type Form = { name: string; email: string; password: string; birthYear: string; inviteCode: string; guardianEmail: string; journeySlug: string; acceptTerms: boolean };
-type JourneyOption = { slug: string; title: string; description: string | null; levels: number; isDefault: boolean };
+type JourneyOption = { slug: string; title: string; description: string | null; levels: number; isDefault: boolean; config?: { family: string; domain: string; name: string; problem: string } | null };
+const DOMAIN_FAMILY = 'data-analytics-domain'; // domain journeys are grouped under one "by industry" choice
 type Key = keyof Form;
 const THIS_YEAR = new Date().getFullYear();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -127,14 +128,36 @@ export default function RegisterPage() {
           <fieldset style={{ border: 0, padding: 0, margin: 0 }} aria-describedby={errors.journeySlug ? 'journeySlug-h' : undefined}>
             <legend className="field-label">Choose your journey</legend>
             <div className="stack gap-8" id="journeySlug">
-              {journeys.map(j => (
-                <label key={j.slug} className="card card-pad" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', borderColor: f.journeySlug === j.slug ? 'var(--gold, currentColor)' : undefined }}>
-                  <input type="radio" name="journeySlug" value={j.slug} checked={f.journeySlug === j.slug} disabled={busy} style={{ marginTop: 3, flex: 'none' }}
-                    onChange={() => { setF(p => ({ ...p, journeySlug: j.slug })); if (errors.journeySlug) setErrors(p => { const n = { ...p }; delete n.journeySlug; return n; }); }} />
-                  <span><b>{j.title}</b>{j.isDefault && <span className="badge badge-gold" style={{ marginLeft: 8 }}>Recommended</span>}
-                    <span className="small text-2" style={{ display: 'block' }}>{j.description || `${j.levels} levels`}</span></span>
-                </label>
-              ))}
+              {(() => {
+                const pick = (slug: string) => { setF(p => ({ ...p, journeySlug: slug })); if (errors.journeySlug) setErrors(p => { const n = { ...p }; delete n.journeySlug; return n; }); };
+                const domains = journeys.filter(j => j.config?.family === DOMAIN_FAMILY).sort((a, b) => a.config!.name.localeCompare(b.config!.name));
+                const general = journeys.filter(j => j.config?.family !== DOMAIN_FAMILY);
+                const chosenDomain = domains.find(d => d.slug === f.journeySlug);
+                return (<>
+                  {general.map(j => (
+                    <label key={j.slug} className="card card-pad" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', borderColor: f.journeySlug === j.slug ? 'var(--gold, currentColor)' : undefined }}>
+                      <input type="radio" name="journeySlug" value={j.slug} checked={f.journeySlug === j.slug} disabled={busy} style={{ marginTop: 3, flex: 'none' }} onChange={() => pick(j.slug)} />
+                      <span><b>{j.title}</b>{j.isDefault && <span className="badge badge-gold" style={{ marginLeft: 8 }}>Recommended</span>}
+                        <span className="small text-2" style={{ display: 'block' }}>{j.description || `${j.levels} levels`}</span></span>
+                    </label>
+                  ))}
+                  {domains.length > 0 && (
+                    <div className="card card-pad" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', borderColor: chosenDomain ? 'var(--gold, currentColor)' : undefined }}>
+                      <input type="radio" name="journeySlug" value="domain" aria-label="Data Analytics by industry domain" checked={!!chosenDomain} disabled={busy} style={{ marginTop: 3, flex: 'none' }} onChange={() => pick((chosenDomain ?? domains[0]).slug)} />
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <b>Data Analytics by industry domain</b><span className="badge badge-info" style={{ marginLeft: 8 }}>{domains.length} domains</span>
+                        <span className="small text-2" style={{ display: 'block' }}>45 days on one real enterprise problem from your industry: Databricks, Unity Catalog, bronze/silver/gold, Power BI, ML and go-live.</span>
+                        <label className="field-label" htmlFor="domainSelect" style={{ marginTop: 10 }}>Your industry domain</label>
+                        <select id="domainSelect" className="select" value={chosenDomain?.slug ?? ''} disabled={busy} onChange={e => e.target.value && pick(e.target.value)}>
+                          {!chosenDomain && <option value="">Choose a domain…</option>}
+                          {domains.map(d => <option key={d.slug} value={d.slug}>{d.config!.name} — {d.config!.problem}</option>)}
+                        </select>
+                        {chosenDomain && <span className="small text-2" style={{ display: 'block', marginTop: 6 }}>{chosenDomain.description}</span>}
+                      </span>
+                    </div>
+                  )}
+                </>);
+              })()}
             </div>
             {errors.journeySlug ? <div className="field-err" id="journeySlug-h" role="alert">{errors.journeySlug}</div> : <div className="field-hint">You can ask an admin to switch you later; your progress is kept.</div>}
           </fieldset>
