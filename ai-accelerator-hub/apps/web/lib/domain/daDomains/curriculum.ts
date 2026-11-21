@@ -7,11 +7,13 @@ import type { DomainSpec } from './types';
 import type { ColumnRule, DatasetSchema } from './datasetCheck';
 
 import { isAdvanced, PYSPARK, legacyDay } from './advanced';
+import { GUIDED } from './guided';
+import type { GuidedStep } from '../guidedSteps';
 import { labCols, excelLoadSteps, excelKpiFormulas, excelDailyFormulas, excelWhyFunctions, DIALECTS, INSTALL, checkInstall, createDatabase, ddl, loadCsv, checkData, copyClean, kpiQueries, perDialect } from './dataLab';
 
 export const DOMAIN_FAMILY = 'data-analytics-domain';
 
-export type DayPage = { day: number; title: string; body: string };
+export type DayPage = { day: number; title: string; body: string; steps?: GuidedStep[] };
 export type ActivityRow = { idx: number; code: string; title: string; xp: number; config: Record<string, any> };
 export type LevelRow = { idx: number; code: string; title: string; summary: string; xp: number; days: DayPage[]; activities: ActivityRow[] };
 export type DomainJourney = {
@@ -93,7 +95,7 @@ const PROMPT_RULES = 'Use made-up (synthetic) data only. No real names, phone nu
 type Ctx = { d: DomainSpec; s: DomainJourney['schemas'] };
 type ModuleTemplate = {
   suffix: string; title: (d: DomainSpec) => string; stage: string; xp: number; evidence: 'dataset' | 'screenshot'; layer?: 'dataset' | 'silver' | 'gold';
-  days: ((c: Ctx) => { title: string; goal: string; why: string; steps: string[]; prompt?: string; prompts?: string[]; code?: { lang: string; text: string }; pyspark?: string; legacy?: string; sections?: string; submit?: string })[];
+  days: ((c: Ctx) => { title: string; goal: string; why: string; steps: string[]; prompt?: string; prompts?: string[]; code?: { lang: string; text: string }; pyspark?: string; legacy?: string; sections?: string; submit?: string; guided?: boolean })[];
   briefing: (c: Ctx) => { problem: string; objective: string; outcome: string; criteria: string[]; check: { q: string; options: string[]; answer: number; why: string } };
   lessons: (c: Ctx) => { title: string; minutes: number; body: string }[];
   quiz: (c: Ctx) => { q: string; options: string[]; answer: number }[];
@@ -509,7 +511,8 @@ function dayMarkdown(d: DomainSpec, stage: string, n: number, x: ReturnType<Modu
     ...trackBlock(d, n),
     '## Goal', x.goal, '',
     `## Why it matters for ${d.name}`, x.why, '',
-    '## Steps', numbered(x.steps), '',
+    // Guided days show their steps as cards (concept, do, check, points) instead of a plain list.
+    ...(x.guided ? [] : ['## Steps', numbered(x.steps), '']),
   ];
   if (x.sections) parts.push(x.sections, '');
   if (x.code) parts.push('## Code', '```' + x.code.lang, x.code.text, '```', '');
@@ -535,8 +538,9 @@ export function buildDomainJourney(d: DomainSpec): DomainJourney {
       const day = i * 5 + k + 1; const r0 = fn(c);
       // Hard and Critical: PySpark alongside SQL, and the legacy-pipeline reverse-engineering thread.
       const py = adv ? PYSPARK[m.suffix]?.[k]?.(d) : undefined; const lg = legacyDay(d, day);
-      const r = { ...r0, ...(py ? { pyspark: py } : {}), ...(lg ? { legacy: lg.section, steps: [...r0.steps, ...lg.steps] } : {}) };
-      return { day, title: r.title, body: dayMarkdown(d, m.stage, day, r) };
+      const guided = GUIDED[m.suffix]?.[k]?.(d);
+      const r = { ...r0, ...(py ? { pyspark: py } : {}), ...(lg ? { legacy: lg.section, steps: [...r0.steps, ...lg.steps] } : {}), ...(guided ? { guided: true } : {}) };
+      return { day, title: r.title, body: dayMarkdown(d, m.stage, day, r), ...(guided ? { steps: guided } : {}) };
     });
     const evidenceTitle = m.evidence === 'dataset' ? `Dataset Check: ${m.layer === 'gold' ? 'Gold KPI Mart' : m.layer === 'silver' ? 'Silver Table' : 'Structured Dataset'}` : 'Screenshot Evidence';
     const activities: ActivityRow[] = [

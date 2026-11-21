@@ -10,10 +10,10 @@ import type { Ctx } from '@/lib/server/context';
 import { AppError } from '@/lib/server/errors';
 import { _resetRateLimits } from '@/lib/server/http';
 import { register } from '@/lib/domain/account';
-import { completeActivity, completeDay, levelState, skipActivity, skipDay } from '@/lib/domain/journey';
+import { completeActivity, completeDay, completeStep, levelState, skipActivity, skipDay } from '@/lib/domain/journey';
 import { myTrack } from '@/lib/domain/journeyTracks';
 import { totalXp } from '@/lib/domain/xp';
-import { DAY_XP, dayStepsFrom } from '@/lib/domain/levelFlowRules';
+
 
 const status = async (p: Promise<unknown>) => { try { await p; return 200; } catch (e) { return (e as AppError).status; } };
 const ctxFor = async (email: string): Promise<Ctx> => {
@@ -38,20 +38,17 @@ describe('Free progression (integration)', () => {
   });
   beforeEach(() => _resetRateLimits());
 
-  it('a day needs every step ticked and the learner’s own screenshot from this level; it earns its points once', async () => {
+  it('a guided day is done step by step (the old one-screenshot route is refused), and earns its points once', async () => {
     const page = await prisma.content.findFirstOrThrow({ where: { level: { code: L1, journey: { slug: 'da-education-easy' } }, kind: 'md', position: 1 } });
-    const steps = dayStepsFrom(JSON.parse(page.payload!).body);
-    expect(steps.length).toBeGreaterThanOrEqual(2);
-    expect(await status(completeDay(me, L1, 1, { steps: steps.map(() => false), fileId: shot }))).toBe(400);
-    expect(await status(completeDay(me, L1, 1, { steps: steps.map(() => true) }))).toBe(400);
-    expect(await status(completeDay(me, L1, 1, { steps: steps.map(() => true), fileId: await screenshot(L2) }))).toBe(400);
-    expect(await status(completeDay(me, L1, 1, { steps: steps.map(() => true), fileId: await screenshot(L1, 300, 200) }))).toBe(400);
+    expect(await status(completeDay(me, L1, 1, { steps: [true, true, true, true], fileId: shot }))).toBe(400);
+    const steps = JSON.parse(page.payload!).steps as { check: { kind: string } }[];
+    expect(steps.length).toBeGreaterThanOrEqual(3);
     const before = await totalXp(me.tenantId, me.userId);
-    const r = await completeDay(me, L1, 1, { steps: steps.map(() => true), fileId: shot });
-    expect(r.xp).toBe(DAY_XP);
-    const again = await completeDay(me, L1, 1, { steps: steps.map(() => true), fileId: shot });
-    expect(again.xp).toBe(0);
-    expect(await totalXp(me.tenantId, me.userId)).toBe(before + DAY_XP);
+    let xp = 0;
+    for (let i = 0; i < steps.length; i++) xp += (await completeStep(me, L1, 1, i, { answer: 'Class teachers call absent children first and the principal tracks catch-up plans for each absent child this week.' })).xp;
+    expect(xp).toBeGreaterThan(0);
+    expect(await totalXp(me.tenantId, me.userId)).toBe(before + xp);
+    expect(await status(completeStep(me, L1, 1, 0, { answer: 'again, the same thing once more for the record' }))).toBe(409);
     expect(await status(skipDay(me, L1, 1))).toBe(409); // a done day cannot be skipped
   });
 
@@ -95,9 +92,10 @@ describe('Free progression (integration)', () => {
     const r = await completeActivity(me, L1, 2, { answers: learn.quiz.map((q: { answer: number }) => q.answer) }) as { xp: number };
     expect(r.xp).toBeGreaterThan(0);
     expect(await totalXp(me.tenantId, me.userId)).toBe(before + r.xp);
-    const page = await prisma.content.findFirstOrThrow({ where: { level: { code: L1, journey: { slug: 'da-education-easy' } }, kind: 'md', position: 2 } });
-    const d2 = await completeDay(me, L1, 2, { steps: dayStepsFrom(JSON.parse(page.payload!).body).map(() => true), fileId: shot });
-    expect(d2.xp).toBe(DAY_XP);
+    // Day 2 was skipped as a whole; doing one of its steps later earns that step's points and keeps the day finished.
+    const d2 = await completeStep(me, L1, 2, 0, { answer: 'Measure: absence days; period: last 10 school days; breakdown: by class and section at Kukatpally.' });
+    expect(d2.xp).toBe(3);
+    expect((await prisma.dayProgress.findFirstOrThrow({ where: { userId: me.userId, day: 2 } })).state).toBe('done');
     expect((await levelState(me, L2)).locked).toBe(false);
   });
 

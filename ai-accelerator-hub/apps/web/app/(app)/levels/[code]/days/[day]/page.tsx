@@ -7,6 +7,8 @@ import { parseMarkdown } from '@/lib/domain/lessonMarkdown';
 import { guarded } from '@/lib/server/page';
 import { DAY_XP, dayStepsFrom } from '@/lib/domain/levelFlowRules';
 import { DayWork } from '@/components/learn/DayWork';
+import { GuidedDay } from '@/components/learn/GuidedDay';
+import { guidedStepsOf } from '@/lib/domain/journey';
 import { TranslateLesson } from '@/components/learn/TranslateLesson';
 import { getLocale, getT } from '@/lib/i18n/server';
 import { cachedLesson } from '@/lib/i18n/lessonTranslate';
@@ -43,7 +45,11 @@ async function DayPage({ params, searchParams }: { params: Promise<{ code: strin
   // Steps to tick: the translated ones when the translation kept the same list, else the English ones.
   const englishSteps = dayStepsFrom(body); const translatedSteps = translated ? dayStepsFrom(translated) : [];
   const steps = translatedSteps.length === englishSteps.length ? translatedSteps : englishSteps;
-  const mine = await prisma.dayProgress.findUnique({ where: { enrollmentId_levelId_day: { enrollmentId: enrollment.id, levelId: level.id, day: dayNo } }, select: { state: true, xpEarned: true } });
+  const mine = await prisma.dayProgress.findUnique({ where: { enrollmentId_levelId_day: { enrollmentId: enrollment.id, levelId: level.id, day: dayNo } }, select: { state: true, xpEarned: true, steps: true } });
+  // Guided days: the task as step cards (concept, do, check, points) instead of a ticklist and one screenshot.
+  const guided = guidedStepsOf(content.payload);
+  const stepStates = (() => { try { const v = JSON.parse(mine?.steps ?? '[]'); return Array.isArray(v) && v.every(x => x === null || typeof x === 'object') ? v : []; } catch { return []; } })();
+  if (guided && mine?.state === 'skipped' && !stepStates.length) guided.forEach((_, i) => { stepStates[i] = { s: 'skipped', xp: 0, at: '' }; });
 
   return (<>
     <section className="ph ph-plain" style={{ marginBottom: 14 }}>
@@ -58,7 +64,7 @@ async function DayPage({ params, searchParams }: { params: Promise<{ code: strin
     <article className="card card-pad" style={{ maxWidth: 820 }} aria-label={content.title || `Day ${dayNo}`}>
       {blocks.map((b, i) => <Render key={i} block={b} />)}
     </article>
-    <DayWork code={code} day={dayNo} steps={steps} state={(mine?.state as 'done' | 'skipped' | undefined) ?? 'open'} xp={mine?.xpEarned ?? 0} dayXp={DAY_XP} next={next ? { code: next.level.code, day: next.position } : null} levelHref={`/levels/${code}`} />
+    {guided ? <GuidedDay code={code} day={dayNo} steps={guided} states={stepStates} /> : <DayWork code={code} day={dayNo} steps={steps} state={(mine?.state as 'done' | 'skipped' | undefined) ?? 'open'} xp={mine?.xpEarned ?? 0} dayXp={DAY_XP} next={next ? { code: next.level.code, day: next.position } : null} levelHref={`/levels/${code}`} />}
     <nav className="row between wrap gap-12" aria-label={t('Day navigation')} style={{ marginTop: 18, maxWidth: 820 }}>
       {prev ? <Link className="btn btn-outline" href={`/levels/${prev.level.code}/days/${prev.position}`}><ChevronLeft size={16} /> {t('Day {n}', { n: prev.position })}</Link> : <span />}
       {next ? <Link className="btn btn-primary" href={`/levels/${next.level.code}/days/${next.position}`}>{t('Day {n}', { n: next.position })} <ChevronRight size={16} /></Link> : <span />}

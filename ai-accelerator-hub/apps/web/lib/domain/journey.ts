@@ -14,7 +14,8 @@ import { personaOf } from './profile';
 import { createHash } from 'crypto';
 import { readTable, validateDataset, DatasetError, type DatasetReport, type DatasetSchema } from './daDomains/datasetCheck';
 import { checkAll, checkAnswer, judgeAnswers } from './answerQuality';
-import { DAY_XP, dayStepsFrom, finished, levelComplete, levelPoints, moveOnMessage } from './levelFlowRules';
+import { validateStep, stepPoints, stepsFinished, type GuidedStep, type StepState } from './guidedSteps';
+import { DAY_XP, dayStepsFrom, finished, levelComplete, moveOnMessage } from './levelFlowRules';
 
 /* ---------- config helpers ---------- */
 type AnyCfg = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -81,7 +82,7 @@ export async function levelState(ctx: Ctx, code: string) {
   const days = await levelDays(level.id, e.id);
   const complete = levelComplete({ activities: level.activities.map(a => ({ idx: a.idx, state: ap.get(a.id)?.state })), bossAttempts: boss?.attempts ?? 0, days });
   const next = complete ? await prisma.level.findFirst({ where: { journeyId: level.journeyId, idx: level.idx + 1 }, select: { code: true, title: true } }) : null;
-  const total = levelPoints(level.xpReward, days.length);
+  const total = level.xpReward + days.reduce((n, x) => n + x.points, 0);
   const completion = { complete, earned: progress.xpEarned, total, next, message: complete ? moveOnMessage(progress.xpEarned, total, next?.title ?? null) : null };
   return { level, locked: false as const, persona, progress, activities: acts, latest, days, completion, boss: boss ? { attempts: boss.attempts, max: boss.maxAttempts, result: boss.harnessResult ? JSON.parse(boss.harnessResult) : null } : { attempts: 0, max: 3, result: null } };
 }
@@ -286,11 +287,14 @@ export async function runBoss(ctx: Ctx, code: string, answers: { choice: number;
 /** The day pages of a level and the learner's state on each: open | done | skipped. */
 export async function levelDays(levelId: string, enrollmentId: string) {
   const [pages, rows] = await Promise.all([
-    prisma.content.findMany({ where: { levelId, kind: 'md' }, select: { position: true, title: true }, orderBy: { position: 'asc' } }),
+    prisma.content.findMany({ where: { levelId, kind: 'md' }, select: { position: true, title: true, payload: true }, orderBy: { position: 'asc' } }),
     prisma.dayProgress.findMany({ where: { enrollmentId, levelId }, select: { day: true, state: true, xpEarned: true } }),
   ]);
   const by = new Map(rows.map(r => [r.day, r]));
-  return pages.map(p => ({ day: p.position, title: p.title ?? `Day ${p.position}`, state: by.get(p.position)?.state ?? 'open', xp: by.get(p.position)?.xpEarned ?? 0 }));
+  return pages.map(p => {
+    const steps = guidedStepsOf(p.payload);
+    return { day: p.position, title: p.title ?? `Day ${p.position}`, state: by.get(p.position)?.state ?? 'open', xp: by.get(p.position)?.xpEarned ?? 0, points: steps ? steps.reduce((n, x) => n + stepPoints(x), 0) : DAY_XP };
+  });
 }
 
 /**
@@ -304,7 +308,7 @@ export async function advanceIfComplete(tenantId: string, progressId: string): P
   const days = await levelDays(p.levelId, p.enrollmentId);
   if (!levelComplete({ activities: p.level.activities.map(a => ({ idx: a.idx, state: st.get(a.id) })), bossAttempts: p.bossProgress?.attempts ?? 0, days })) return null;
   const next = await prisma.level.findFirst({ where: { tenantId, journeyId: p.level.journeyId, idx: p.level.idx + 1 } });
-  const total = levelPoints(p.level.xpReward, days.length);
+  const total = p.level.xpReward + days.reduce((n, x) => n + x.points, 0);
   const message = moveOnMessage(p.xpEarned, total, next?.title ?? null);
   const opened = await prisma.$transaction(async tx => {
     if (!p.completedAt) await tx.progress.update({ where: { id: p.id }, data: { completedAt: new Date() } });
@@ -349,15 +353,11 @@ async function loadDay(ctx: Ctx, code: string, day: number) {
 /** Mark a day done: every step ticked and one screenshot of the learner's own work. Earns DAY_XP once. */
 export async function completeDay(ctx: Ctx, code: string, day: number, p: { steps?: unknown; fileId?: unknown }) {
   const { st, page, prev } = await loadDay(ctx, code, day);
+  if (guidedStepsOf(page.payload)) throw badRequest('This day is done step by step: complete or skip each step.');
   const steps = dayStepsFrom(String(parseCfg(page.payload).body || ''));
   const ticks = Array.isArray(p.steps) ? p.steps : [];
   if (steps.length && (ticks.length !== steps.length || !ticks.every(x => x === true))) throw badRequest('Tick every step you completed.', { steps: 'Tick every step, or skip the day.' });
-  const fileId = typeof p.fileId === 'string' ? p.fileId : '';
-  const f = fileId ? await prisma.file.findFirst({ where: { id: fileId, tenantId: ctx.tenantId, ownerId: ctx.userId } }) : null;
-  if (!f || !f.mime.startsWith('image/')) throw badRequest('Upload a screenshot of your work (PNG, JPG or WebP).', { fileId: 'Upload your screenshot for this day.' });
-  if (f.avStatus === 'infected') throw badRequest('That file failed the security check. Upload a different screenshot.');
-  if (f.entityType !== 'level_evidence' || f.entityId !== code) throw badRequest('Upload the screenshot from this day’s page.', { fileId: 'Upload it here, on this day.' });
-  if ((f.width ?? 0) < 640 || (f.height ?? 0) < 360) throw badRequest(`The screenshot is too small to read (${f.width ?? '?'}×${f.height ?? '?'}). Use at least 640×360 pixels.`, { fileId: 'Too small to read.' });
+  const f = await verifyShot(ctx, code, p.fileId);
   const first = prev?.state !== 'done';
   const xp = await prisma.$transaction(async tx => {
     await tx.dayProgress.upsert({ where: { enrollmentId_levelId_day: { enrollmentId: st.progress.enrollmentId, levelId: st.level.id, day } }, update: { state: 'done', steps: JSON.stringify(ticks), fileId: f.id, ...(first ? { completedAt: new Date() } : {}) }, create: { tenantId: ctx.tenantId, enrollmentId: st.progress.enrollmentId, levelId: st.level.id, userId: ctx.userId, day, state: 'done', steps: JSON.stringify(ticks), fileId: f.id, completedAt: new Date() } });
@@ -388,4 +388,72 @@ export async function skipDay(ctx: Ctx, code: string, day: number) {
   });
   const advanced = await advanceIfComplete(ctx.tenantId, st.progress.id);
   return { skipped: true, advanced };
+}
+
+/** The learner's own screenshot, uploaded on this level, readable. */
+async function verifyShot(ctx: Ctx, code: string, fileIdRaw: unknown) {
+  const fileId = typeof fileIdRaw === 'string' ? fileIdRaw : '';
+  const f = fileId ? await prisma.file.findFirst({ where: { id: fileId, tenantId: ctx.tenantId, ownerId: ctx.userId } }) : null;
+  if (!f || !f.mime.startsWith('image/')) throw badRequest('Upload a screenshot of your work (PNG, JPG or WebP).', { fileId: 'Upload your screenshot.' });
+  if (f.avStatus === 'infected') throw badRequest('That file failed the security check. Upload a different screenshot.');
+  if (f.entityType !== 'level_evidence' || f.entityId !== code) throw badRequest('Upload the screenshot from this page.', { fileId: 'Upload it here.' });
+  if ((f.width ?? 0) < 640 || (f.height ?? 0) < 360) throw badRequest(`The screenshot is too small to read (${f.width ?? '?'}×${f.height ?? '?'}). Use at least 640×360 pixels.`, { fileId: 'Too small to read.' });
+  return f;
+}
+
+/* ---------- guided steps: concept → do → check → points, one step at a time ---------- */
+
+export const guidedStepsOf = (payload: string | null | undefined): GuidedStep[] | null => {
+  const s = parseCfg(payload).steps;
+  return Array.isArray(s) && s.length ? (s as GuidedStep[]) : null;
+};
+const statesOf = (raw: string | null | undefined): (StepState | null)[] => { const v = parseCfg(raw); return Array.isArray(v) ? v : []; };
+
+/** Steps of a guided day and this learner's progress on each. */
+export async function guidedDay(ctx: Ctx, code: string, day: number) {
+  const { page, prev } = await loadDay(ctx, code, day);
+  const steps = guidedStepsOf(page.payload);
+  if (!steps) return null;
+  return { steps, states: statesOf(prev?.steps), dayState: prev?.state ?? 'open' };
+}
+
+/** Do one step: checked against its rule, points awarded once. The day is done when every step is done or skipped. */
+export async function completeStep(ctx: Ctx, code: string, day: number, i: number, input: { answer?: unknown; paste?: unknown; fileId?: unknown; skip?: boolean }) {
+  const { st, page, prev } = await loadDay(ctx, code, day);
+  const steps = guidedStepsOf(page.payload);
+  if (!steps) throw badRequest('This day has no guided steps.');
+  if (!Number.isInteger(i) || i < 0 || i >= steps.length) throw badRequest('Unknown step.');
+  // A day skipped as a whole: every step counts as skipped, so doing one later never re-opens the day.
+  const saved = statesOf(prev?.steps).filter(x => x && typeof x === 'object');
+  const states: (StepState | null)[] = prev?.state === 'skipped' && !saved.length ? steps.map(() => ({ s: 'skipped' as const, xp: 0, at: '' })) : statesOf(prev?.steps);
+  const firstOpen = steps.findIndex((_, k) => !states[k]);
+  if (states[i]?.s === 'done') throw conflict('This step is already done.');
+  if (firstOpen !== -1 && i > firstOpen) throw forbidden('Finish or skip the earlier steps first.');
+  const step = steps[i];
+  let fileId: string | undefined;
+  if (!input.skip) {
+    if (step.check.kind === 'screenshot') fileId = (await verifyShot(ctx, code, input.fileId)).id;
+    const r = validateStep(step, { answer: typeof input.answer === 'string' ? input.answer : undefined, paste: typeof input.paste === 'string' ? input.paste : undefined, fileOk: !!fileId });
+    if (!r.ok) throw badRequest(r.reason, { step: r.reason });
+  }
+  const pts = input.skip ? 0 : stepPoints(step);
+  const out = await prisma.$transaction(async tx => {
+    let xp = 0;
+    if (pts) {
+      const a = await awardXp(tx, { tenantId: ctx.tenantId, userId: ctx.userId, amount: pts, source: 'step_complete', idempotencyKey: `step:${st.progress.id}:${day}:${i}`, levelId: st.level.id, metadata: { day, step: i } });
+      if (a.awarded) { xp = a.amount; await tx.progress.update({ where: { id: st.progress.id }, data: { xpEarned: { increment: xp }, state: st.progress.state === 'available' ? 'in_progress' : undefined } }); }
+      await touchStreak(tx, ctx.tenantId, ctx.userId);
+    }
+    const next = [...states]; while (next.length < steps.length) next.push(null);
+    next[i] = { s: input.skip ? 'skipped' : 'done', xp, at: new Date().toISOString(), ...(typeof input.answer === 'string' ? { answer: input.answer.slice(0, 4000) } : {}), ...(typeof input.paste === 'string' ? { paste: input.paste.slice(0, 4000) } : {}), ...(fileId ? { fileId } : {}) };
+    const allDone = stepsFinished(steps, next);
+    const anyDone = next.some(x => x?.s === 'done');
+    const state = allDone ? (anyDone ? 'done' : 'skipped') : 'in_progress';
+    const where = { enrollmentId_levelId_day: { enrollmentId: st.progress.enrollmentId, levelId: st.level.id, day } };
+    await tx.dayProgress.upsert({ where, update: { state, steps: JSON.stringify(next), xpEarned: { increment: xp }, ...(allDone ? { completedAt: new Date() } : {}) }, create: { tenantId: ctx.tenantId, enrollmentId: st.progress.enrollmentId, levelId: st.level.id, userId: ctx.userId, day, state, steps: JSON.stringify(next), xpEarned: xp, completedAt: allDone ? new Date() : null } });
+    await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: input.skip ? 'step.skipped' : 'step.completed', resourceType: 'Level', resourceId: st.level.id, after: { day, step: i, xp } });
+    return { xp, dayDone: allDone };
+  });
+  const advanced = out.dayDone ? await advanceIfComplete(ctx.tenantId, st.progress.id) : null;
+  return { ...out, advanced };
 }

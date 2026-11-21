@@ -102,17 +102,17 @@ describe('40-day domain journeys', () => {
       for (const [n, l] of j.levels.entries()) for (const day of l.days) {
         expect(day.body, `${j.slug} day ${day.day}`).toContain(d.name);
         expect(day.body).toMatch(/^# Day \d+ — /m);
-        expect(day.body).toMatch(/## Steps/);
+        if (day.steps) expect(day.steps.length).toBeGreaterThanOrEqual(3); else expect(day.body).toMatch(/## Steps/); // guided days use step cards
         expect(day.body.toLowerCase()).toContain(stageWords[n].toLowerCase());
       }
-      const m2 = j.levels[1].days.map(x => x.body).join('\n');
+      const m2 = j.levels[1].days.map(x => x.body + JSON.stringify(x.steps ?? [])).join('\n');
       for (const w of ['structured', 'semi-structured', 'unstructured']) expect(m2.toLowerCase()).toContain(w);
       expect(j.levels[2].days.map(x => x.body).join('\n')).toContain(d.catalog);
     }
   });
   it('the collection module gives an AI prompt that names every dataset column', () => {
     for (const j of journeys) {
-      const prompt = j.levels[1].days.map(x => x.body).join('\n');
+      const prompt = j.levels[1].days.map(x => x.body + JSON.stringify(x.steps ?? [])).join('\n');
       for (const c of j.schemas.dataset.columns) expect(prompt, `${j.slug}: ${c.name}`).toContain(c.name);
     }
   });
@@ -164,7 +164,7 @@ describe('enterprise production grade', () => {
       [8, /Asset Bundle/i], [8, /Jobs/], [8, /runbook/i], [8, /go-live/i],
     ];
     for (const j of journeys) for (const [m, re] of where) {
-      expect(j.levels[m].days.map(x => x.body).join('\n'), `${j.slug} module ${m + 1} ${re}`).toMatch(re);
+      expect(j.levels[m].days.map(x => x.body + JSON.stringify(x.steps ?? [])).join('\n'), `${j.slug} module ${m + 1} ${re}`).toMatch(re);
     }
   });
   it('each domain’s regulations and SLA appear in its own journey', () => {

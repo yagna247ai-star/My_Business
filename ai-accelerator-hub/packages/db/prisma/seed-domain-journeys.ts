@@ -71,7 +71,7 @@ async function seedJourney(tenantId: string, j: DomainJourney): Promise<'created
     prevLevelId = lv.id;
 
     for (const d of l.days) {
-      const payload = JSON.stringify({ body: d.body, day: d.day, module: l.code });
+      const payload = JSON.stringify({ body: d.body, day: d.day, module: l.code, ...(d.steps ? { steps: d.steps } : {}) });
       const title = `Day ${d.day} — ${d.title}`;
       const row = await prisma.content.findFirst({ where: { levelId: lv.id, kind: 'md', position: d.day } });
       if (row) await prisma.content.update({ where: { id: row.id }, data: { title, payload, durationMin: 240 } });

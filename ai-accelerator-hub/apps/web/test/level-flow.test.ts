@@ -42,6 +42,7 @@ describe('free progression', () => {
 describe('day steps', () => {
   it('reads the numbered steps of every domain day', () => {
     for (const d of JOURNEY_SPECS) for (const l of buildDomainJourney(d).levels) for (const day of l.days) {
+      if (day.steps) continue; // guided days show their steps as cards
       const steps = dayStepsFrom(day.body);
       expect(steps.length, `${d.slug} day ${day.day}`).toBeGreaterThanOrEqual(2);
       expect(steps.length).toBeLessThanOrEqual(20);
@@ -58,7 +59,7 @@ describe('Module 2: Excel and SQL lab', () => {
     for (const d of JOURNEY_SPECS) {
       const m2 = buildDomainJourney(d).levels[1];
       expect(m2.days.map(x => x.day)).toEqual([6, 7, 8, 9, 10]);
-      const [d6, d7, d8, d9, d10] = m2.days.map(x => x.body);
+      const [d6, d7, d8, d9, d10] = m2.days.map(x => x.body + JSON.stringify(x.steps ?? [])); // lesson text plus guided step cards
       expect(d6).toContain('AI prompt 2 (copy)');
       expect(d7).toMatch(/From Text\/CSV/);
       expect(d7).toContain(`tbl_${d.dataset.name}`);
@@ -131,5 +132,36 @@ describe('Hard and Critical: PySpark alongside SQL, and reverse engineering', ()
     expect(day(30)).toContain('bfsi_fraud.gold.payment_txn_daily_kpis');
     expect(bodies('bfsi-critical')).toContain('withWatermark'); // Critical: Structured Streaming
     expect(bodies('bfsi')).not.toContain('withWatermark');
+  });
+});
+
+
+import { validateStep, STEP_POINTS } from '../lib/domain/guidedSteps';
+describe('guided steps (concept → do → check → points)', () => {
+  it('Days 1–10 of every domain journey are guided; every step has a concept, instructions and a working check', () => {
+    for (const s of JOURNEY_SPECS) {
+      const days = buildDomainJourney(s).levels.slice(0, 2).flatMap(l => l.days);
+      expect(days.map(d => d.day)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      for (const d of days) {
+        expect(d.steps?.length, `${s.slug} day ${d.day}`).toBeGreaterThanOrEqual(3);
+        expect(d.body).not.toContain('## Steps');
+        for (const st of d.steps!) {
+          expect(st.concept.length, `${s.slug} d${d.day} ${st.title}`).toBeGreaterThan(40);
+          expect(st.do.length).toBeGreaterThan(0);
+          if (st.check.kind === 'paste') {
+            expect(() => new RegExp(st.check.kind === 'paste' ? st.check.pattern : '')).not.toThrow();
+            if (st.check.sample) expect(validateStep(st, { paste: st.check.sample }).ok, `${s.slug} d${d.day} "${st.title}" sample must pass its own check`).toBe(true);
+          }
+        }
+      }
+    }
+  });
+  it('paste checks reject the wrong output and accept the right one; points are by effort', () => {
+    const day7 = buildDomainJourney(JOURNEY_SPECS.find(s => s.slug === 'bfsi-easy')!).levels[1].days.find(d => d.day === 7)!;
+    const header = day7.steps![0];
+    expect(validateStep(header, { paste: 'emi_id,loan_account_id' }).ok).toBe(false);
+    expect(validateStep(header, { paste: 'emi_id,loan_account_id,product,due_date,emi_amount,status,days_late,auto_debit' }).ok).toBe(true);
+    expect(validateStep(header, { paste: '' }).ok).toBe(false);
+    expect(STEP_POINTS).toEqual({ tick: 2, answer: 3, paste: 5, screenshot: 5 });
   });
 });
