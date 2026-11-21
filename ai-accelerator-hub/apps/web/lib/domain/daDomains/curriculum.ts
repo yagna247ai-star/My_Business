@@ -6,6 +6,7 @@
 import type { DomainSpec } from './types';
 import type { ColumnRule, DatasetSchema } from './datasetCheck';
 
+import { isAdvanced, PYSPARK, legacyDay } from './advanced';
 import { labCols, excelLoadSteps, excelKpiFormulas, excelDailyFormulas, excelWhyFunctions, DIALECTS, INSTALL, checkInstall, createDatabase, ddl, loadCsv, checkData, copyClean, kpiQueries, perDialect } from './dataLab';
 
 export const DOMAIN_FAMILY = 'data-analytics-domain';
@@ -92,7 +93,7 @@ const PROMPT_RULES = 'Use made-up (synthetic) data only. No real names, phone nu
 type Ctx = { d: DomainSpec; s: DomainJourney['schemas'] };
 type ModuleTemplate = {
   suffix: string; title: (d: DomainSpec) => string; stage: string; xp: number; evidence: 'dataset' | 'screenshot'; layer?: 'dataset' | 'silver' | 'gold';
-  days: ((c: Ctx) => { title: string; goal: string; why: string; steps: string[]; prompt?: string; prompts?: string[]; code?: { lang: string; text: string }; sections?: string; submit?: string })[];
+  days: ((c: Ctx) => { title: string; goal: string; why: string; steps: string[]; prompt?: string; prompts?: string[]; code?: { lang: string; text: string }; pyspark?: string; legacy?: string; sections?: string; submit?: string })[];
   briefing: (c: Ctx) => { problem: string; objective: string; outcome: string; criteria: string[]; check: { q: string; options: string[]; answer: number; why: string } };
   lessons: (c: Ctx) => { title: string; minutes: number; body: string }[];
   quiz: (c: Ctx) => { q: string; options: string[]; answer: number }[];
@@ -512,6 +513,8 @@ function dayMarkdown(d: DomainSpec, stage: string, n: number, x: ReturnType<Modu
   ];
   if (x.sections) parts.push(x.sections, '');
   if (x.code) parts.push('## Code', '```' + x.code.lang, x.code.text, '```', '');
+  if (x.pyspark) parts.push(`## PySpark (${d.track?.label ?? 'Hard'} track: submit this version)`, 'Run it in a Databricks notebook attached to serverless compute. It does the same as the SQL above with the DataFrame API.', '```python', x.pyspark, '```', '');
+  if (x.legacy) parts.push(x.legacy, '');
   if (x.prompt) parts.push('## AI prompt (copy)', '```text', x.prompt, '```', '');
   (x.prompts ?? []).forEach((pr, i) => parts.push(`## AI prompt ${i + 1} (copy)`, '```text', pr, '```', ''));
   if (x.submit) parts.push('## What to submit', x.submit, '');
@@ -527,14 +530,21 @@ export function buildDomainJourney(d: DomainSpec): DomainJourney {
     const b0 = m.briefing(c);
     const b = d.track ? { ...b0, outcome: `${d.track.label} track: ${d.track.deliverables[i] ?? b0.outcome}`, problem: i === 0 ? `${d.track.question} ${b0.problem}` : b0.problem } : b0;
     const bossSpec = m.boss(c);
-    const days = m.days.map((fn, k) => { const day = i * 5 + k + 1; const r = fn(c); return { day, title: r.title, body: dayMarkdown(d, m.stage, day, r) }; });
+    const adv = isAdvanced(d);
+    const days = m.days.map((fn, k) => {
+      const day = i * 5 + k + 1; const r0 = fn(c);
+      // Hard and Critical: PySpark alongside SQL, and the legacy-pipeline reverse-engineering thread.
+      const py = adv ? PYSPARK[m.suffix]?.[k]?.(d) : undefined; const lg = legacyDay(d, day);
+      const r = { ...r0, ...(py ? { pyspark: py } : {}), ...(lg ? { legacy: lg.section, steps: [...r0.steps, ...lg.steps] } : {}) };
+      return { day, title: r.title, body: dayMarkdown(d, m.stage, day, r) };
+    });
     const evidenceTitle = m.evidence === 'dataset' ? `Dataset Check: ${m.layer === 'gold' ? 'Gold KPI Mart' : m.layer === 'silver' ? 'Silver Table' : 'Structured Dataset'}` : 'Screenshot Evidence';
     const activities: ActivityRow[] = [
       { idx: 1, code: 'MISSION_BRIEFING', title: `Mission Briefing: ${m.title(d)}`, xp: x.briefing, config: { kind: 'briefing', estMinutes: 10, problem: b.problem, objective: b.objective, outcome: b.outcome, criteria: b.criteria, check: shuffleQ(b.check, seed) } },
       { idx: 2, code: 'LEARN', title: `Learn: ${m.title(d)}`, xp: x.learn, config: { kind: 'learn', estMinutes: 40, passPct: 60, lessons: m.lessons(c), resources: [], quiz: m.quiz(c).map(q => shuffleQ(q, seed)) } },
       { idx: 3, code: m.evidence === 'dataset' ? 'DATASET_CHECK' : 'SCREENSHOT_EVIDENCE', title: evidenceTitle, xp: x.evidence, config: m.evidenceCfg(c) },
       { idx: 4, code: 'BUILD', title: m.build(c).title, xp: x.build, config: { kind: 'build', estMinutes: 60, tools: ['ChatGPT', 'Gemini', 'Claude', 'Microsoft Copilot', 'Databricks Assistant', 'No AI tool'], fields: m.build(c).fields, iterations: 0, iterationRules: { promptMinWords: 10, outputMinWords: 15, changeMinWords: 10, maxSimilarity: 0.85 } } },
-      { idx: 5, code: 'SUBMIT_PROOF', title: `Submit Proof: ${m.title(d)}`, xp: x.proof, config: { kind: 'proof', estMinutes: 15, minWords: 50, evidenceTypes: ['Public folder or repository link (GitHub, Google Drive, OneDrive)', 'Databricks notebook export or SQL file link', 'Power BI publish link or video walkthrough'], checklist: m.proof(c) } },
+      { idx: 5, code: 'SUBMIT_PROOF', title: `Submit Proof: ${m.title(d)}`, xp: x.proof, config: { kind: 'proof', estMinutes: 15, minWords: 50, evidenceTypes: ['Public folder or repository link (GitHub, Google Drive, OneDrive)', 'Databricks notebook export or SQL file link', 'Power BI publish link or video walkthrough'], checklist: [...m.proof(c), ...(adv && ['BRONZE', 'SILVER', 'GOLD'].includes(m.suffix) ? ['My proof link includes the PySpark notebook, not only the SQL'] : []), ...(adv && m.suffix === 'GOLD' ? ['I reconciled the legacy numbers with my gold numbers and explained every difference'] : [])] } },
       { idx: 6, code: 'EVALUATION_BOSS', title: `Boss Challenge: ${m.title(d)}`, xp: x.boss, config: (() => {
         const order = bossSpec.choices.map((_, k) => k).sort((a, z) => { const r = seeded(seed + 'boss' + a + z)(); return r - 0.5; });
         return { kind: 'boss', estMinutes: 25, rubric: `DOMAIN_M${n}_RUBRIC`, attempts: 3, xpSplit: { base: x.bossBase, bossBonus: x.bossBonus }, intro: bossSpec.intro, choices: order.map(k => bossSpec.choices[k]), scenarios: bossSpec.scenarios.map(s => ({ s: s.s, correct: s.correct.map(cc => order.indexOf(cc)) })), minWhyWords: 6 };

@@ -112,3 +112,24 @@ describe('Level 2 field scenes for every domain', () => {
     }
   });
 });
+
+describe('Hard and Critical: PySpark alongside SQL, and reverse engineering', () => {
+  const bodies = (slug: string) => buildDomainJourney(JOURNEY_SPECS.find(s => s.slug === slug)!).levels.flatMap(l => l.days.map(d => d.body)).join('\n');
+  it('Hard, Critical and untracked journeys get PySpark on the Databricks days; Easy and Intermediate do not', () => {
+    for (const s of JOURNEY_SPECS) {
+      const n = (bodies(s.slug).match(/## PySpark \(/g) ?? []).length;
+      if (s.track && ['easy', 'intermediate'].includes(s.track.level)) expect(n, s.slug).toBe(0); else expect(n, s.slug).toBeGreaterThanOrEqual(14);
+    }
+  });
+  it('advanced journeys inherit a legacy pipeline on Day 16, prove its bugs on Day 21, design the replacement on Day 26 and reconcile on Day 30', () => {
+    const j = buildDomainJourney(JOURNEY_SPECS.find(s => s.slug === 'bfsi-critical')!);
+    const day = (n: number) => j.levels.flatMap(l => l.days).find(d => d.day === n)!.body;
+    expect(day(16)).toContain('CREATE PROCEDURE dbo.usp_daily_payment_txn_kpis');
+    expect(day(16)).not.toMatch(/integer division/i); // no hints on the day they read it
+    expect(day(21)).toMatch(/Integer division/);
+    expect(day(26)).toContain('/Volumes/bfsi_fraud/bronze/raw_files/');
+    expect(day(30)).toContain('bfsi_fraud.gold.payment_txn_daily_kpis');
+    expect(bodies('bfsi-critical')).toContain('withWatermark'); // Critical: Structured Streaming
+    expect(bodies('bfsi')).not.toContain('withWatermark');
+  });
+});
