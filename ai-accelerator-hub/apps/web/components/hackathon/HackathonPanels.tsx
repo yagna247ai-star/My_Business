@@ -41,7 +41,7 @@ export function HackathonPanels({ id, status, myTeam, peerTasks, result, canJudg
       <form onSubmit={e => { e.preventDefault(); call(() => api(`/api/v1/hackathons/${id}/submit`, { body: { title, repoUrl: repo, reflectionMd: reflection } }), 'Entry submitted. Good luck.'); }} style={{ display: 'grid', gap: 10, marginTop: 10 }}>
         <div><label className="field-label" htmlFor="entryTitle"><Tr>Project title</Tr></label><input id="entryTitle" className="input" value={title} onChange={e => setTitle(e.target.value)} required /></div>
         <div><label className="field-label" htmlFor="entryRepo"><Tr>GitHub repository URL</Tr></label><input id="entryRepo" className="input" type="url" value={repo} onChange={e => setRepo(e.target.value)} placeholder={t('https://github.com/…')} required /></div>
-        <div><label className="field-label" htmlFor="entryRef"><Tr>Reflection (50+ words)</Tr></label><textarea id="entryRef" className="textarea" rows={3} value={reflection} onChange={e => setReflection(e.target.value)} required /></div>
+        <div><label className="field-label" htmlFor="entryRef"><Tr>Reflection</Tr></label><textarea id="entryRef" className="textarea" rows={3} value={reflection} onChange={e => setReflection(e.target.value)} required /></div>
         <div><button className="btn btn-gold btn-sm" type="submit"><Tr>Submit entry</Tr></button></div>
       </form>
     </section>}

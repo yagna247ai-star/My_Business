@@ -62,7 +62,7 @@ export function PromptStudio({ saved, persona, onSave, fe, busy }: Props) {
       <div className="grid2" style={{ gap: 12 }}>{t.fields.map(f => {
         const r = chk.rules.find(x => x.key === f.key)!; const n = words(fields[f.key]);
         return (<label key={f.key} className="stack gap-4" style={f.rows && f.rows > 3 ? { gridColumn: '1 / -1' } : undefined}>
-          <span className="row between gap-8"><b className="small"><Tv v={f.label} /></b><span className={`xs ps-count ${r.ok ? 'ok' : ''}`} aria-live="polite">{r.ok ? <CheckCircle2 size={13} aria-hidden="true" /> : <Circle size={13} aria-hidden="true" />}{n}/{f.min}<Tr>+ words</Tr></span></span>
+          <span className="row between gap-8"><b className="small"><Tv v={f.label} /></b><span className={`xs ps-count ${r.ok ? 'ok' : ''}`} aria-live="polite">{r.ok ? <CheckCircle2 size={13} aria-hidden="true" /> : <Circle size={13} aria-hidden="true" />}</span></span>
           <span className="muted xs"><Tv v={f.hint} /></span>
           <textarea className="input" rows={f.rows || 2} value={fields[f.key] || ''} placeholder={f.placeholder} onChange={e => setFields({ ...fields, [f.key]: e.target.value })} aria-invalid={!r.ok && n > 0} />
           {!r.ok && n > 0 && <span className="xs field-hint"><Tv v={r.msg} /></span>}

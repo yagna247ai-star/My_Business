@@ -10,13 +10,15 @@
 import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { parseCfg } from './journey';
+import { checkAnswer } from './answerQuality';
 
 export type ReviewInput = {
   bossBest: number;      // scenarios answered correctly
   bossTotal: number;     // scenarios in the boss
   bossMin: number;       // minimum correct to pass (rubric.bossMin)
-  reflectionWords: number;
-  briefFieldsMet: boolean;   // every build field reached its minimum words
+  /** Quality of the reflection, 1–5 (answerQuality.checkAnswer): a real, relevant account, not a word count. */
+  reflectionScore: number;
+  briefFieldsMet: boolean;   // every build field is a real, relevant answer
   limitsWritten: boolean;    // the data-limits field is written
 };
 
@@ -35,24 +37,24 @@ const clamp = (n: number) => Math.min(5, Math.max(1, Math.round(n)));
 /** Score every rubric dimension from the evidence, then decide. Same weights and threshold as the rubric. */
 export function templateReview(input: ReviewInput, weights: Record<string, number>, threshold: number): TemplateReview {
   const correct = input.bossTotal > 0 ? clamp(1 + (4 * input.bossBest) / input.bossTotal) : 1;
-  const reflection = input.reflectionWords >= 80 ? 5 : input.reflectionWords >= 50 ? 4 : 1;
+  const reflection = Math.min(5, Math.max(1, Math.round(input.reflectionScore)));
   const scores: Record<string, number> = {
     correct_result: correct,
-    business_reading: input.reflectionWords >= 80 ? 5 : input.reflectionWords >= 50 ? 4 : 2,
+    business_reading: input.reflectionScore >= 5 ? 5 : input.reflectionScore >= 3 ? 4 : 2,
     method: input.briefFieldsMet ? 4 : 2,
     data_checks: input.limitsWritten ? 4 : 2,
     reflection,
   };
   const avg = Math.round(Object.entries(weights).reduce((s, [k, w]) => s + (scores[k] ?? 1) * w, 0) * 100) / 100;
   const bossOk = input.bossBest >= input.bossMin;
-  const reflectionOk = input.reflectionWords >= 50;
+  const reflectionOk = input.reflectionScore >= 3;
   // Hard gates, as in the proof form: boss, reflection length and every build field. The average must also clear the threshold.
   const verdict = avg >= threshold && bossOk && reflectionOk && input.briefFieldsMet ? 'approved' : 'needs_changes';
 
   const missing: Missing[] = [];
   if (!bossOk) missing.push({ item: `Boss: ${input.bossBest} of ${input.bossTotal} scenarios right (need ${input.bossMin}). Re-read each situation and choose the first step that checks the data.`, points: 5 });
-  if (input.reflectionWords < 50) missing.push({ item: `Reflection: write at least 50 words about what you did (you have ${input.reflectionWords}).`, points: 3 });
-  if (!input.briefFieldsMet) missing.push({ item: 'Method: fill every build field to its minimum word count.', points: 3 });
+  if (!reflectionOk) missing.push({ item: 'Reflection: say what you did, what surprised you, and what you learned, in your own words.', points: 3 });
+  if (!input.briefFieldsMet) missing.push({ item: 'Method: answer every build field with a real, relevant answer in your own words.', points: 3 });
   if (!input.limitsWritten) missing.push({ item: 'Data checks: name at least one limit of your data (what it cannot tell you).', points: 2 });
   const reasons = missing.map(m => m.item);
   const feedback = verdict === 'approved'
@@ -61,7 +63,6 @@ export function templateReview(input: ReviewInput, weights: Record<string, numbe
   return { scores, avg, verdict, feedback, missing: verdict === 'approved' ? [] : missing };
 }
 
-const words = (s: unknown) => String(s ?? '').trim().split(/\s+/).filter(Boolean).length;
 export const AUTO_REVIEWER_EMAIL = 'auto-reviewer@system.local';
 
 /** The system reviewer for a tenant: an account that cannot log in, with the reviewer role. */
@@ -105,16 +106,17 @@ export async function autoReviewSubmission(tenantId: string, progressId: string)
   const harness = JSON.parse(progress.bossProgress.harnessResult) as { best?: number; total?: number };
   const buildRow = a4 ? await prisma.activityProgress.findFirst({ where: { progressId, activityId: a4.id } }) : null;
   const fields: Record<string, string> = buildRow?.data ? (JSON.parse(buildRow.data).brief?.fields ?? {}) : {};
-  const fieldSpec: { key: string; minWords: number }[] = cfg4.fields ?? [];
-  const briefFieldsMet = fieldSpec.length > 0 && fieldSpec.every(f => words(fields[f.key]) >= f.minWords);
+  const fieldSpec: { key: string; label: string; hint?: string }[] = cfg4.fields ?? [];
+  const good = (f: { key: string; label: string; hint?: string }) => checkAnswer(fields[f.key], { topic: f.label, hint: f.hint, depth: 'detail' }).ok;
+  const briefFieldsMet = fieldSpec.length > 0 && fieldSpec.every(good);
   const limitField = fieldSpec.find(f => /limit/i.test(f.key));
-  const limitsWritten = limitField ? words(fields[limitField.key]) >= limitField.minWords : false;
+  const limitsWritten = limitField ? good(limitField) : false;
 
   const review = templateReview({
     bossBest: harness.best ?? 0,
     bossTotal: harness.total ?? 4,
     bossMin: 2,
-    reflectionWords: words(sub.reflectionMd),
+    reflectionScore: (() => { const q = checkAnswer(sub.reflectionMd, { topic: 'what you did, what surprised you, and what you learned', depth: 'detail' }); return q.ok ? q.score : Math.min(q.score, 2); })(),
     briefFieldsMet,
     limitsWritten,
   }, weights, rubric.passThreshold);

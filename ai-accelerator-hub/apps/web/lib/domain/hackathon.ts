@@ -12,11 +12,11 @@ import { audit, notify } from '@/lib/server/audit';
 import { awardXp } from './xp';
 import { safePublicUrl } from './journey';
 import { assertChildAllowed } from './childSafety';
+import { checkAnswer } from './answerQuality';
 
 export const STATUSES = ['draft', 'open', 'building', 'submit', 'review', 'closed'] as const;
 type Status = (typeof STATUSES)[number];
 const PEER_DIMS = ['problem', 'build', 'teamwork'] as const;
-const words = (s: unknown) => String(s || '').trim().split(/\s+/).filter(Boolean).length;
 
 async function hackathonOrThrow(tenantId: string, id: string) {
   const h = await prisma.hackathon.findFirst({ where: { id, tenantId }, include: { entries: { include: { team: { include: { members: true } }, peer: true } } } });
@@ -120,7 +120,8 @@ export async function submitEntry(ctx: Ctx, hackathonId: string, input: { title:
   const demo = input.deployedUrl ? safePublicUrl(input.deployedUrl) : null;
   if (input.deployedUrl && !demo) throw badRequest('Demo link must be a public https URL.');
   if (!input.title.trim()) throw badRequest('Title is required.');
-  if (words(input.reflectionMd) < 50) throw badRequest(`Reflection needs 50+ words (you have ${words(input.reflectionMd)}).`);
+  const refl = checkAnswer(input.reflectionMd, { topic: 'what your team built, what went wrong and what you learned', depth: 'detail' });
+  if (!refl.ok) throw badRequest(refl.reason!);
   const entry = mine[0].entries[0];
   const updated = await prisma.hackathonEntry.update({ where: { id: entry.id }, data: { title: input.title.trim(), repoUrl: repo, deployedUrl: demo, reflectionMd: input.reflectionMd.trim(), state: 'submitted', submittedAt: new Date() } });
   await audit(prisma, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'hackathon.submitted', resourceType: 'HackathonEntry', resourceId: entry.id, after: { hackathonId } });

@@ -19,6 +19,7 @@ import { PAID_AGENTS, type AgentCode } from './personalise';
 import { AGENTS, VERIFIED_ON, findMethod, nodeMajor } from './setupGuide';
 import { PASS_MARK, scoreAuto, scoreReview } from './proofScore';
 import { TECHNIQUE, buildPrompt, checkPrompt, findCase, isTechnique, readSavedPrompt, type TechniqueId } from './promptTechniques';
+import { checkAll } from './answerQuality';
 
 export { VERIFIED_ON, AGENTS } from './setupGuide';
 export type { AgentInfo, InstallMethod } from './setupGuide';
@@ -31,7 +32,6 @@ export type StepId = (typeof STEPS)[number];
 /** Patterns for common secret formats. A match blocks the save and tells the learner to rotate the key. */
 const SECRETS = [/sk-ant-[A-Za-z0-9_-]{10,}/, /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}/, /\bgh[pousr]_[A-Za-z0-9]{20,}/, /\bAKIA[0-9A-Z]{16}\b/, /\bAIza[0-9A-Za-z_-]{30,}/, /-----BEGIN [A-Z ]*PRIVATE KEY-----/];
 export const hasSecret = (s: string) => SECRETS.some(re => re.test(s));
-const words = (s: unknown) => String(s || '').trim().split(/\s+/).filter(Boolean).length;
 
 export const KEY_QUIZ = {
   q: 'Where should your API key live?',
@@ -145,8 +145,10 @@ export async function saveStep(ctx: Ctx, id: string, step: StepId, raw: unknown)
     data = { technique, caseId, fields, before, spotted: d.spotted ?? null };
   } else {
     const d = stepSchemas.result.parse(raw);
-    if (words(d.summary) < 30) errors.summary = `Describe what the agent produced in at least 30 words (you have ${words(d.summary)}).`;
-    if (words(d.verified) < 15) errors.verified = 'Say how you checked the result (ran it, opened the file, tested it) in at least 15 words.';
+    Object.assign(errors, checkAll([
+      { key: 'summary', text: d.summary, topic: 'what the agent produced', depth: 'detail' },
+      { key: 'verified', text: d.verified, topic: 'how you checked the result worked (ran it, opened the file, tested it)' },
+    ]));
     if (hasSecret(d.summary + d.verified)) errors.summary = 'Remove the secret key, then revoke it with the provider.';
     const f = await prisma.file.findFirst({ where: { id: d.screenshotId, tenantId: ctx.tenantId, ownerId: ctx.userId } });
     if (!f || !f.mime.startsWith('image/')) errors.screenshotId = 'Upload a screenshot (PNG, JPG or WebP) of the agent’s result.';

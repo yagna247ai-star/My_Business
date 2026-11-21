@@ -24,7 +24,9 @@ async function Dashboard() {
   const ctx = await requireCtx();
   if (!isLearner(ctx)) redirect(hasPerm(ctx, 'analytics:read') ? '/admin' : hasPerm(ctx, 'review:read') ? '/review' : '/settings');
   const [sum, journey, lb, profile, t] = await Promise.all([learnerSummary(ctx), journeyOverview(ctx), leaderboard(ctx, 'cohort'), getProfile(ctx), getT()]);
-  const current = journey.levels.find(l => ['available', 'in_progress', 'submitted'].includes(l.state)) || journey.levels.find(l => l.state === 'approved') || journey.levels[0];
+  // The furthest level the learner has opened: with free progression, Level 1 can stay "submitted" while Level 2 is open.
+  const opened = journey.levels.filter(l => l.state !== 'locked');
+  const current = [...opened].reverse().find(l => l.state !== 'approved') ?? opened[opened.length - 1] ?? journey.levels[0];
   const st = await levelState(ctx, current.code);
   const acts = st.locked ? [] : st.activities;
   const done = acts.filter(a => a.state === 'completed').length;

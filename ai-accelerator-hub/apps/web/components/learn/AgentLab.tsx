@@ -134,17 +134,15 @@ function Connect({ info, quiz, done, onSave, fe }: { info: AgentInfo; quiz: Prop
     <div><button className="btn btn-gold" type="button" disabled={q === null || !ok} onClick={() => onSave({ quiz: q, noKeyShared: true })}><Tr>Save</Tr></button></div></div>);
 }
 
-const wc = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
-const Count = ({ n, min }: { n: number; min: number }) => <span className={`xs ps-count ${n >= min ? 'ok' : ''}`} aria-live="polite">{n}/{min}<Tr>+ words</Tr></span>;
 
 function Result({ runId, info, savedShot, savedMeta, savedSummary, savedVerified, onSave, fe }: { runId: string; info: AgentInfo; savedShot: string | null; savedMeta: { width: number | null; height: number | null } | null; savedSummary: string; savedVerified: string; onSave: (d: unknown) => void; fe: Record<string, string> }) {
   const [summary, setSummary] = useState(savedSummary); const [verified, setVerified] = useState(savedVerified);
   const [shot, setShot] = useState<Shot | null>(savedShot ? { id: savedShot, name: 'Your saved screenshot', width: savedMeta?.width ?? null, height: savedMeta?.height ?? null, preview: `/api/v1/files/${savedShot}?inline=1` } : null);
-  const ready = !!shot && wc(summary) >= 30 && wc(verified) >= 15;
+  const ready = !!shot && summary.trim().length > 0 && verified.trim().length > 0;
   return (<div className="stack gap-12">
     <p className="text-2"><Tr>Paste the prompt you built into</Tr> {info.name}<Tr>, let it work, then show us what happened.</Tr></p>
-    <label className="stack gap-8"><span className="row between gap-8"><span className="bold small"><Tr>What did the agent produce?</Tr></span><Count n={wc(summary)} min={30} /></span><span className="muted xs"><Tr>Files, code, a plan, an answer — at least 30 words.</Tr></span><textarea className="input" rows={4} value={summary} onChange={e => setSummary(e.target.value)} /></label><Err m={fe.summary} />
-    <label className="stack gap-8"><span className="row between gap-8"><span className="bold small"><Tr>How did you check it worked?</Tr></span><Count n={wc(verified)} min={15} /></span><span className="muted xs"><Tr>Ran it, opened it, tested it, compared with what you asked — at least 15 words.</Tr></span><textarea className="input" rows={3} value={verified} onChange={e => setVerified(e.target.value)} /></label><Err m={fe.verified} />
+    <label className="stack gap-8"><span className="row between gap-8"><span className="bold small"><Tr>What did the agent produce?</Tr></span></span><span className="muted xs"><Tr>Files, code, a plan, an answer: describe what you got.</Tr></span><textarea className="input" rows={4} value={summary} onChange={e => setSummary(e.target.value)} /></label><Err m={fe.summary} />
+    <label className="stack gap-8"><span className="row between gap-8"><span className="bold small"><Tr>How did you check it worked?</Tr></span></span><span className="muted xs"><Tr>Ran it, opened it, tested it, compared with what you asked.</Tr></span><textarea className="input" rows={3} value={verified} onChange={e => setVerified(e.target.value)} /></label><Err m={fe.verified} />
     <div className="stack gap-8"><span className="bold small"><Tr>Screenshot of the result</Tr></span><span className="muted xs"><Tr>It should show</Tr> {info.name} <Tr>itself and the result you described. Your reviewer checks this.</Tr></span>
       <ScreenshotInput runId={runId} value={shot} onChange={setShot} error={fe.screenshotId} /></div>
     <div><button className="btn btn-gold" type="button" disabled={!ready} onClick={() => onSave({ summary, verified, screenshotId: shot!.id })}><Tr>Save result</Tr></button>{!ready && <span className="muted xs" style={{ marginLeft: 8 }}>{!shot ? <Tr>Add your screenshot.</Tr> : <Tr>Add a little more to the write-up.</Tr>}</span>}</div>

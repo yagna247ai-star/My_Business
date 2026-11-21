@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { templateReview, type ReviewInput } from '@/lib/domain/autoReview';
 
 const WEIGHTS = { correct_result: 0.35, business_reading: 0.25, method: 0.2, data_checks: 0.1, reflection: 0.1 };
-const good: ReviewInput = { bossBest: 4, bossTotal: 4, bossMin: 2, reflectionWords: 60, briefFieldsMet: true, limitsWritten: true };
+const good: ReviewInput = { bossBest: 4, bossTotal: 4, bossMin: 2, reflectionScore: 4, briefFieldsMet: true, limitsWritten: true };
 
 describe('automated review template', () => {
   it('approves a complete, correct submission and gives whole-number scores 1–5', () => {
@@ -22,13 +22,13 @@ describe('automated review template', () => {
     expect(r.feedback).toMatch(/boss|scenario/i);
   });
   it('asks for changes when the reflection is too short, and says why', () => {
-    const r = templateReview({ ...good, reflectionWords: 12 }, WEIGHTS, 3.0);
+    const r = templateReview({ ...good, reflectionScore: 2 }, WEIGHTS, 3.0);
     expect(r.verdict).toBe('needs_changes');
     expect(r.feedback).toMatch(/reflection/i);
   });
   it('approved work has nothing missing; a gap is listed with the points still available', () => {
     expect(templateReview(good, WEIGHTS, 3.0).missing).toEqual([]);
-    const r = templateReview({ ...good, reflectionWords: 12 }, WEIGHTS, 3.0);
+    const r = templateReview({ ...good, reflectionScore: 2 }, WEIGHTS, 3.0);
     expect(r.missing.length).toBeGreaterThan(0);
     for (const m of r.missing) {
       expect(m.points).toBeGreaterThan(0);
@@ -46,11 +46,11 @@ import { parseGaps } from '@/lib/domain/gaps';
 
 describe('gap highlights for the learner', () => {
   it('reads each gap from the automated feedback, with its points', () => {
-    const r = templateReview({ ...good, bossBest: 1, reflectionWords: 10, limitsWritten: false }, WEIGHTS, 3.0);
+    const r = templateReview({ ...good, bossBest: 1, reflectionScore: 1, limitsWritten: false }, WEIGHTS, 3.0);
     const gaps = parseGaps(r.feedback);
     expect(gaps.map(g => g.area)).toEqual(['Boss', 'Reflection', 'Data checks']);
     expect(gaps.map(g => g.points)).toEqual([5, 3, 2]);
-    expect(gaps[1].text).toMatch(/at least 50 words/);
+    expect(gaps[1].text).toMatch(/what you did, what surprised you, and what you learned/);
   });
   it('approved feedback has no gaps', () => {
     expect(parseGaps(templateReview(good, WEIGHTS, 3.0).feedback)).toEqual([]);

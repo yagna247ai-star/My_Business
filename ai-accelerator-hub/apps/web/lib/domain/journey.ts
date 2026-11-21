@@ -13,6 +13,7 @@ import { resolveConfig } from './personalise';
 import { personaOf } from './profile';
 import { createHash } from 'crypto';
 import { readTable, validateDataset, DatasetError, type DatasetReport, type DatasetSchema } from './daDomains/datasetCheck';
+import { checkAll, checkAnswer, judgeAnswers } from './answerQuality';
 import { DAY_XP, dayStepsFrom, finished, levelComplete, levelPoints, moveOnMessage } from './levelFlowRules';
 
 /* ---------- config helpers ---------- */
@@ -30,7 +31,6 @@ export function publicConfig(cfg: AnyCfg): AnyCfg {
   return out;
 }
 
-const words = (s: unknown) => String(s || '').trim().split(/\s+/).filter(Boolean).length;
 const tokens = (s: string) => new Set(s.toLowerCase().split(/[^a-z0-9ऀ-෿]+/).filter(w => w.length > 2));
 const similarity = (a: string, b: string) => { const A = tokens(a), B = tokens(b); if (!A.size || !B.size) return 0; let i = 0; A.forEach(t => { if (B.has(t)) i++; }); return i / (A.size + B.size - i); };
 const PII = [/\b[6-9]\d{9}\b/, /\b[\w.+-]+@[\w-]+\.[\w.]+\b/, /\b\d{4}\s?\d{4}\s?\d{4}\b/]; // Indian mobile, email, 12-digit ID-like numbers
@@ -154,19 +154,23 @@ export async function completeActivity(ctx: Ctx, code: string, idx: number, payl
   if (cfg.kind === 'build') {
     const errors: Record<string, string> = {};
     const f = (payload.fields || {}) as Record<string, string>;
-    for (const fld of cfg.fields) if (words(f[fld.key]) < fld.minWords) errors[fld.key] = `Write at least ${fld.minWords} words (you have ${words(f[fld.key])}).`;
+    // Quality, not length: a real, relevant answer in the learner's own words (no word counts).
+    Object.assign(errors, checkAll(cfg.fields.map((fld: AnyCfg) => ({ key: fld.key, text: f[fld.key], topic: fld.label, hint: fld.hint, depth: 'detail' as const }))));
     if (!cfg.tools.includes(payload.tool)) errors.tool = 'Choose the AI tool you used.';
     const its = (Array.isArray(payload.iterations) ? payload.iterations : []) as { prompt?: string; output?: string; change?: string }[];
     const rules = cfg.iterationRules;
     for (let i = 0; i < cfg.iterations; i++) {
       const it = its[i] || {};
-      if (words(it.prompt) < rules.promptMinWords) errors[`it${i}.prompt`] = `Prompt ${i + 1}: at least ${rules.promptMinWords} words.`;
-      if (words(it.output) < rules.outputMinWords) errors[`it${i}.output`] = `Output ${i + 1}: summarise it in at least ${rules.outputMinWords} words.`;
-      if (i > 0 && words(it.change) < rules.changeMinWords) errors[`it${i}.change`] = `Iteration ${i + 1}: explain what you changed (at least ${rules.changeMinWords} words).`;
+      Object.assign(errors, checkAll([
+        { key: `it${i}.prompt`, text: it.prompt, topic: 'the prompt you gave the AI tool' },
+        { key: `it${i}.output`, text: it.output, topic: 'what the AI returned' },
+        ...(i > 0 ? [{ key: `it${i}.change`, text: it.change, topic: 'what you changed in the prompt, and why' }] : []),
+      ]));
       if (i > 0 && it.prompt && its[i - 1]?.prompt && similarity(it.prompt, its[i - 1].prompt!) > rules.maxSimilarity) errors[`it${i}.prompt`] = `Prompt ${i + 1} is almost the same as prompt ${i}. Change it meaningfully.`;
     }
     const all = [...Object.values(f), ...its.flatMap(x => [x.prompt, x.output, x.change])].join(' ');
     if (PII.some(re => re.test(all))) errors.pii = 'Remove phone numbers, email addresses or ID numbers before saving.';
+    if (!Object.keys(errors).length) Object.assign(errors, await judgeAnswers(cfg.fields.map((fld: AnyCfg) => ({ key: fld.key, topic: fld.label, text: String(f[fld.key]) })), `${st.level.title}: ${st.level.summary ?? ''}`));
     if (Object.keys(errors).length) throw badRequest('Your brief needs a few fixes.', errors);
     const brief = { tool: payload.tool, fields: Object.fromEntries(cfg.fields.map((x: AnyCfg) => [x.key, String(f[x.key]).trim()])), iterations: its.slice(0, cfg.iterations).map(x => ({ prompt: String(x.prompt).trim(), output: String(x.output).trim(), change: String(x.change || '').trim() })) };
     return markComplete(ctx, st, act, { brief, savedAt: new Date().toISOString() });
@@ -224,9 +228,11 @@ export async function submitProof(ctx: Ctx, code: string, p: { evidenceUrl: stri
   const errors: Record<string, string> = {};
   const evidence = safePublicUrl(p.evidenceUrl || ''); if (!evidence) errors.evidenceUrl = 'Use a public https link (Google Docs, Notion, GitHub…).';
   const demo = p.demoUrl ? safePublicUrl(p.demoUrl) : null; if (p.demoUrl && !demo) errors.demoUrl = 'Demo link must be a public https URL.';
-  if (words(p.reflection) < cfg.minWords) errors.reflection = `Write at least ${cfg.minWords} words (you have ${words(p.reflection)}).`;
+  const refl = checkAnswer(p.reflection, { topic: 'what you did, what surprised you, and what you learned', depth: 'detail' });
+  if (!refl.ok) errors.reflection = refl.reason!;
   if (!Array.isArray(p.checklist) || p.checklist.length !== cfg.checklist.length || !p.checklist.every(Boolean)) errors.checklist = 'Confirm every item in the checklist.';
   if (PII.some(re => re.test(p.reflection || ''))) errors.reflection = 'Remove phone numbers, email addresses or ID numbers.';
+  if (!Object.keys(errors).length) Object.assign(errors, await judgeAnswers([{ key: 'reflection', topic: 'Reflect on what you did in this level, what surprised you, and what you learned', text: p.reflection }], `${st.level.title}: ${st.level.summary ?? ''}`));
   if (Object.keys(errors).length) throw badRequest('Your proof needs a few fixes.', errors);
   const brief = st.activities.find(a => a.idx === 4)?.data?.brief || null;
   const attempt = st.progress.submissions.length + 1;
@@ -256,8 +262,8 @@ export async function runBoss(ctx: Ctx, code: string, answers: { choice: number;
   const results = cfg.scenarios.map((s: AnyCfg, i: number) => {
     const a = answers[i] || { choice: -1, why: '' };
     const choiceOk = (s.correct as number[]).includes(Number(a.choice));
-    const whyOk = words(a.why) >= cfg.minWhyWords;
-    return { pass: choiceOk && whyOk, reason: !choiceOk ? 'Not the best tool for this situation.' : !whyOk ? `Explain why in at least ${cfg.minWhyWords} words.` : 'Correct.' };
+    const why = checkAnswer(a.why, { topic: `why this is the right move: ${s.s}` });
+    return { pass: choiceOk && why.ok, reason: !choiceOk ? 'Not the best tool for this situation.' : !why.ok ? why.reason! : 'Correct.' };
   });
   const passed = results.filter((r: { pass: boolean }) => r.pass).length;
   const out = await prisma.$transaction(async tx => {
