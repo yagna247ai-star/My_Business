@@ -538,7 +538,13 @@ export function buildDomainJourney(d: DomainSpec): DomainJourney {
       const day = i * 5 + k + 1; const r0 = fn(c);
       // Hard and Critical: PySpark alongside SQL, and the legacy-pipeline reverse-engineering thread.
       const py = adv ? PYSPARK[m.suffix]?.[k]?.(d) : undefined; const lg = legacyDay(d, day);
-      const guided = GUIDED[m.suffix]?.[k]?.(d);
+      const g0 = GUIDED[m.suffix]?.[k]?.(d);
+      // Days 11–45 open with the day's goal; legacy-pipeline tasks (Hard/Critical) become guided steps too.
+      const guided = g0 ? [
+        ...(day > 10 ? [{ title: 'Today’s goal', concept: r0.why, do: [r0.goal], check: { kind: 'tick' as const, prompt: 'I understand what today is for' } }] : []),
+        ...g0,
+        ...(lg ? lg.steps.map(x => ({ title: 'Reverse engineering', concept: 'You inherited a legacy pipeline with no documentation. Understanding it before replacing it is how real migrations avoid breaking the business.', do: [x], check: { kind: 'answer' as const, prompt: x } })) : []),
+      ] : undefined;
       const r = { ...r0, ...(py ? { pyspark: py } : {}), ...(lg ? { legacy: lg.section, steps: [...r0.steps, ...lg.steps] } : {}), ...(guided ? { guided: true } : {}) };
       return { day, title: r.title, body: dayMarkdown(d, m.stage, day, r), ...(guided ? { steps: guided } : {}) };
     });

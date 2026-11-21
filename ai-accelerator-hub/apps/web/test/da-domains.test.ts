@@ -102,7 +102,7 @@ describe('40-day domain journeys', () => {
       for (const [n, l] of j.levels.entries()) for (const day of l.days) {
         expect(day.body, `${j.slug} day ${day.day}`).toContain(d.name);
         expect(day.body).toMatch(/^# Day \d+ — /m);
-        if (day.steps) expect(day.steps.length).toBeGreaterThanOrEqual(3); else expect(day.body).toMatch(/## Steps/); // guided days use step cards
+        if (day.steps) { expect(day.steps.length).toBeGreaterThanOrEqual(2); expect(day.steps.some(s => s.check.kind !== 'tick'), `${j.slug} day ${day.day} needs a real check`).toBe(true); } else expect(day.body).toMatch(/## Steps/); // guided days use step cards
         expect(day.body.toLowerCase()).toContain(stageWords[n].toLowerCase());
       }
       const m2 = j.levels[1].days.map(x => x.body + JSON.stringify(x.steps ?? [])).join('\n');
@@ -170,7 +170,7 @@ describe('enterprise production grade', () => {
   it('each domain’s regulations and SLA appear in its own journey', () => {
     for (const j of journeys) {
       const d = DOMAINS.find(x => x.slug === j.config.domain)!;
-      const all = j.levels.flatMap(l => l.days.map(x => x.body)).join('\n');
+      const all = j.levels.flatMap(l => l.days.map(x => x.body + JSON.stringify(x.steps ?? []))).join('\n');
       for (const r of d.enterprise.regulations) expect(all, `${j.slug}: ${r}`).toContain(r);
       expect(all).toContain(d.enterprise.sla);
       for (const p of d.enterprise.piiColumns) expect(all, `${j.slug}: mask ${p}`).toContain(p);

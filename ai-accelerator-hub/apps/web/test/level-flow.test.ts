@@ -138,12 +138,12 @@ describe('Hard and Critical: PySpark alongside SQL, and reverse engineering', ()
 
 import { validateStep, STEP_POINTS } from '../lib/domain/guidedSteps';
 describe('guided steps (concept → do → check → points)', () => {
-  it('Days 1–10 of every domain journey are guided; every step has a concept, instructions and a working check', () => {
+  it('all 45 days of every domain journey are guided; every step has a concept, instructions and a working check', () => {
     for (const s of JOURNEY_SPECS) {
-      const days = buildDomainJourney(s).levels.slice(0, 2).flatMap(l => l.days);
-      expect(days.map(d => d.day)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      const days = buildDomainJourney(s).levels.flatMap(l => l.days);
+      expect(days.map(d => d.day)).toEqual(Array.from({ length: 45 }, (_, i) => i + 1));
       for (const d of days) {
-        expect(d.steps?.length, `${s.slug} day ${d.day}`).toBeGreaterThanOrEqual(3);
+        expect(d.steps?.length, `${s.slug} day ${d.day}`).toBeGreaterThanOrEqual(d.day <= 10 ? 3 : 2);
         expect(d.body).not.toContain('## Steps');
         for (const st of d.steps!) {
           expect(st.concept.length, `${s.slug} d${d.day} ${st.title}`).toBeGreaterThan(40);
