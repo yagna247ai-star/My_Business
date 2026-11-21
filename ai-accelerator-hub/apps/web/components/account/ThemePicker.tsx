@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { Tr } from '@/components/i18n/Tr';
+import { Tv } from '@/components/i18n/Tv';
 
 type Choice = 'system' | 'light' | 'dark' | 'sln';
 const OPTIONS: { value: Choice; label: string; note: string }[] = [
@@ -31,13 +33,13 @@ export function ThemePicker() {
 
   return (
     <section className="card card-pad stack gap-12" aria-labelledby="thT">
-      <h2 className="h3" id="thT">Appearance</h2>
+      <h2 className="h3" id="thT"><Tr>Appearance</Tr></h2>
       <fieldset className="stack gap-8" style={{ border: 0, padding: 0, margin: 0 }}>
-        <legend className="muted small" style={{ marginBottom: 6 }}>Choose a theme. It is saved on this device.</legend>
+        <legend className="muted small" style={{ marginBottom: 6 }}><Tr>Choose a theme. It is saved on this device.</Tr></legend>
         {OPTIONS.map(o => (
           <label key={o.value} className="row gap-12" style={{ alignItems: 'flex-start', cursor: 'pointer' }}>
             <input type="radio" name="theme" value={o.value} checked={value === o.value} onChange={() => choose(o.value)} style={{ marginTop: 4 }} />
-            <span className="stack gap-2"><span className="bold">{o.label}</span><span className="muted xs">{o.note}</span></span>
+            <span className="stack gap-2"><span className="bold"><Tv v={o.label} /></span><span className="muted xs"><Tv v={o.note} /></span></span>
           </label>
         ))}
       </fieldset>

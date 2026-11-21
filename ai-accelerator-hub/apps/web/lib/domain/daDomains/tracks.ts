@@ -11,6 +11,7 @@ import { DOMAINS } from './catalog';
 import type { DomainSpec, TrackInfo, TrackLevelName } from './types';
 import { key, str, int, num, date, cat, optional } from './types';
 import { EDUCATION_DOSSIER } from './dossiers/education';
+import { LEVEL2_SCENES } from './dossiers/level2';
 import { EDUCATION_TRACKS, EDUCATION_CANDIDATES, IKIGAI_QUIZ, TRACK_LABEL } from './dossiers/education-tracks';
 import type { ProblemTrack } from './dossiers/types';
 
@@ -169,7 +170,8 @@ const educationCritical: DomainSpec = {
 
 /** Every journey the seed builds: all 17 domains (Education as its Hard track) plus the extra Education tracks. */
 export const JOURNEY_SPECS: DomainSpec[] = [
-  ...DOMAINS.map(d => (d.slug === 'education' ? educationHard : d)),
+  // Every other domain gets the Level 2 (Days 6–10) field scenes, like the approved Education Level 2.
+  ...DOMAINS.map(d => (d.slug === 'education' ? educationHard : { ...d, situations: { ...(d.situations ?? {}), ...(LEVEL2_SCENES[d.slug] ?? {}) } })),
   educationEasy, educationIntermediate, educationCritical,
 ];
 

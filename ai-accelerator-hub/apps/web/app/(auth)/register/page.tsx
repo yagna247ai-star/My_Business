@@ -5,6 +5,9 @@ import { useEffect, useRef, useState } from 'react';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { api, ApiError } from '@/lib/client/api';
 import { TrackPicker } from '@/components/learn/TrackPicker';
+import { Tr } from '@/components/i18n/Tr';
+import { useT } from '@/components/i18n/I18nProvider';
+import { Tv } from '@/components/i18n/Tv';
 
 type Form = { name: string; email: string; password: string; birthYear: string; inviteCode: string; guardianEmail: string; journeySlug: string; acceptTerms: boolean; trackAck: boolean };
 type JourneyOption = { slug: string; title: string; description: string | null; levels: number; isDefault: boolean; config?: { family: string; domain: string; name: string; problem: string; track?: string } | null };
@@ -41,6 +44,7 @@ function validate(f: Form, needsTrack = false): Partial<Record<Key, string>> {
 const ORDER: Key[] = ['name', 'email', 'password', 'birthYear', 'guardianEmail', 'inviteCode', 'journeySlug', 'trackAck', 'acceptTerms'];
 
 export default function RegisterPage() {
+  const t = useT();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [f, setF] = useState<Form>({ name: '', email: '', password: '', birthYear: '', inviteCode: '', guardianEmail: '', journeySlug: '', acceptTerms: false, trackAck: false });
@@ -101,27 +105,27 @@ export default function RegisterPage() {
 
   const field = (k: Key, label: string, opts: { type?: string; hint?: string; ac?: string; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']; required?: boolean; extra?: React.ReactNode } = {}) => (
     <div>
-      <label className="field-label" htmlFor={k}>{label}{opts.required !== false && <span aria-hidden="true" style={{ color: 'var(--danger)' }}> *</span>}</label>
+      <label className="field-label" htmlFor={k}><Tv v={label} />{opts.required !== false && <span aria-hidden="true" style={{ color: 'var(--danger)' }}> *</span>}</label>
       <div style={{ position: 'relative' }}>
         <input className="input" id={k} name={k} type={opts.type || 'text'} autoComplete={opts.ac} inputMode={opts.inputMode}
           value={String(f[k])} onChange={set(k)} required={opts.required !== false} disabled={busy}
           aria-invalid={!!errors[k]} aria-describedby={errors[k] || opts.hint ? `${k}-h` : undefined}
           style={errors[k] ? { borderColor: 'var(--danger)', ...(opts.extra ? { paddingRight: 64 } : {}) } : opts.extra ? { paddingRight: 64 } : undefined} />
-        {opts.extra}
+        <Tv v={opts.extra} />
       </div>
-      {errors[k] ? <div className="field-err" id={`${k}-h`} role="alert">{errors[k]}</div> : opts.hint ? <div className="field-hint" id={`${k}-h`}>{opts.hint}</div> : null}
+      {errors[k] ? <div className="field-err" id={`${k}-h`} role="alert">{errors[k]}</div> : opts.hint ? <div className="field-hint" id={`${k}-h`}><Tv v={opts.hint} /></div> : null}
     </div>
   );
 
   return (
-    <AuthCard title="Create your account" subtitle="Free to start. Choose your journey; Level 1 opens immediately.">
+    <AuthCard title={t('Create your account')} subtitle="Free to start. Choose your journey; Level 1 opens immediately.">
       <form ref={formRef} className="stack gap-16" onSubmit={submit} noValidate aria-busy={busy}>
         {field('name', 'Full name', { ac: 'name' })}
         {field('email', 'Email', { type: 'email', ac: 'email', inputMode: 'email' })}
         {field('password', 'Password', {
           type: showPw ? 'text' : 'password', ac: 'new-password', hint: 'At least 10 characters, with a letter and a number.',
           extra: <button type="button" className="link small" onClick={() => setShowPw(s => !s)} aria-controls="password" aria-pressed={showPw}
-            style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontWeight: 700 }}>{showPw ? 'Hide' : 'Show'}</button>,
+            style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontWeight: 700 }}>{showPw ? <Tr>Hide</Tr> : <Tr>Show</Tr>}</button>,
         })}
         {field('birthYear', 'Year of birth', { type: 'text', inputMode: 'numeric', ac: 'bday-year', hint: 'Used only to apply age-appropriate safety settings.' })}
         {minor && field('guardianEmail', 'Parent or guardian email', { type: 'email', ac: 'off', inputMode: 'email', hint: 'Required for learners under 18. Community features unlock after consent.' })}
@@ -130,7 +134,7 @@ export default function RegisterPage() {
         </div>
         {journeys && journeys.length > 0 && (
           <fieldset style={{ border: 0, padding: 0, margin: 0 }} aria-describedby={errors.journeySlug ? 'journeySlug-h' : undefined}>
-            <legend className="field-label">Choose your journey</legend>
+            <legend className="field-label"><Tr>Choose your journey</Tr></legend>
             <div className="stack gap-8" id="journeySlug">
               {(() => {
                 const pick = (slug: string) => { setF(p => ({ ...p, journeySlug: slug })); if (errors.journeySlug) setErrors(p => { const n = { ...p }; delete n.journeySlug; return n; }); };
@@ -148,22 +152,22 @@ export default function RegisterPage() {
                   {general.map(j => (
                     <label key={j.slug} className="card card-pad" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', borderColor: f.journeySlug === j.slug ? 'var(--gold, currentColor)' : undefined }}>
                       <input type="radio" name="journeySlug" value={j.slug} checked={f.journeySlug === j.slug && !domainActive} disabled={busy} style={{ marginTop: 3, flex: 'none' }} onChange={() => { setDomainKey(''); pick(j.slug); }} />
-                      <span><b>{j.title}</b>{j.isDefault && <span className="badge badge-gold" style={{ marginLeft: 8 }}>Recommended</span>}
+                      <span><b><Tv v={j.title} /></b>{j.isDefault && <span className="badge badge-gold" style={{ marginLeft: 8 }}><Tr>Recommended</Tr></span>}
                         <span className="small text-2" style={{ display: 'block' }}>{j.description || `${j.levels} levels`}</span></span>
                     </label>
                   ))}
                   {domains.length > 0 && (
                     <div className="card card-pad" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', borderColor: domainActive ? 'var(--gold, currentColor)' : undefined }}>
-                      <input type="radio" name="journeySlug" value="domain" aria-label="Data Analytics by industry domain" checked={domainActive} disabled={busy} style={{ marginTop: 3, flex: 'none' }} onChange={() => chooseDomain((current ?? domains[0]).key)} />
+                      <input type="radio" name="journeySlug" value="domain" aria-label={t('Data Analytics by industry domain')} checked={domainActive} disabled={busy} style={{ marginTop: 3, flex: 'none' }} onChange={() => chooseDomain((current ?? domains[0]).key)} />
                       <span style={{ flex: 1, minWidth: 0 }}>
-                        <b>Data Analytics by industry domain</b><span className="badge badge-info" style={{ marginLeft: 8 }}>{domains.length} domains</span>
-                        <span className="small text-2" style={{ display: 'block' }}>45 days on one real enterprise problem from your industry: Databricks, Unity Catalog, bronze/silver/gold, Power BI, ML and go-live.</span>
-                        <label className="field-label" htmlFor="domainSelect" style={{ marginTop: 10 }}>Your industry domain</label>
+                        <b><Tr>Data Analytics by industry domain</Tr></b><span className="badge badge-info" style={{ marginLeft: 8 }}>{domains.length} <Tr>domains</Tr></span>
+                        <span className="small text-2" style={{ display: 'block' }}><Tr>45 days on one real enterprise problem from your industry: Databricks, Unity Catalog, bronze/silver/gold, Power BI, ML and go-live.</Tr></span>
+                        <label className="field-label" htmlFor="domainSelect" style={{ marginTop: 10 }}><Tr>Your industry domain</Tr></label>
                         <select id="domainSelect" className="select" value={domainActive ? current!.key : ''} disabled={busy} onChange={e => e.target.value && chooseDomain(e.target.value)}>
-                          {!domainActive && <option value="">Choose a domain…</option>}
-                          {domains.map(d => <option key={d.key} value={d.key}>{d.main.config!.name} — {d.tracked ? '4 tracks: Easy to Critical' : d.main.config!.problem}</option>)}
+                          {!domainActive && <option value="">{t('Choose a domain…')}</option>}
+                          {domains.map(d => <option key={d.key} value={d.key}>{d.main.config!.name} — {d.tracked ? t('4 tracks: Easy to Critical') : d.main.config!.problem}</option>)}
                         </select>
-                        {domainActive && !current!.tracked && <span className="small text-2" style={{ display: 'block', marginTop: 6 }}>{current!.main.description}</span>}
+                        {domainActive && !current!.tracked && <span className="small text-2" style={{ display: 'block', marginTop: 6 }}><Tv v={current!.main.description} /></span>}
                         {domainActive && current!.tracked && (
                           <TrackPicker domain={current!.key} options={current!.list.map(j => ({ slug: j.slug, track: j.config!.track ?? 'hard' }))} value={f.journeySlug} disabled={busy}
                             onPick={slug => { setF(p => ({ ...p, journeySlug: slug, trackAck: false })); setErrors(p => { const n = { ...p }; delete n.journeySlug; delete n.trackAck; return n; }); }}
@@ -176,20 +180,20 @@ export default function RegisterPage() {
                 </>);
               })()}
             </div>
-            {errors.journeySlug && !domainKey ? <div className="field-err" id="journeySlug-h" role="alert">{errors.journeySlug}</div> : <div className="field-hint">{domainKey ? 'Your track can change until Module 1 is complete; your points are always kept.' : 'You can ask an admin to switch you later; your progress is kept.'}</div>}
+            {errors.journeySlug && !domainKey ? <div className="field-err" id="journeySlug-h" role="alert"><Tv v={errors.journeySlug} /></div> : <div className="field-hint">{domainKey ? <Tr>Your track can change until Module 1 is complete; your points are always kept.</Tr> : <Tr>You can ask an admin to switch you later; your progress is kept.</Tr>}</div>}
           </fieldset>
         )}
         <div>
           <label className="small" htmlFor="acceptTerms" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
             <input id="acceptTerms" type="checkbox" checked={f.acceptTerms} onChange={set('acceptTerms')} disabled={busy}
               aria-invalid={!!errors.acceptTerms} aria-describedby={errors.acceptTerms ? 'acceptTerms-h' : undefined} style={{ marginTop: 3, flex: 'none', width: 16, height: 16 }} />
-            <span>I agree to the terms and the privacy notice. My data is used to run my learning journey and is never sold.</span>
+            <span><Tr>I agree to the terms and the privacy notice. My data is used to run my learning journey and is never sold.</Tr></span>
           </label>
-          {errors.acceptTerms && <div className="field-err" id="acceptTerms-h" role="alert">{errors.acceptTerms}</div>}
+          {errors.acceptTerms && <div className="field-err" id="acceptTerms-h" role="alert"><Tv v={errors.acceptTerms} /></div>}
         </div>
-        {msg && <p className="field-err" role="alert" aria-live="assertive" style={{ marginTop: 0 }}>{msg}</p>}
-        <button className="btn btn-gold btn-block" type="submit" disabled={busy}>{busy ? 'Creating account…' : 'Create account'}</button>
-        <p className="small text-2">Already have an account? <Link className="link" href="/login">Sign in</Link></p>
+        {msg && <p className="field-err" role="alert" aria-live="assertive" style={{ marginTop: 0 }}><Tv v={msg} /></p>}
+        <button className="btn btn-gold btn-block" type="submit" disabled={busy}>{busy ? <Tr>Creating account…</Tr> : <Tr>Create account</Tr>}</button>
+        <p className="small text-2"><Tr>Already have an account?</Tr> <Link className="link" href="/login"><Tr>Sign in</Tr></Link></p>
       </form>
     </AuthCard>
   );

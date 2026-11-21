@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react';
 import { Suspense, useState } from 'react';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { useT } from '@/components/i18n/I18nProvider';
+import { Tv } from '@/components/i18n/Tv';
 
 /** Only same-site paths: "?next=https://evil.example" or "//evil.example" must never redirect off-site. */
 function safeNext(raw: string | null) {
@@ -44,7 +45,7 @@ function LoginForm() {
             <button type="button" className="link small" onClick={() => setShowPw(s => !s)} aria-controls="password" aria-pressed={showPw} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontWeight: 700 }}>{t(showPw ? 'Hide' : 'Show')}</button>
           </div>
         </div>
-        {error && <p className="field-err" role="alert" aria-live="assertive" style={{ marginTop: 0 }}>{error}</p>}
+        {error && <p className="field-err" role="alert" aria-live="assertive" style={{ marginTop: 0 }}><Tv v={error} /></p>}
         <button className="btn btn-gold btn-block" type="submit" disabled={busy}>{t(busy ? 'Signing in…' : 'Sign in')}</button>
         <p className="small text-2">{t('New here?')} <Link className="link" href="/register">{t('Create an account')}</Link></p>
       </form>

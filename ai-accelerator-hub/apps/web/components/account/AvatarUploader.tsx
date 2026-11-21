@@ -1,11 +1,15 @@
 'use client';
 import { useState } from 'react';
+import { Tr } from '@/components/i18n/Tr';
+import { useT } from '@/components/i18n/I18nProvider';
+import { Tv } from '@/components/i18n/Tv';
 
 const TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 const MAX_MB = 5;
 
 /** Profile photo: pick an image, upload it, and make it the avatar. The server checks type, size and scan status. */
 export function AvatarUploader({ initialUrl }: { initialUrl: string | null }) {
+  const t = useT();
   const [url, setUrl] = useState<string | null>(initialUrl);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -52,22 +56,22 @@ export function AvatarUploader({ initialUrl }: { initialUrl: string | null }) {
 
   return (
     <section className="card card-pad stack gap-12" aria-labelledby="avT">
-      <h2 className="h3" id="avT">Profile photo</h2>
+      <h2 className="h3" id="avT"><Tr>Profile photo</Tr></h2>
       <div className="row gap-12" style={{ alignItems: 'center' }}>
         {url
           // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={url} alt="Your profile photo" width={80} height={80} style={{ borderRadius: '50%', objectFit: 'cover' }} />
-          : <span className="avatar" aria-hidden="true" style={{ width: 80, height: 80, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>No photo</span>}
+          ? <img src={url} alt={t('Your profile photo')} width={80} height={80} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+          : <span className="avatar" aria-hidden="true" style={{ width: 80, height: 80, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Tr>No photo</Tr></span>}
         <div className="stack gap-8">
           <label className="btn btn-outline btn-sm" style={{ cursor: busy ? 'wait' : 'pointer' }}>
-            {busy ? 'Saving…' : url ? 'Change photo' : 'Upload photo'}
-            <input type="file" accept={TYPES.join(',')} onChange={onPick} disabled={busy} style={{ display: 'none' }} aria-label="Choose a profile photo" />
+            {busy ? <Tr>Saving…</Tr> : url ? <Tr>Change photo</Tr> : <Tr>Upload photo</Tr>}
+            <input type="file" accept={TYPES.join(',')} onChange={onPick} disabled={busy} style={{ display: 'none' }} aria-label={t('Choose a profile photo')} />
           </label>
-          {url && <button type="button" className="btn btn-ghost btn-sm" onClick={onRemove} disabled={busy}>Remove photo</button>}
-          <p className="muted xs">PNG, JPEG, WebP or GIF, up to {MAX_MB} MB. Shown to people in your institution.</p>
+          {url && <button type="button" className="btn btn-ghost btn-sm" onClick={onRemove} disabled={busy}><Tr>Remove photo</Tr></button>}
+          <p className="muted xs"><Tr>PNG, JPEG, WebP or GIF, up to</Tr> {MAX_MB} <Tr>MB. Shown to people in your institution.</Tr></p>
         </div>
       </div>
-      {msg && <p className="small" role="status">{msg}</p>}
+      {msg && <p className="small" role="status"><Tv v={msg} /></p>}
     </section>
   );
 }

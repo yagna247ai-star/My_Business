@@ -2,8 +2,7 @@ import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import { I18nProvider } from '@/components/i18n/I18nProvider';
-import { getLocale } from '@/lib/i18n/server';
-import { dictFor } from '@/lib/i18n/core';
+import { getDict, getLocale } from '@/lib/i18n/server';
 
 // One type system for every theme. The font files live in app/fonts (SIL OFL, see LICENSES.txt), so builds and
 // pages never call Google: no build failure when Google is unreachable, no font flash, no layout shift.
@@ -31,7 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body><I18nProvider locale={locale} dict={dictFor(locale)}>{children}</I18nProvider></body>
+      <body><I18nProvider locale={locale} dict={await getDict(locale)}>{children}</I18nProvider></body>
     </html>
   );
 }

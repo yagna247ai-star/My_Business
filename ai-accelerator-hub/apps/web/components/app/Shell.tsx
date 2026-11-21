@@ -20,6 +20,7 @@ import { api } from '@/lib/client/api';
 import { NavIcon } from './icons';
 import { useT } from '@/components/i18n/I18nProvider';
 import type { T } from '@/lib/i18n/core';
+import { Tr } from '@/components/i18n/Tr';
 
 export type NavItem = { href: string; label: string; icon: string; group: string; count?: number };
 type Props = { user: { name: string; roleLabel: string; tenant: string; avatarUrl?: string | null; crown?: string | null }; nav: NavItem[]; streak?: { status: string; current: number } | null; xp?: number | null; unread: number; children: React.ReactNode };
@@ -76,11 +77,11 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
   return (
     <div className="app">
       <a className="skip" href="#main">{t('Skip to content')}</a>
-      <aside className={`sidebar ${open ? 'is-open' : ''}`} id="sidebar" aria-label="Primary">
+      <aside className={`sidebar ${open ? 'is-open' : ''}`} id="sidebar" aria-label={t('Primary')}>
         <div className="brand-row">
-          <Link className="brand" href="/dashboard" aria-label="AI Accelerator Hub home">
+          <Link className="brand" href="/dashboard" aria-label={t('AI Accelerator Hub home')}>
             <span className="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 4 4 21h8z" fill="#3878F6" /><path d="M12 4l8 17h-8z" fill="#8658E8" /><circle cx="12" cy="3.6" r="2.2" fill="#E8B94F" /></svg></span>
-            <span className="brand-txt"><b>AI Accelerator</b><small>HUB</small></span>
+            <span className="brand-txt"><b><Tr>AI Accelerator</Tr></b><small>HUB</small></span>
           </Link>
           <button className="rail-btn desk" type="button" onClick={toggleRail} aria-controls="sidebar" aria-expanded={!rail}
             aria-label={t(rail ? 'Expand sidebar' : 'Collapse sidebar')} title={`${rail ? 'Expand' : 'Collapse'} sidebar (Ctrl/⌘ + B)`}>
@@ -88,7 +89,7 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
           </button>
           <button className="rail-btn only-mobile" type="button" aria-label={t('Close menu')} onClick={() => setOpen(false)}><X size={16} /></button>
         </div>
-        <nav className="nav" aria-label="Main">
+        <nav className="nav" aria-label={t('Main')}>
           {groups.map(g => (
             <div key={g}>
               <div className="side-group-label">{t(g)}</div>
@@ -109,7 +110,7 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
       <div className="main-col">
         <header className="topbar">
           <button className="icon-btn only-mobile" type="button" aria-label={t('Open menu')} aria-expanded={open} aria-controls="sidebar" onClick={() => setOpen(true)}><Menu size={18} /></button>
-          <nav className="crumb" aria-label="Breadcrumb"><span className="crumb-pre">{t('You are here')}</span><span className="crumb-cur" aria-current="page">{t(current?.label || 'Home')}</span><ChevronRight size={14} aria-hidden="true" /></nav>
+          <nav className="crumb" aria-label={t('Breadcrumb')}><span className="crumb-pre">{t('You are here')}</span><span className="crumb-cur" aria-current="page">{t(current?.label || 'Home')}</span><ChevronRight size={14} aria-hidden="true" /></nav>
           <div className="top-right">
             {sv && streak && <Link href="/dashboard#streak" className={`pill pill-streak ${sv.cls}`} title={`Streak: ${streak.current} (${streak.status})`}><sv.I size={15} aria-hidden="true" /><span><b>{streak.current}</b><span className="days-word"> {sv.w}</span></span></Link>}
             {typeof xp === 'number' && <Link href="/achievements" className="pill pill-rank" title={t('Total XP')}>{xp.toLocaleString('en-IN')} XP</Link>}
@@ -122,7 +123,7 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
                   {!notes ? <p className="muted small" style={{ padding: 20 }}>{t('Loading…')}</p> : notes.length === 0 ? <p className="muted small" style={{ padding: 20 }}>{t("You're all caught up.")}</p> : notes.map(n => (
                     <button key={n.id} type="button" className={`notif ${n.read ? '' : 'unread'}`} onClick={() => { setNotifOpen(false); if (n.href) router.push(n.href); }}>
                       <span className={`ni ${n.tone || ''}`} aria-hidden="true"><Bell size={15} /></span>
-                      <span style={{ flex: 1, minWidth: 0 }}><b>{n.title}</b>{n.body && <p>{n.body}</p>}<time dateTime={n.at}>{ago(t, n.at)}</time></span>
+                      <span style={{ flex: 1, minWidth: 0 }}><b>{t(n.title)}</b>{n.body && <p>{t(n.body)}</p>}<time dateTime={n.at}>{ago(t, n.at)}</time></span>
                       {!n.read && <span className="unread-dot" aria-label={t('Unread')} />}
                     </button>
                   ))}

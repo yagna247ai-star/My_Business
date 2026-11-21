@@ -1446,3 +1446,17 @@ model ContentTranslation {
   @@unique([contentId, locale])
   @@map("content_translations")
 }
+
+/// Machine translations of interface text (buttons, labels, messages), keyed by the English text. Reviewed
+/// translations in apps/web/lib/i18n/messages.ts always win over these.
+model UiTranslation {
+  id        String   @id @default(cuid())
+  locale    String
+  key       String // the English text
+  text      String
+  model     String?
+  createdAt DateTime @default(now())
+
+  @@unique([locale, key])
+  @@map("ui_translations")
+}

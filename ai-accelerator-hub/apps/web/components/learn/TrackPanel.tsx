@@ -7,6 +7,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/client/api';
 import { useT } from '@/components/i18n/I18nProvider';
+import { Tr } from '@/components/i18n/Tr';
+import { Tv } from '@/components/i18n/Tv';
 
 type Opt = { level: string; name: string; title: string; current: boolean };
 export type TrackView = { level: string; levelName: string; title: string; changeable: boolean; options: Opt[]; pending: { id: string; level: string; name: string; title: string; reason: string | null; by: string } | null };
@@ -49,7 +51,7 @@ export function TrackPanel({ track }: { track: TrackView }) {
   return (
     <section className="card card-pad" style={{ marginBottom: 24 }} aria-labelledby="trackTitle">
       <div style={{ display: 'flex', gap: 12, alignItems: 'baseline', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-        <div><span className="eyebrow">{t('Your track')}</span><h2 className="h3" id="trackTitle" style={{ margin: '2px 0 0' }}>{track.levelName}: {track.title}</h2></div>
+        <div><span className="eyebrow">{t('Your track')}</span><h2 className="h3" id="trackTitle" style={{ margin: '2px 0 0' }}><Tv v={track.levelName} />: <Tv v={track.title} /></h2></div>
         {track.changeable && !track.pending && !open && <button type="button" className="btn btn-ghost btn-sm" onClick={() => setOpen(true)}>{t('Change track')}</button>}
       </div>
       <p className="small text-2" style={{ margin: '6px 0 0' }}>
@@ -58,11 +60,11 @@ export function TrackPanel({ track }: { track: TrackView }) {
 
       {track.pending && (
         <div className="callout info" role="status" style={{ marginTop: 12, display: 'block' }}>
-          <p style={{ margin: 0 }}><b>{track.pending.by} moved you to the {track.pending.name} track: {track.pending.title}.</b>{track.pending.reason ? ` Reason: ${track.pending.reason}` : ''}</p>
+          <p style={{ margin: 0 }}><b>{track.pending.by} <Tr>moved you to the</Tr> {track.pending.name} <Tr>track:</Tr> <Tv v={track.pending.title} />.</b>{track.pending.reason ? ` Reason: ${track.pending.reason}` : ''}</p>
           <div className="stack gap-8" style={{ marginTop: 10 }}>
             <ModeChoice value={mode} onChange={setMode} disabled={busy} />
             {target === 'critical' && <label className="small" style={{ display: 'flex', gap: 8 }}><input type="checkbox" id="trackAck" checked={ack} onChange={e => setAck(e.target.checked)} disabled={busy} style={{ flex: 'none', marginTop: 3 }} /><span>{ACK}</span></label>}
-            <div><button type="button" className="btn btn-gold btn-sm" disabled={busy} onClick={() => go(`/api/v1/me/track/${track.pending!.id}`, { mode, ack })}>{busy ? 'Moving…' : `Start the ${track.pending.name} track`}</button></div>
+            <div><button type="button" className="btn btn-gold btn-sm" disabled={busy} onClick={() => go(`/api/v1/me/track/${track.pending!.id}`, { mode, ack })}>{busy ? <Tr>Moving…</Tr> : `Start the ${track.pending.name} track`}</button></div>
           </div>
         </div>
       )}
@@ -74,7 +76,7 @@ export function TrackPanel({ track }: { track: TrackView }) {
             {track.options.filter(o => !o.current).map(o => (
               <label key={o.level} className="small" style={{ display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
                 <input type="radio" name="newTrack" value={o.level} checked={level === o.level} onChange={() => { setLevel(o.level); setAck(false); }} disabled={busy} style={{ marginTop: 3, flex: 'none' }} />
-                <span><b>{o.name}</b>: {o.title}</span>
+                <span><b>{o.name}</b>: <Tv v={o.title} /></span>
               </label>
             ))}
           </fieldset>
@@ -86,7 +88,7 @@ export function TrackPanel({ track }: { track: TrackView }) {
           </div>
         </div>
       )}
-      {msg && <p className="field-err" role="alert" style={{ marginTop: 8 }}>{msg}</p>}
+      {msg && <p className="field-err" role="alert" style={{ marginTop: 8 }}><Tv v={msg} /></p>}
     </section>
   );
 }

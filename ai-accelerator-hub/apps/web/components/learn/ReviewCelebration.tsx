@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import type { Gap } from '@/lib/domain/gaps';
+import { Tr } from '@/components/i18n/Tr';
+import { Tv } from '@/components/i18n/Tv';
 
 const FLOWERS = ['🌸', '🌼', '🌺', '🌷', '💐', '🌻'];
 
@@ -18,7 +20,7 @@ export function FlowerBurst({ title, xp, last = false }: { title: string; xp?: n
           ))}
         </div>
       )}
-      <div className="stack gap-4"><b>🎉 {title} approved!</b><span>{typeof xp === 'number' ? `You earned ${xp} XP for this level. ` : ''}{last ? 'You have finished the whole journey.' : 'The next level is open.'}</span></div>
+      <div className="stack gap-4"><b>🎉 <Tv v={title} /> <Tr>approved!</Tr></b><span>{typeof xp === 'number' ? `You earned ${xp} XP for this level. ` : ''}{last ? <Tr>You have finished the whole journey.</Tr> : <Tr>The next level is open.</Tr>}</span></div>
     </div>
   );
 }
@@ -29,16 +31,16 @@ export function GapList({ gaps, avg }: { gaps: Gap[]; avg?: number | null }) {
   return (
     <div className="callout warn gap-card" role="status">
       <div className="stack gap-8" style={{ width: '100%' }}>
-        <b>Almost there{typeof avg === 'number' ? ` · ${avg.toFixed(2)} / 5` : ''}. Fix {gaps.length === 1 ? 'this one thing' : `these ${gaps.length} things`} to earn {total} more points.</b>
+        <b><Tr>Almost there</Tr>{typeof avg === 'number' ? ` · ${avg.toFixed(2)} / 5` : ''}<Tr>. Fix</Tr> {gaps.length === 1 ? <Tr>this one thing</Tr> : `these ${gaps.length} things`} <Tr>to earn</Tr> {total} <Tr>more points.</Tr></b>
         <ul className="stack gap-8" style={{ margin: 0, paddingLeft: 0, listStyle: 'none' }}>
           {gaps.map((g, i) => (
             <li key={i} className="row gap-8" style={{ alignItems: 'flex-start' }}>
-              <span className="badge badge-gold" style={{ whiteSpace: 'nowrap' }}>+{g.points} pts</span>
-              <span><b>{g.area}:</b> {g.text}</span>
+              <span className="badge badge-gold" style={{ whiteSpace: 'nowrap' }}>+<Tv v={g.points} /> <Tr>pts</Tr></span>
+              <span><b><Tv v={g.area} />:</b> <Tv v={g.text} /></span>
             </li>
           ))}
         </ul>
-        <span className="small">You keep all the XP you already earned. Resubmit when you are ready.</span>
+        <span className="small"><Tr>You keep all the XP you already earned. Resubmit when you are ready.</Tr></span>
       </div>
     </div>
   );

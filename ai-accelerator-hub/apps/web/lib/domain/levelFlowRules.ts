@@ -36,6 +36,13 @@ export function moveOnMessage(earned: number, total: number, nextTitle: string |
   return nextTitle ? `${head} ${nextTitle} is open.${rest}` : `${head} You have finished the journey.${rest}`;
 }
 
+/** The same message in the learner's language (t from useT / getT). */
+export function moveOnText(t: (en: string, v?: Record<string, string | number>) => string, earned: number, total: number, nextTitle: string | null): string {
+  const parts = [t('You earned {a} of {b} points in this level.', { a: earned, b: total }), nextTitle ? t('{title} is open.', { title: nextTitle }) : t('You have finished the journey.')];
+  if (earned < total) parts.push(t('Skipped steps earned no points; you can go back and finish them any time to add their points.'));
+  return parts.join(' ');
+}
+
 /** The steps a learner ticks on a day page: the numbered list under "Steps" (domain journeys) or "Your turn" (generic). */
 export function dayStepsFrom(body: string): string[] {
   const blocks = parseMarkdown(body);

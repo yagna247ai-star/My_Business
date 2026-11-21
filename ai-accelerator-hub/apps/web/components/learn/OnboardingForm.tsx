@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, Check } from 'lucide-react';
 import { api, ApiError } from '@/lib/client/api';
 import type { Answers, Plan } from '@/lib/domain/personalise';
+import { Tr } from '@/components/i18n/Tr';
+import { useT } from '@/components/i18n/I18nProvider';
+import { Tv } from '@/components/i18n/Tv';
 
 type Opt<T extends string | number> = { v: T; l: string; d?: string };
 const ROLE: Opt<Answers['role']>[] = [
@@ -22,12 +25,13 @@ const OS: Opt<Answers['os']>[] = [{ v: 'macos', l: 'macOS' }, { v: 'windows', l:
 const STYLE: Opt<Answers['learningStyle']>[] = [{ v: 'watch', l: 'Watch a demo first' }, { v: 'read', l: 'Read first' }, { v: 'do', l: 'Try it first' }];
 
 function Choice<T extends string | number>({ name, legend, opts, value, onChange }: { name: string; legend: string; opts: Opt<T>[]; value: T | undefined; onChange: (v: T) => void }) {
-  return (<fieldset className="q" style={{ border: 0 }}><legend className="bold">{legend}</legend>
-    {opts.map(o => <label key={String(o.v)} className="opt"><input type="radio" name={name} checked={value === o.v} onChange={() => onChange(o.v)} /><span>{o.l}{o.d && <span className="muted xs" style={{ display: 'block' }}>{o.d}</span>}</span></label>)}
+  return (<fieldset className="q" style={{ border: 0 }}><legend className="bold"><Tv v={legend} /></legend>
+    {opts.map(o => <label key={String(o.v)} className="opt"><input type="radio" name={name} checked={value === o.v} onChange={() => onChange(o.v)} /><span><Tv v={o.l} />{o.d && <span className="muted xs" style={{ display: 'block' }}><Tv v={o.d} /></span>}</span></label>)}
   </fieldset>);
 }
 
 export function OnboardingForm({ initial, initialPlan, minor }: { initial: Partial<Answers> | null; initialPlan: Plan | null; minor: boolean }) {
+  const t = useT();
   const router = useRouter();
   const [a, setA] = useState<Partial<Answers>>(initial || {});
   const [plan, setPlan] = useState<Plan | null>(initialPlan);
@@ -39,35 +43,35 @@ export function OnboardingForm({ initial, initialPlan, minor }: { initial: Parti
 
   if (plan && !editing) return (
     <section className="card card-pad stack gap-16" aria-labelledby="planT">
-      <div><span className="badge badge-gold">{plan.label}</span><h2 className="h2" id="planT" style={{ marginTop: 8 }}>{plan.headline}</h2></div>
+      <div><span className="badge badge-gold"><Tv v={plan.label} /></span><h2 className="h2" id="planT" style={{ marginTop: 8 }}><Tv v={plan.headline} /></h2></div>
       <div className="grid2" style={{ gap: 14 }}>
-        <div className="kv"><span>Mode</span><span>{plan.mode}</span></div>
-        <div className="kv"><span>Pace</span><span>{plan.pace.note}</span></div>
+        <div className="kv"><span><Tr>Mode</Tr></span><span><Tv v={plan.mode} /></span></div>
+        <div className="kv"><span><Tr>Pace</Tr></span><span><Tv v={plan.pace.note} /></span></div>
       </div>
-      <div><h3 className="h3" style={{ marginBottom: 8 }}>Levels we will put extra focus on</h3><ul className="checklist">{plan.emphasis.map(e => <li key={e.levelIdx}><Check size={16} aria-hidden="true" /><span><b>Level {e.levelIdx}</b> — {e.why}</span></li>)}</ul><p className="muted xs" style={{ marginTop: 6 }}>Every level still unlocks only when you pass it. Your path changes examples and support, not the bar.</p></div>
-      <div><h3 className="h3" style={{ marginBottom: 8 }}>Your AI agent options</h3><ul className="checklist">{plan.agents.map(g => <li key={g.code}><span className="badge badge-neutral">{g.rank}</span><span><b>{g.name}</b> — {g.why}{!g.allowed && <span className="field-err" style={{ display: 'block' }}>{g.blockedReason}</span>}</span></li>)}</ul></div>
-      <ul className="checklist">{plan.support.map(x => <li key={x}><Check size={16} aria-hidden="true" /><span>{x}</span></li>)}</ul>
-      <div className="row gap-12 wrap"><Link className="btn btn-gold" href="/levels">Start Level 1<ArrowRight size={15} /></Link><Link className="btn btn-outline" href="/agent-lab">Set up your AI agent</Link><button className="btn btn-text" type="button" onClick={() => setEditing(true)}>Change my answers</button></div>
+      <div><h3 className="h3" style={{ marginBottom: 8 }}><Tr>Levels we will put extra focus on</Tr></h3><ul className="checklist">{plan.emphasis.map(e => <li key={e.levelIdx}><Check size={16} aria-hidden="true" /><span><b><Tr>Level</Tr> <Tv v={e.levelIdx} /></b> — <Tv v={e.why} /></span></li>)}</ul><p className="muted xs" style={{ marginTop: 6 }}><Tr>Every level still unlocks only when you pass it. Your path changes examples and support, not the bar.</Tr></p></div>
+      <div><h3 className="h3" style={{ marginBottom: 8 }}><Tr>Your AI agent options</Tr></h3><ul className="checklist">{plan.agents.map(g => <li key={g.code}><span className="badge badge-neutral">{g.rank}</span><span><b>{g.name}</b> — <Tv v={g.why} />{!g.allowed && <span className="field-err" style={{ display: 'block' }}><Tv v={g.blockedReason} /></span>}</span></li>)}</ul></div>
+      <ul className="checklist">{plan.support.map(x => <li key={x}><Check size={16} aria-hidden="true" /><span><Tv v={x} /></span></li>)}</ul>
+      <div className="row gap-12 wrap"><Link className="btn btn-gold" href="/levels"><Tr>Start Level 1</Tr><ArrowRight size={15} /></Link><Link className="btn btn-outline" href="/agent-lab"><Tr>Set up your AI agent</Tr></Link><button className="btn btn-text" type="button" onClick={() => setEditing(true)}><Tr>Change my answers</Tr></button></div>
     </section>
   );
 
   return (
     <section className="card card-pad stack gap-16" aria-labelledby="obT">
-      <h2 className="h3" id="obT">Tell us about you — 2 minutes</h2>
-      <p className="text-2 small">Your answers choose the examples, demos, questions, pace and AI tools you see. You can change them any time. Do not include phone numbers or emails.</p>
-      {minor && <p className="callout info small">You are under 18, so we keep you private by default and recommend free tools that need no payment card.</p>}
+      <h2 className="h3" id="obT"><Tr>Tell us about you — 2 minutes</Tr></h2>
+      <p className="text-2 small"><Tr>Your answers choose the examples, demos, questions, pace and AI tools you see. You can change them any time. Do not include phone numbers or emails.</Tr></p>
+      {minor && <p className="callout info small"><Tr>You are under 18, so we keep you private by default and recommend free tools that need no payment card.</Tr></p>}
       <Choice name="role" legend="Which describes you best?" opts={ROLE} value={a.role} onChange={v => set('role', v)} />
-      {a.role === 'school_student' && <label className="row gap-12"><input type="checkbox" checked={!!a.pythonHobby} onChange={e => set('pythonHobby', e.target.checked)} />I am learning Python (or another language) as a hobby</label>}
+      {a.role === 'school_student' && <label className="row gap-12"><input type="checkbox" checked={!!a.pythonHobby} onChange={e => set('pythonHobby', e.target.checked)} /><Tr>I am learning Python (or another language) as a hobby</Tr></label>}
       {a.role === 'working_professional' && <Choice name="prof" legend="What kind of work do you do?" opts={PROF} value={a.profession} onChange={v => set('profession', v)} />}
       <Choice name="comfort" legend="How comfortable are you with code?" opts={COMFORT} value={a.codingComfort} onChange={v => set('codingComfort', v)} />
       <Choice name="goal" legend="What do you most want from this journey?" opts={GOAL} value={a.goal} onChange={v => set('goal', v)} />
       <Choice name="hours" legend="How much time can you give each week?" opts={HOURS} value={a.hoursPerWeek} onChange={v => set('hoursPerWeek', v)} />
       <Choice name="os" legend="Which computer will you use?" opts={OS} value={a.os} onChange={v => set('os', v)} />
       <Choice name="style" legend="How do you like to learn?" opts={STYLE} value={a.learningStyle} onChange={v => set('learningStyle', v)} />
-      <label className="stack gap-8"><span className="bold">Your field or interest (optional)</span><input className="input" maxLength={80} placeholder="e.g. cricket, healthcare, tiffin service, fintech" value={a.domain || ''} onChange={e => set('domain', e.target.value)} /></label>
-      <label className="stack gap-8"><span className="bold">Your context card (optional)</span><span className="muted xs">One short page about you that the AI coach reads first, so every chat starts already knowing you: what you do, what you want to build, how you like explanations.</span><textarea className="input" rows={4} maxLength={1200} value={a.contextCard || ''} onChange={e => set('contextCard', e.target.value)} /></label>
-      {err && <p className="field-err" role="alert">{err}</p>}
-      <div className="row gap-12"><button className="btn btn-gold" type="button" disabled={!ready || busy} onClick={save}>{busy ? 'Saving…' : 'Build my path'}</button>{initialPlan && <button className="btn btn-text" type="button" onClick={() => setEditing(false)}>Cancel</button>}</div>
+      <label className="stack gap-8"><span className="bold"><Tr>Your field or interest (optional)</Tr></span><input className="input" maxLength={80} placeholder={t('e.g. cricket, healthcare, tiffin service, fintech')} value={a.domain || ''} onChange={e => set('domain', e.target.value)} /></label>
+      <label className="stack gap-8"><span className="bold"><Tr>Your context card (optional)</Tr></span><span className="muted xs"><Tr>One short page about you that the AI coach reads first, so every chat starts already knowing you: what you do, what you want to build, how you like explanations.</Tr></span><textarea className="input" rows={4} maxLength={1200} value={a.contextCard || ''} onChange={e => set('contextCard', e.target.value)} /></label>
+      {err && <p className="field-err" role="alert"><Tv v={err} /></p>}
+      <div className="row gap-12"><button className="btn btn-gold" type="button" disabled={!ready || busy} onClick={save}>{busy ? <Tr>Saving…</Tr> : <Tr>Build my path</Tr>}</button>{initialPlan && <button className="btn btn-text" type="button" onClick={() => setEditing(false)}><Tr>Cancel</Tr></button>}</div>
     </section>
   );
 }

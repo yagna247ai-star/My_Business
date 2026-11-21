@@ -99,3 +99,16 @@ describe('Module 2: Excel and SQL lab', () => {
     expect(INSTALL.postgres.map(o => o.os)).toEqual(['Windows', 'Mac', 'Ubuntu / WSL']);
   });
 });
+
+describe('Level 2 field scenes for every domain', () => {
+  it('every journey has a “Today in the field” scene on Days 6–10 that names its own table and database', () => {
+    for (const d of JOURNEY_SPECS.filter(x => !x.track || x.track.level === 'hard')) {
+      const c = labCols(d);
+      for (const n of [6, 7, 8, 9, 10]) expect(d.situations?.[n]?.scene, `${d.slug} day ${n}`).toBeTruthy();
+      expect(d.situations![7].task, d.slug).toContain(c.table);
+      expect(d.situations![9].task, d.slug).toContain(c.db);
+      const body = buildDomainJourney(d).levels[1].days.find(x => x.day === 8)!.body;
+      expect(body).toContain('## Today in the field');
+    }
+  });
+});

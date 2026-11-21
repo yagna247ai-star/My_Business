@@ -8,6 +8,8 @@ import { useState } from 'react';
 import { CheckCircle2, ImageUp, SkipForward } from 'lucide-react';
 import { api, ApiError } from '@/lib/client/api';
 import { useT } from '@/components/i18n/I18nProvider';
+import { moveOnText } from '@/lib/domain/levelFlowRules';
+import { Tv } from '@/components/i18n/Tv';
 
 type Props = { code: string; day: number; steps: string[]; state: 'open' | 'done' | 'skipped'; xp: number; dayXp: number; next: { code: string; day: number } | null; levelHref: string };
 
@@ -24,10 +26,10 @@ export function DayWork({ code, day, steps, state: initialState, xp: initialXp, 
   const [msg, setMsg] = useState('');
 
   const send = async (body: Record<string, unknown>) => {
-    const r = await api<{ xp?: number; advanced?: { next: string | null; message: string } | null }>(`/api/v1/levels/${code}/days/${day}`, { body });
+    const r = await api<{ xp?: number; advanced?: { earned: number; total: number; nextTitle: string | null } | null }>(`/api/v1/levels/${code}/days/${day}`, { body });
     return r;
   };
-  const after = (text: string, advanced?: { next: string | null; message: string } | null) => { setMsg(advanced?.message ? `${text} ${advanced.message}` : text); router.refresh(); };
+  const after = (text: string, advanced?: { earned: number; total: number; nextTitle: string | null } | null) => { setMsg(advanced ? `${text} ${moveOnText(t, advanced.earned, advanced.total, advanced.nextTitle)}` : text); router.refresh(); };
 
   async function done() {
     if (!file) return;
@@ -56,7 +58,7 @@ export function DayWork({ code, day, steps, state: initialState, xp: initialXp, 
         <h2 className="h3" id="dayWorkTitle" style={{ margin: 0 }}>{t('Your work today')}</h2>
         <span className={`badge ${state === 'done' ? 'badge-success' : state === 'skipped' ? 'badge-neutral' : 'badge-gold'}`}>{state === 'done' ? t('Done · +{xp} points', { xp }) : state === 'skipped' ? t('Skipped · 0 points') : t('+{xp} points', { xp: dayXp })}</span>
       </div>
-      {msg && <p className="callout ok" role="status"><CheckCircle2 size={18} /><span>{msg}</span></p>}
+      {msg && <p className="callout ok" role="status"><CheckCircle2 size={18} /><span><Tv v={msg} /></span></p>}
       {state === 'done' && !msg ? <p className="callout ok small"><CheckCircle2 size={16} /><span>{t('You finished this day and your screenshot is saved. You can replace it with a better one below.')}</span></p> : null}
       {state === 'skipped' && !msg ? <p className="callout info small"><SkipForward size={16} /><span>{t('You skipped this day. Do the steps and upload a screenshot any time to earn its {xp} points.', { xp: dayXp })}</span></p> : null}
 
@@ -76,7 +78,7 @@ export function DayWork({ code, day, steps, state: initialState, xp: initialXp, 
         <input type="file" accept="image/png,image/jpeg,image/webp" aria-label={t('Day screenshot')} disabled={busy} onChange={e => { const f = e.target.files?.[0] ?? null; setFile(f); setErr(''); if (preview) URL.revokeObjectURL(preview); setPreview(f ? URL.createObjectURL(f) : ''); }} />
       </label>
       {preview && <img src={preview} alt={t('Preview of your screenshot')} style={{ maxWidth: '100%', maxHeight: 280, objectFit: 'contain', borderRadius: 12, border: '1px solid var(--border)' }} />}
-      {err && <p className="field-err" role="alert">{err}</p>}
+      {err && <p className="field-err" role="alert"><Tv v={err} /></p>}
 
       <div className="row gap-12 wrap" style={{ alignItems: 'center' }}>
         <button className="btn btn-gold" type="button" disabled={busy || !file || !ticks.every(Boolean)} onClick={done}>{busy ? t('Saving…') : state === 'done' ? t('Replace screenshot') : t('Mark Day {n} done', { n: day })}</button>

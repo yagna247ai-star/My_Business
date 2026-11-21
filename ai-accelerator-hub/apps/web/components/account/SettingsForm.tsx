@@ -5,6 +5,8 @@ import { rememberLocale, useT } from '@/components/i18n/I18nProvider';
 import { isLocale } from '@/lib/i18n/core';
 import { Download } from 'lucide-react';
 import { api, ApiError } from '@/lib/client/api';
+import { Tr } from '@/components/i18n/Tr';
+import { Tv } from '@/components/i18n/Tv';
 
 type S = { leaderboardVisibility: string; globalOptIn: boolean; quietHours: boolean; ageBand: string; guardianConsent: string; deletionRequestedAt: string | null };
 export function SettingsForm({ initial, language, area: initialArea = '' }: { initial: S; language: string; area?: string }) {
@@ -16,18 +18,18 @@ export function SettingsForm({ initial, language, area: initialArea = '' }: { in
   const sw = (on: boolean, label: string, onClick: () => void, disabled = false) => <button className="switch" type="button" role="switch" aria-checked={on} aria-label={label} onClick={onClick} disabled={disabled} />;
   const minor = s.ageBand === 'minor';
   return (<div className="stack gap-20">
-    {msg && <p className="callout ok small" role="status">{msg}</p>}{err && <p className="callout warn small" role="alert">{err}</p>}
-    <section className="card card-pad" aria-labelledby="pv"><h2 className="h3" id="pv">Privacy</h2>
-      {minor && <p className="callout info small" style={{ marginTop: 10 }}>Because you are under 18, privacy is on by default{s.guardianConsent !== 'granted' ? ' and some settings need your guardian’s approval' : ''}.</p>}
-      <div className="set-row"><div><b>Show my name in standings</b><p>Off shows you as “Anonymous learner”. Your XP still counts.</p></div>{sw(s.leaderboardVisibility !== 'private', 'Show my name in standings', () => save({ leaderboardVisibility: s.leaderboardVisibility === 'private' ? 'cohort' : 'private' }))}</div>
-      <div className="set-row"><div><b>Share progress beyond my institution</b><p>Explicit consent for cross-institution visibility. Withdraw any time.</p></div>{sw(s.globalOptIn, 'Share progress beyond my institution', () => save({ globalOptIn: !s.globalOptIn }))}</div>
-      <div className="set-row"><div><b>Quiet hours</b><p>No reminders between 10 pm and 8 am IST.</p></div>{sw(s.quietHours, 'Quiet hours', () => save({ quietHours: !s.quietHours }))}</div>
-      <div className="set-row"><div><b>My area</b><p>Your city or area, for area crowns (top 3 per area). Leave blank to skip.</p></div><form style={{ display: 'flex', gap: 8 }} onSubmit={e => { e.preventDefault(); save({ area }); }}><input className="input" style={{ width: 180 }} value={area} maxLength={60} aria-label="My area" placeholder="e.g. Hyderabad" onChange={e => setArea(e.target.value)} /><button className="btn btn-soft btn-sm" type="submit">Save area</button></form></div>
-      <div className="set-row"><div><b>{t('Language')}</b><p>{t('Your progress never changes when you switch.')}</p></div><select className="select" style={{ width: 'auto' }} value={lang} aria-label="Language" onChange={async e => { const v = e.target.value; setLang(v); await save({ preferredLanguage: v }); if (isLocale(v)) rememberLocale(v); router.refresh(); }}>{[['en', 'English'], ['hi', 'हिन्दी'], ['te', 'తెలుగు'], ['ta', 'தமிழ்'], ['kn', 'ಕನ್ನಡ'], ['ml', 'മലയാളം']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+    {msg && <p className="callout ok small" role="status"><Tv v={msg} /></p>}{err && <p className="callout warn small" role="alert"><Tv v={err} /></p>}
+    <section className="card card-pad" aria-labelledby="pv"><h2 className="h3" id="pv"><Tr>Privacy</Tr></h2>
+      {minor && <p className="callout info small" style={{ marginTop: 10 }}><Tr>Because you are under 18, privacy is on by default</Tr>{s.guardianConsent !== 'granted' ? <Tr>and some settings need your guardian’s approval</Tr> : ''}.</p>}
+      <div className="set-row"><div><b><Tr>Show my name in standings</Tr></b><p><Tr>Off shows you as “Anonymous learner”. Your XP still counts.</Tr></p></div>{sw(s.leaderboardVisibility !== 'private', 'Show my name in standings', () => save({ leaderboardVisibility: s.leaderboardVisibility === 'private' ? 'cohort' : 'private' }))}</div>
+      <div className="set-row"><div><b><Tr>Share progress beyond my institution</Tr></b><p><Tr>Explicit consent for cross-institution visibility. Withdraw any time.</Tr></p></div>{sw(s.globalOptIn, 'Share progress beyond my institution', () => save({ globalOptIn: !s.globalOptIn }))}</div>
+      <div className="set-row"><div><b><Tr>Quiet hours</Tr></b><p><Tr>No reminders between 10 pm and 8 am IST.</Tr></p></div>{sw(s.quietHours, 'Quiet hours', () => save({ quietHours: !s.quietHours }))}</div>
+      <div className="set-row"><div><b><Tr>My area</Tr></b><p><Tr>Your city or area, for area crowns (top 3 per area). Leave blank to skip.</Tr></p></div><form style={{ display: 'flex', gap: 8 }} onSubmit={e => { e.preventDefault(); save({ area }); }}><input className="input" style={{ width: 180 }} value={area} maxLength={60} aria-label={t('My area')} placeholder={t('e.g. Hyderabad')} onChange={e => setArea(e.target.value)} /><button className="btn btn-soft btn-sm" type="submit"><Tr>Save area</Tr></button></form></div>
+      <div className="set-row"><div><b>{t('Language')}</b><p>{t('Your progress never changes when you switch.')}</p></div><select className="select" style={{ width: 'auto' }} value={lang} aria-label={t('Language')} onChange={async e => { const v = e.target.value; setLang(v); await save({ preferredLanguage: v }); if (isLocale(v)) rememberLocale(v); router.refresh(); }}>{[['en', 'English'], ['hi', 'हिन्दी'], ['te', 'తెలుగు'], ['ta', 'தமிழ்'], ['kn', 'ಕನ್ನಡ'], ['ml', 'മലയാളം']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
     </section>
-    <section className="card card-pad" aria-labelledby="dt"><h2 className="h3" id="dt">Your data</h2>
-      <div className="set-row"><div><b>Download my data</b><p>Everything we hold about you in this institution, as JSON.</p></div><a className="btn btn-outline btn-sm" href="/api/v1/settings/export"><Download size={14} />Download</a></div>
-      <div className="set-row"><div><b>Delete my account</b><p>{s.deletionRequestedAt ? `Requested on ${new Date(s.deletionRequestedAt).toLocaleDateString('en-IN')}. Your institution reviews it within 30 days.` : 'Starts a deletion request. Issued certificates stay verifiable.'}</p></div>{!s.deletionRequestedAt && <button className="btn btn-outline btn-sm" type="button" onClick={del} style={{ color: 'var(--danger)' }}>{confirmDel ? 'Confirm deletion request' : 'Request deletion'}</button>}</div>
+    <section className="card card-pad" aria-labelledby="dt"><h2 className="h3" id="dt"><Tr>Your data</Tr></h2>
+      <div className="set-row"><div><b><Tr>Download my data</Tr></b><p><Tr>Everything we hold about you in this institution, as JSON.</Tr></p></div><a className="btn btn-outline btn-sm" href="/api/v1/settings/export"><Download size={14} /><Tr>Download</Tr></a></div>
+      <div className="set-row"><div><b><Tr>Delete my account</Tr></b><p>{s.deletionRequestedAt ? `Requested on ${new Date(s.deletionRequestedAt).toLocaleDateString('en-IN')}. Your institution reviews it within 30 days.` : <Tr>Starts a deletion request. Issued certificates stay verifiable.</Tr>}</p></div>{!s.deletionRequestedAt && <button className="btn btn-outline btn-sm" type="button" onClick={del} style={{ color: 'var(--danger)' }}>{confirmDel ? <Tr>Confirm deletion request</Tr> : <Tr>Request deletion</Tr>}</button>}</div>
     </section>
   </div>);
 }

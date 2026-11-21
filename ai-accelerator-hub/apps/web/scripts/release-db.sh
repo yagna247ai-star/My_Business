@@ -13,3 +13,6 @@ npx prisma migrate deploy --schema "$SCHEMA"
 npm run seed:content
 npm run seed:domains   # 17 domain journeys; skips unchanged domains (content hash)
 npm run smoke:role
+# Machine-translate any new interface text into the 5 Indian languages (reviewed text in messages.ts wins).
+# Never blocks a release: without an AI key, untranslated text simply shows in English.
+npm run i18n:fill || echo "release-db: i18n:fill failed (non-blocking)"

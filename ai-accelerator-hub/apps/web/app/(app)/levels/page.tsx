@@ -8,6 +8,7 @@ import { topApprovedLevel } from '@/lib/domain/gamify';
 import { myTrack } from '@/lib/domain/journeyTracks';
 import { TrackPanel } from '@/components/learn/TrackPanel';
 import { getLocale, getT } from '@/lib/i18n/server';
+import { Tv } from '@/components/i18n/Tv';
 
 export const metadata = { title: 'Journey' };
 const NUM = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen'];
@@ -27,8 +28,8 @@ async function Journey() {
           <div className="lv-grid">{levels.filter(l => l.stage?.idx === idx).map(l => {
             const locked = l.state === 'locked';
             const status = l.state === 'approved' ? <><CheckCircle2 size={14} />{t('Approved')}</> : locked ? <><Lock size={14} />{t('After Level {n} is complete', { n: l.idx - 1 })}</> : !l.published ? <><Unlock size={14} />{t('Unlocked · content coming')}</> : <><Clock size={14} />{t(l.state.replace('_', ' '))}</>;
-            const inner = <><span className="code lv-code">L{String(l.idx).padStart(2, '0')} · {l.xp} XP</span><span className="nm">{l.title}{l.idx === top ? <> <span className="crown-tag" aria-label="Your top approved level"><Crown size={16} /> {t('Top level')}</span></> : null}</span><span className="muted xs">{(l.summary || '').split(' · ').slice(0, 3).join(' · ')}</span><span className="st">{status}</span></>;
-            return locked ? <div key={l.idx} className="lv-tile locked" aria-label={`Level ${l.idx} ${l.title}, locked`}>{inner}</div> : <Link key={l.idx} href={`/levels/${l.code}`} className="lv-tile current lift">{inner}</Link>;
+            const inner = <><span className="code lv-code">L{String(l.idx).padStart(2, '0')} · {l.xp} XP</span><span className="nm"><Tv v={l.title} />{l.idx === top ? <> <span className="crown-tag" aria-label={t('Your top approved level')}><Crown size={16} /> {t('Top level')}</span></> : null}</span><span className="muted xs">{(l.summary || '').split(' · ').slice(0, 3).join(' · ')}</span><span className="st"><Tv v={status} /></span></>;
+            return locked ? <div key={l.idx} className="lv-tile locked" aria-label={`Level ${l.idx} ${l.title}, locked`}><Tv v={inner} /></div> : <Link key={l.idx} href={`/levels/${l.code}`} className="lv-tile current lift"><Tv v={inner} /></Link>;
           })}</div>
         </section>
       ))}

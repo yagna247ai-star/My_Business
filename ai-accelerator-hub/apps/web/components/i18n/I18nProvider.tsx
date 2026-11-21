@@ -2,11 +2,12 @@
 /** Gives every client component the page's language: const t = useT(); t('Sign out'). */
 import { createContext, useContext, useMemo } from 'react';
 import { LANG_COOKIE, makeT, type Dict, type Locale, type T } from '@/lib/i18n/core';
+import { setApiTranslator } from '@/lib/client/api';
 
 const Ctx = createContext<{ locale: Locale; t: T }>({ locale: 'en', t: makeT({}) });
 
 export function I18nProvider({ locale, dict, children }: { locale: Locale; dict: Dict; children: React.ReactNode }) {
-  const value = useMemo(() => ({ locale, t: makeT(dict) }), [locale, dict]);
+  const value = useMemo(() => { const t = makeT(dict); setApiTranslator(s => t(s)); return { locale, t }; }, [locale, dict]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

@@ -1,7 +1,16 @@
 'use client';
 /** Browser → API helper. Same-origin JSON, typed errors, timeouts, readable messages for every failure mode. */
+/** Set by I18nProvider: every error message (and field message) is shown in the page's language when a translation exists. */
+let translate: (s: string) => string = s => s;
+export const setApiTranslator = (fn: (s: string) => string) => { translate = fn; };
+/** Marks a fixed message for the translation key list (identity at runtime). */
+const msg = (s: string) => s;
+
 export class ApiError extends Error {
-  constructor(public status: number, public code: string, message: string, public details?: Record<string, string>, public requestId?: string) { super(message); }
+  constructor(public status: number, public code: string, message: string, public details?: Record<string, string>, public requestId?: string) {
+    super(translate(message));
+    if (details) this.details = Object.fromEntries(Object.entries(details).map(([k, v]) => [k, translate(v)]));
+  }
 }
 
 type ErrBody = { error?: { code?: string; message?: string; details?: unknown; requestId?: string } };
@@ -19,14 +28,14 @@ function toFieldMap(d: unknown): Record<string, string> | undefined {
 }
 
 const STATUS_MESSAGE: Record<number, string> = {
-  401: 'Your session has ended. Please sign in again.',
-  403: 'You do not have permission to do that.',
-  404: 'We could not find that.',
-  413: 'That is too large to upload.',
-  429: 'Too many attempts. Please wait a minute and try again.',
-  502: 'The server is restarting. Please try again in a moment.',
-  503: 'This service is temporarily unavailable. Please try again shortly.',
-  504: 'The server took too long to respond. Please try again.',
+  401: msg('Your session has ended. Please sign in again.'),
+  403: msg('You do not have permission to do that.'),
+  404: msg('We could not find that.'),
+  413: msg('That is too large to upload.'),
+  429: msg('Too many attempts. Please wait a minute and try again.'),
+  502: msg('The server is restarting. Please try again in a moment.'),
+  503: msg('This service is temporarily unavailable. Please try again shortly.'),
+  504: msg('The server took too long to respond. Please try again.'),
 };
 
 export async function api<T = unknown>(path: string, opts: { method?: string; body?: unknown; timeoutMs?: number; signal?: AbortSignal } = {}): Promise<T> {
@@ -45,7 +54,7 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
   } catch (e) {
     const timedOut = (e as Error)?.name === 'TimeoutError' || ctrl.signal.reason?.name === 'TimeoutError';
     if (opts.signal?.aborted) throw e;
-    throw new ApiError(0, timedOut ? 'TIMEOUT' : 'NETWORK', timedOut ? 'The request took too long. Check your connection and try again.' : 'Could not reach the server. Check your internet connection and try again.');
+    throw new ApiError(0, timedOut ? 'TIMEOUT' : 'NETWORK', timedOut ? msg('The request took too long. Check your connection and try again.') : msg('Could not reach the server. Check your internet connection and try again.'));
   } finally { clearTimeout(timer); }
 
   const text = await res.text();
@@ -57,6 +66,6 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
     const msg = e.message || STATUS_MESSAGE[res.status] || (res.status >= 500 ? 'Something went wrong on our side. Please try again in a moment.' : 'That request could not be completed.');
     throw new ApiError(res.status, e.code || `HTTP_${res.status}`, msg, toFieldMap(e.details), e.requestId || res.headers.get('x-request-id') || undefined);
   }
-  if (text && data === undefined) throw new ApiError(res.status, 'BAD_RESPONSE', 'The server sent an unexpected response. Please refresh and try again.');
+  if (text && data === undefined) throw new ApiError(res.status, 'BAD_RESPONSE', msg('The server sent an unexpected response. Please refresh and try again.'));
   return (data ?? {}) as T;
 }

@@ -33,4 +33,4 @@ export function dictFor(locale: Locale): Dict {
 export type Vars = Record<string, string | number>;
 export const interpolate = (s: string, vars?: Vars) => (vars ? s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : s);
 export type T = (en: string, vars?: Vars) => string;
-export const makeT = (dict: Dict): T => (en, vars) => interpolate(dict[en] ?? en, vars);
+export const makeT = (dict: Dict): T => (en, vars) => (typeof en === 'string' ? interpolate(dict[en] ?? dict[en.replace(/\s+/g, ' ').trim()] ?? en, vars) : en);

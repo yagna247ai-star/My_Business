@@ -12,6 +12,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ClipboardPaste, ImageUp, CheckCircle2, AlertTriangle, X } from 'lucide-react';
 import { MIN_W, MIN_H } from '@/lib/domain/proofScore';
+import { Tr } from '@/components/i18n/Tr';
+import { useT } from '@/components/i18n/I18nProvider';
+import { Tv } from '@/components/i18n/Tv';
 
 export type Shot = { id: string; name: string; width: number | null; height: number | null; preview: string };
 const SERVER_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
@@ -63,6 +66,7 @@ async function prepare(f: File): Promise<File> {
 }
 
 export function ScreenshotInput({ runId, value, onChange, error }: { runId: string; value: Shot | null; onChange: (s: Shot | null) => void; error?: string }) {
+  const t = useT();
   const [busy, setBusy] = useState(''); const [err, setErr] = useState(''); const [over, setOver] = useState(false);
   const wrap = useRef<HTMLDivElement>(null); const input = useRef<HTMLInputElement>(null);
   useEffect(() => () => { if (value?.preview?.startsWith('blob:')) URL.revokeObjectURL(value.preview); }, [value?.preview]);
@@ -121,23 +125,23 @@ export function ScreenshotInput({ runId, value, onChange, error }: { runId: stri
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } }}
       onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setOver(true); }} onDragLeave={() => setOver(false)}
       onDrop={e => { e.preventDefault(); setOver(false); const f = e.dataTransfer.files?.[0]; if (f) upload(f, 'dropped'); }}>
-      {value ? <img src={value.preview} alt="Your screenshot preview" className="shot-preview" /> : <div className="stack gap-6" style={{ alignItems: 'center', textAlign: 'center' }}>
+      {value ? <img src={value.preview} alt={t('Your screenshot preview')} className="shot-preview" /> : <div className="stack gap-6" style={{ alignItems: 'center', textAlign: 'center' }}>
         <ImageUp size={22} aria-hidden="true" />
-        <b className="small">Click to choose a screenshot</b>
-        <span className="muted xs">or paste it (<kbd className="key">{mac ? '⌘' : 'Ctrl'}</kbd> + <kbd className="key">V</kbd>), or drag an image here</span></div>}
-      {busy && <span className="shot-busy" role="status">{busy}</span>}
+        <b className="small"><Tr>Click to choose a screenshot</Tr></b>
+        <span className="muted xs"><Tr>or paste it (</Tr><kbd className="key">{mac ? '⌘' : 'Ctrl'}</kbd> + <kbd className="key">V</kbd><Tr>), or drag an image here</Tr></span></div>}
+      {busy && <span className="shot-busy" role="status"><Tv v={busy} /></span>}
     </div>
     <div className="row gap-8 wrap" style={{ alignItems: 'center' }}>
-      <button type="button" className="btn btn-outline btn-sm" onClick={pick} disabled={!!busy}><ImageUp size={14} aria-hidden="true" />{value ? 'Replace screenshot' : 'Choose a file'}</button>
-      <span className="muted xs row gap-4" style={{ alignItems: 'center' }}><ClipboardPaste size={13} aria-hidden="true" />Paste works too</span>
-      {value && !busy && <button type="button" className="btn btn-text btn-sm" onClick={() => { onChange(null); setErr(''); }}><X size={14} aria-hidden="true" />Remove</button>}
+      <button type="button" className="btn btn-outline btn-sm" onClick={pick} disabled={!!busy}><ImageUp size={14} aria-hidden="true" />{value ? <Tr>Replace screenshot</Tr> : <Tr>Choose a file</Tr>}</button>
+      <span className="muted xs row gap-4" style={{ alignItems: 'center' }}><ClipboardPaste size={13} aria-hidden="true" /><Tr>Paste works too</Tr></span>
+      {value && !busy && <button type="button" className="btn btn-text btn-sm" onClick={() => { onChange(null); setErr(''); }}><X size={14} aria-hidden="true" /><Tr>Remove</Tr></button>}
       {/* Visually hidden but still in the layout — some browsers ignore .click() on display:none inputs. */}
       <input ref={input} type="file" accept="image/*,.heic,.heif" className="sr-only" tabIndex={-1} aria-hidden="true"
         onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) upload(f, 'uploaded'); }} />
     </div>
     {value && <p className="small row gap-6" style={{ alignItems: 'center', margin: 0 }}>{small ? <AlertTriangle size={14} aria-hidden="true" style={{ color: 'var(--danger)' }} /> : <CheckCircle2 size={14} aria-hidden="true" style={{ color: 'var(--success)' }} />}
-      <span>{value.name}{value.width ? ` · ${value.width}×${value.height}` : ''}{small ? ` — smaller than ${MIN_W}×${MIN_H}; capture the whole window for full points` : value.width ? ' — real image, readable size' : ''}</span></p>}
-    <p className="muted xs" style={{ margin: 0 }}><b>Tip:</b> {mac ? 'Press Control + Shift + Command + 4 and select an area — adding Control copies it to the clipboard instead of saving a file. Then paste it here.' : 'Press Windows + Shift + S and select the area; in the Snipping Tool window press Ctrl + C to copy it, then paste it here.'} Crop out API keys, emails and other people’s data first.</p>
+      <span>{value.name}{value.width ? ` · ${value.width}×${value.height}` : ''}{small ? ` — smaller than ${MIN_W}×${MIN_H}; capture the whole window for full points` : value.width ? <Tr>— real image, readable size</Tr> : ''}</span></p>}
+    <p className="muted xs" style={{ margin: 0 }}><b><Tr>Tip:</Tr></b> {mac ? <Tr>Press Control + Shift + Command + 4 and select an area — adding Control copies it to the clipboard instead of saving a file. Then paste it here.</Tr> : <Tr>Press Windows + Shift + S and select the area; in the Snipping Tool window press Ctrl + C to copy it, then paste it here.</Tr>} <Tr>Crop out API keys, emails and other people’s data first.</Tr></p>
     {(err || error) && <p className="field-err" role="alert" style={{ margin: 0 }}>{err || error}</p>}
   </div>);
 }

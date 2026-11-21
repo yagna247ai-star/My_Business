@@ -4,6 +4,9 @@ import { requireCtx } from '@/lib/server/context';
 import { ranks, type Tab } from '@/lib/domain/ranks';
 import { guarded } from '@/lib/server/page';
 import { Crown } from '@/components/app/Crown';
+import { Tr } from '@/components/i18n/Tr';
+import { getT } from '@/lib/i18n/server';
+import { Tv } from '@/components/i18n/Tv';
 
 export const metadata = { title: 'Ranks' };
 const fmt = (n: number) => n.toLocaleString('en-IN');
@@ -22,11 +25,12 @@ function Move({ n }: { n: number }) {
 }
 
 async function Ranks({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const t = await getT();
   const ctx = await requireCtx();
   const q = (await searchParams).tab;
   const tab: Tab = q === 'state' || q === 'all' ? q : 'city';
   const r = await ranks(ctx, tab);
-  if (!r) return <div className="card empty"><h1 className="h3">No ranks yet</h1><p className="text-2">Ranks appear once the journey is set up.</p></div>;
+  if (!r) return <div className="card empty"><h1 className="h3"><Tr>No ranks yet</Tr></h1><p className="text-2"><Tr>Ranks appear once the journey is set up.</Tr></p></div>;
   const { board, scope } = r;
   const [first, second, third] = board.list;
   const rest = board.list.slice(3);
@@ -40,57 +44,57 @@ async function Ranks({ searchParams }: { searchParams: Promise<{ tab?: string }>
   return (<div className="rk">
     <section className="rk-head">
       <span className="rk-head-ic" aria-hidden="true"><Trophy size={20} /></span>
-      <div><span className="eyebrow">Leaderboard</span><h1 id="pageTitle">Ranks</h1><p className="muted small">Ranks refresh every 15 minutes. Movement is since yesterday.</p></div>
+      <div><span className="eyebrow"><Tr>Leaderboard</Tr></span><h1 id="pageTitle"><Tr>Ranks</Tr></h1><p className="muted small"><Tr>Ranks refresh every 15 minutes. Movement is since yesterday.</Tr></p></div>
     </section>
 
     <div className="rk-grid">
       <aside className="rk-side">
-        <nav className="rk-tabs" aria-label="Rank scope">
-          {tabs.map(t => <Link key={t.key} href={`/ranks?tab=${t.key}`} aria-current={tab === t.key ? 'page' : undefined}><b>{t.label}</b><span>{t.sub}</span></Link>)}
+        <nav className="rk-tabs" aria-label={t('Rank scope')}>
+          {tabs.map(t => <Link key={t.key} href={`/ranks?tab=${t.key}`} aria-current={tab === t.key ? 'page' : undefined}><b><Tv v={t.label} /></b><span><Tv v={t.sub} /></span></Link>)}
         </nav>
 
         {board.me ? (
-          <section className="rk-standing" aria-label="Your standing">
+          <section className="rk-standing" aria-label={t('Your standing')}>
             <div className="rk-standing-top">
-              <span className="rk-standing-eyebrow">Your standing · {where}</span>
+              <span className="rk-standing-eyebrow"><Tr>Your standing ·</Tr> <Tv v={where} /></span>
               <Avatar name={ctx.name || 'You'} url={null} size={44} />
             </div>
-            <p className="rk-top">Top {board.me.topPercent}%</p>
-            <p className="rk-pos">You are <b>#{board.me.rank}</b> of <b>{fmt(board.me.total)}</b> {scope.kind === 'all' ? 'overall' : `in ${scope.name}`}.</p>
+            <p className="rk-top"><Tr>Top</Tr> <Tv v={board.me.topPercent} />%</p>
+            <p className="rk-pos"><Tr>You are</Tr> <b>#{board.me.rank}</b> <Tr>of</Tr> <b>{fmt(board.me.total)}</b> {scope.kind === 'all' ? <Tr>overall</Tr> : `in ${scope.name}`}.</p>
             <dl className="rk-stats">
-              <div><dt>{fmt(board.me.points)}</dt><dd>points</dd></div>
-              <div><dt>{board.me.level}</dt><dd>level</dd></div>
-              <div><dt>{board.me.move > 0 ? `Up ${board.me.move}` : board.me.move < 0 ? `Down ${-board.me.move}` : 'Steady'}</dt><dd>{board.me.move ? 'since yesterday' : 'same place as yesterday'}</dd></div>
+              <div><dt>{fmt(board.me.points)}</dt><dd><Tr>points</Tr></dd></div>
+              <div><dt>{board.me.level}</dt><dd><Tr>level</Tr></dd></div>
+              <div><dt>{board.me.move > 0 ? `Up ${board.me.move}` : board.me.move < 0 ? `Down ${-board.me.move}` : <Tr>Steady</Tr>}</dt><dd>{board.me.move ? <Tr>since yesterday</Tr> : <Tr>same place as yesterday</Tr>}</dd></div>
             </dl>
           </section>
         ) : (
-          <section className="rk-standing" aria-label="Your standing"><p className="rk-pos">Earn your first points to join the ranks.</p></section>
+          <section className="rk-standing" aria-label={t('Your standing')}><p className="rk-pos"><Tr>Earn your first points to join the ranks.</Tr></p></section>
         )}
 
         {board.nextUp && (
-          <section className="card rk-next" aria-label="Next place up">
-            <h2 className="h4">Next place up</h2>
-            <div className="rk-next-row"><span><b>{board.nextUp.name}</b> is at #{board.nextUp.rank}.</span><span className="rk-pill">{fmt(board.nextUp.gap)} points to go</span></div>
+          <section className="card rk-next" aria-label={t('Next place up')}>
+            <h2 className="h4"><Tr>Next place up</Tr></h2>
+            <div className="rk-next-row"><span><b>{board.nextUp.name}</b> <Tr>is at #</Tr>{board.nextUp.rank}.</span><span className="rk-pill">{fmt(board.nextUp.gap)} <Tr>points to go</Tr></span></div>
           </section>
         )}
-        {r.note && <p className="callout info small">{r.note}</p>}
-        <p className="muted xs rk-foot"><RefreshCw size={12} aria-hidden="true" /><span>Cities with fewer than 10 ranked learners are ranked at state level. <Link className="link bold" href="/leaderboard/areas">Area crowns and the final fight</Link></span></p>
+        {r.note && <p className="callout info small"><Tv v={r.note} /></p>}
+        <p className="muted xs rk-foot"><RefreshCw size={12} aria-hidden="true" /><span><Tr>Cities with fewer than 10 ranked learners are ranked at state level.</Tr> <Link className="link bold" href="/leaderboard/areas"><Tr>Area crowns and the final fight</Tr></Link></span></p>
       </aside>
 
       <section className="rk-main" aria-labelledby="rk-title">
-        <div className="rk-main-head"><h2 className="h3" id="rk-title">Top of {where}</h2><span className="muted small">First {Math.min(25, board.total)} of {fmt(board.total)} members.</span></div>
+        <div className="rk-main-head"><h2 className="h3" id="rk-title"><Tr>Top of</Tr> <Tv v={where} /></h2><span className="muted small"><Tr>First</Tr> {Math.min(25, board.total)} <Tr>of</Tr> {fmt(board.total)} <Tr>members.</Tr></span></div>
 
         {first && (
-          <div className="rk-podium" aria-label="Top three">
+          <div className="rk-podium" aria-label={t('Top three')}>
             {[second, first, third].map((p, i) => p && (
               <div key={p.rank} className={`rk-pod rk-pod-${p.rank}`} style={{ order: i }}>
                 <div className="rk-pod-person">
-                  {p.rank === 1 && <span className="rk-pod-crown"><Crown tier={1} size={30} title="First place" /></span>}
+                  {p.rank === 1 && <span className="rk-pod-crown"><Crown tier={1} size={30} title={t('First place')} /></span>}
                   <Avatar name={p.name} url={p.avatarUrl} size={p.rank === 1 ? 72 : 58} />
                   <b className="rk-pod-name">{p.name}</b>
-                  {p.me && <span className="rk-you">You</span>}
+                  {p.me && <span className="rk-you"><Tr>You</Tr></span>}
                   <span className="muted xs">{p.level}</span>
-                  <span className="rk-pill">{fmt(p.points)} pts</span>
+                  <span className="rk-pill">{fmt(p.points)} <Tr>pts</Tr></span>
                 </div>
                 <div className="rk-step"><span className="rk-step-n">{p.rank}</span></div>
               </div>
@@ -99,19 +103,19 @@ async function Ranks({ searchParams }: { searchParams: Promise<{ tab?: string }>
         )}
 
         {rest.length > 0 && (
-          <ol className="card rk-list" start={4} aria-label="Ranks 4 and below">
+          <ol className="card rk-list" start={4} aria-label={t('Ranks 4 and below')}>
             {rest.map(p => (
               <li key={p.rank} className={p.me ? 'me' : ''}>
                 <span className="rk-n">{p.rank}</span>
                 <Avatar name={p.name} url={p.avatarUrl} />
-                <span className="rk-who"><span className="rk-name">{p.name}{p.me && <span className="rk-you">You</span>}{p.finisher && <span className="rk-badge"><Crown tier={1} size={12} /> Journey Finisher</span>}</span><span className="muted xs">{p.area} · {p.level}</span></span>
+                <span className="rk-who"><span className="rk-name">{p.name}{p.me && <span className="rk-you"><Tr>You</Tr></span>}{p.finisher && <span className="rk-badge"><Crown tier={1} size={12} /> <Tr>Journey Finisher</Tr></span>}</span><span className="muted xs"><Tv v={p.area} /> · {p.level}</span></span>
                 <Move n={p.move} />
-                <span className="rk-pts"><b>{fmt(p.points)}</b> pts</span>
+                <span className="rk-pts"><b>{fmt(p.points)}</b> <Tr>pts</Tr></span>
               </li>
             ))}
           </ol>
         )}
-        {board.total === 0 && <p className="muted">No points yet in {where}.</p>}
+        {board.total === 0 && <p className="muted"><Tr>No points yet in</Tr> <Tv v={where} />.</p>}
       </section>
     </div>
   </div>);

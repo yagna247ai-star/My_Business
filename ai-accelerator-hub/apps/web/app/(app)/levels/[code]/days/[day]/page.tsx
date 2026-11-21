@@ -10,11 +10,13 @@ import { DayWork } from '@/components/learn/DayWork';
 import { TranslateLesson } from '@/components/learn/TranslateLesson';
 import { getLocale, getT } from '@/lib/i18n/server';
 import { cachedLesson } from '@/lib/i18n/lessonTranslate';
+import { Tr } from '@/components/i18n/Tr';
+import { Tv } from '@/components/i18n/Tv';
 
 export const dynamic = 'force-dynamic';
 
 function Inline({ text }: { text: string }) {
-  return <>{parseInline(text).map((p, i) => p.kind === 'bold' ? <strong key={i}>{p.text}</strong> : p.kind === 'code' ? <code key={i} className="mono" style={{ padding: '1px 5px', borderRadius: 6, background: 'var(--surface-3)' }}>{p.text}</code> : <span key={i}>{p.text}</span>)}</>;
+  return <>{parseInline(text).map((p, i) => p.kind === 'bold' ? <strong key={i}><Tv v={p.text} /></strong> : p.kind === 'code' ? <code key={i} className="mono" style={{ padding: '1px 5px', borderRadius: 6, background: 'var(--surface-3)' }}>{p.text}</code> : <span key={i}><Tv v={p.text} /></span>)}</>;
 }
 
 function Render({ block }: { block: Block }) {
@@ -52,7 +54,7 @@ async function DayPage({ params, searchParams }: { params: Promise<{ code: strin
     return <div className="card empty"><div className="ic-wrap"><Lock size={22} /></div><h1 className="h3">{t('{title} is locked', { title: level.title })}</h1><p className="text-2" style={{ marginTop: 6 }}>{t('Finish the earlier module first.')}</p></div>;
   }
   const content = await prisma.content.findFirst({ where: { levelId: level.id, kind: 'md', position: dayNo } });
-  if (!content) return <div className="card empty"><h1 className="h3">Day {dayNo} is not in {level.title}</h1></div>;
+  if (!content) return <div className="card empty"><h1 className="h3"><Tr>Day</Tr> <Tv v={dayNo} /> <Tr>is not in</Tr> <Tv v={level.title} /></h1></div>;
 
   const [prev, next] = await Promise.all([
     prisma.content.findFirst({ where: { kind: 'md', position: dayNo - 1, level: { journeyId: enrollment.journeyId, tenantId: ctx.tenantId } }, select: { position: true, level: { select: { code: true } } } }),
@@ -69,8 +71,8 @@ async function DayPage({ params, searchParams }: { params: Promise<{ code: strin
 
   return (<>
     <section className="ph ph-plain" style={{ marginBottom: 14 }}>
-      <span className="eyebrow">{level.title} · {t('Day {n} of 45', { n: dayNo })}</span>
-      <h1 id="pageTitle" className="sr-only">{content.title}</h1>
+      <span className="eyebrow"><Tv v={level.title} /> · {t('Day {n} of 45', { n: dayNo })}</span>
+      <h1 id="pageTitle" className="sr-only"><Tv v={content.title} /></h1>
       <div className="row between wrap gap-12" style={{ marginTop: 6 }}>
         <div className="bar" style={{ flex: 1, minWidth: 200 }} aria-label={`Day ${dayNo} of 45`}><i style={{ width: `${(dayNo / 45) * 100}%` }} /></div>
         <span className="muted small">{t('{n}% of the 45 days', { n: Math.round((dayNo / 45) * 100) })}</span>
@@ -81,7 +83,7 @@ async function DayPage({ params, searchParams }: { params: Promise<{ code: strin
       {blocks.map((b, i) => <Render key={i} block={b} />)}
     </article>
     <DayWork code={code} day={dayNo} steps={steps} state={(mine?.state as 'done' | 'skipped' | undefined) ?? 'open'} xp={mine?.xpEarned ?? 0} dayXp={DAY_XP} next={next ? { code: next.level.code, day: next.position } : null} levelHref={`/levels/${code}`} />
-    <nav className="row between wrap gap-12" aria-label="Day navigation" style={{ marginTop: 18, maxWidth: 820 }}>
+    <nav className="row between wrap gap-12" aria-label={t('Day navigation')} style={{ marginTop: 18, maxWidth: 820 }}>
       {prev ? <Link className="btn btn-outline" href={`/levels/${prev.level.code}/days/${prev.position}`}><ChevronLeft size={16} /> {t('Day {n}', { n: prev.position })}</Link> : <span />}
       {next ? <Link className="btn btn-primary" href={`/levels/${next.level.code}/days/${next.position}`}>{t('Day {n}', { n: next.position })} <ChevronRight size={16} /></Link> : <span />}
     </nav>

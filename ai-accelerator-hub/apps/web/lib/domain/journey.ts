@@ -291,7 +291,7 @@ export async function levelDays(levelId: string, enrollmentId: string) {
  * Open the next level once every activity and day of this one is done or skipped. Review never blocks this.
  * Idempotent: safe to call after every save. Never resets a level the learner has already opened.
  */
-export async function advanceIfComplete(tenantId: string, progressId: string): Promise<{ next: string | null; message: string } | null> {
+export async function advanceIfComplete(tenantId: string, progressId: string): Promise<{ next: string | null; message: string; earned: number; total: number; nextTitle: string | null } | null> {
   const p = await prisma.progress.findUnique({ where: { id: progressId }, include: { level: { include: { activities: { select: { id: true, idx: true } } } }, activityProgress: { select: { activityId: true, state: true } }, bossProgress: { select: { attempts: true } } } });
   if (!p) return null;
   const st = new Map(p.activityProgress.map(a => [a.activityId, a.state]));
@@ -312,7 +312,7 @@ export async function advanceIfComplete(tenantId: string, progressId: string): P
     await notify(tx, tenantId, p.userId, 'level_completed', { title: `${p.level.title} complete: ${p.xpEarned} of ${total} points`, body: message, href: `/levels/${next.code}`, tone: 'ok' });
     return true;
   });
-  return { next: opened && next ? next.code : null, message };
+  return { next: opened && next ? next.code : null, message, earned: p.xpEarned, total, nextTitle: next?.title ?? null };
 }
 
 /** Skip an activity for now: no points, the next activity opens, and it can still be done later for its points. */

@@ -3,6 +3,8 @@ import Script from 'next/script';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { api, ApiError } from '@/lib/client/api';
+import { Tr } from '@/components/i18n/Tr';
+import { Tv } from '@/components/i18n/Tv';
 
 type Plan = { slug: string; name: string; amountInr: number; interval: string };
 declare global { interface Window { Razorpay?: new (o: Record<string, unknown>) => { open: () => void } } }
@@ -19,7 +21,7 @@ export function Plans({ plans, configured }: { plans: Plan[]; configured: boolea
   };
   return (<>
     {configured && <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />}
-    {err && <p className="callout warn small" role="alert" style={{ marginBottom: 12 }}>{err}</p>}
-    <div className="track-grid">{plans.map(p => <article key={p.slug} className="card trk"><h2 className="h3">{p.name}</h2><div className="kpi" style={{ padding: 0 }}><div className="v">{p.amountInr ? `₹${p.amountInr.toLocaleString('en-IN')}` : 'Free'}</div><div className="d">{p.amountInr ? `per ${p.interval === 'yearly' ? 'year' : p.interval === 'monthly' ? 'month' : 'purchase'} · GST included` : 'Level 1 and the community'}</div></div>{p.amountInr > 0 && <button className="btn btn-gold" type="button" disabled={!configured || busy === p.slug} onClick={() => buy(p.slug)}>{configured ? (busy === p.slug ? 'Opening checkout…' : 'Choose plan') : 'Online payment not enabled yet'}</button>}</article>)}</div>
+    {err && <p className="callout warn small" role="alert" style={{ marginBottom: 12 }}><Tv v={err} /></p>}
+    <div className="track-grid">{plans.map(p => <article key={p.slug} className="card trk"><h2 className="h3">{p.name}</h2><div className="kpi" style={{ padding: 0 }}><div className="v">{p.amountInr ? `₹${p.amountInr.toLocaleString('en-IN')}` : <Tr>Free</Tr>}</div><div className="d">{p.amountInr ? `per ${p.interval === 'yearly' ? 'year' : p.interval === 'monthly' ? 'month' : 'purchase'} · GST included` : <Tr>Level 1 and the community</Tr>}</div></div>{p.amountInr > 0 && <button className="btn btn-gold" type="button" disabled={!configured || busy === p.slug} onClick={() => buy(p.slug)}>{configured ? (busy === p.slug ? <Tr>Opening checkout…</Tr> : <Tr>Choose plan</Tr>) : <Tr>Online payment not enabled yet</Tr>}</button>}</article>)}</div>
   </>);
 }
