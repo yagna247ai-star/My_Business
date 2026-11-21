@@ -140,4 +140,27 @@ export const langchainProvider: AiProvider = {
       refused: false,
     };
   },
+  /**
+   * One image plus a question, for checks such as "is this screenshot the learner's work?". Uses only providers that read
+   * images: Anthropic, Gemini and OpenAI by default; any other provider when AI_VISION_MODEL_<ID> names a vision model.
+   */
+  async vision(_model: string, system: string, prompt: string, image: { bytes: Buffer; mime: string }): Promise<ProviderReply> {
+    const active = configuredDefs().filter(({ def }) => VISION_IDS.has(def.id) || !!process.env[`AI_VISION_MODEL_${def.id.toUpperCase()}`]?.trim());
+    if (active.length === 0) throw new Error('No AI provider that reads images is configured');
+    const models = await Promise.all(active.map(async ({ def, apiKey }) => {
+      const v = process.env[`AI_VISION_MODEL_${def.id.toUpperCase()}`]?.trim();
+      const override = process.env[`AI_MODEL_${def.id.toUpperCase()}`]?.trim();
+      const name = v || (def.id === 'gemini' && !override ? await geminiModel(apiKey, def.defaultModel) : modelFor(def, ''));
+      return { def, name, runnable: def.build(apiKey, name) };
+    }));
+    const [primary, ...rest] = models;
+    const chain = rest.length ? primary.runnable.withFallbacks({ fallbacks: rest.map(r => r.runnable) }) : primary.runnable;
+    const res = await chain.invoke([new SystemMessage(system), new HumanMessage({ content: [
+      { type: 'text', text: prompt },
+      { type: 'image_url', image_url: { url: `data:${image.mime};base64,${image.bytes.toString('base64')}` } },
+    ] })]);
+    const usage = res.usage_metadata;
+    return { text: textOf(res).trim(), tokensIn: usage?.input_tokens ?? 0, tokensOut: usage?.output_tokens ?? 0, model: String(res.response_metadata?.model_name ?? `${primary.def.id}:${primary.name}`), refused: false };
+  },
 };
+const VISION_IDS = new Set(['anthropic', 'gemini', 'openai']);

@@ -26,3 +26,22 @@ describe('level and activity pages', () => {
     expect(levelPrep({ code: 'X', title: 'Anything' }).length).toBeGreaterThanOrEqual(2);
   });
 });
+
+import { activityCoachContext } from '@/lib/domain/levelView';
+describe('AI coach context for an activity', () => {
+  it('carries the activity content but never its answers', () => {
+    const s = activityCoachContext('Mission Briefing: EMI bounces', { kind: 'briefing', problem: 'Which borrowers bounced yesterday?', objective: 'Measurable questions', outcome: 'A canvas', criteria: ['Each KPI has a formula'], check: { q: 'Which is measurable?', options: ['By product, yesterday', 'Are we doing badly?'], answer: 0, why: 'SECRET-WHY' } });
+    expect(s).toContain('Which borrowers bounced yesterday?');
+    expect(s).toContain('Each KPI has a formula');
+    expect(s).toContain('Are we doing badly?');
+    expect(s).not.toContain('SECRET-WHY');
+  });
+  it('leaves out quiz answers and boss solutions, and is capped', () => {
+    const learn = activityCoachContext('Learn', { kind: 'learn', lessons: [{ title: 'KPIs', body: 'A KPI is a number you track.' }], quiz: [{ q: 'Q', options: ['a', 'b'], answer: 1, why: 'QUIZ-SECRET' }] });
+    expect(learn).toContain('A KPI is a number you track.');
+    expect(learn).not.toContain('QUIZ-SECRET');
+    const boss = activityCoachContext('Boss', { kind: 'boss', intro: 'Pick the right move', scenarios: [{ s: 'S', correct: [2] }], choices: ['BOSS-CHOICE'] });
+    expect(boss).not.toContain('BOSS-CHOICE');
+    expect(activityCoachContext('Learn', { kind: 'learn', lessons: Array.from({ length: 6 }, () => ({ title: 'x', body: 'y'.repeat(400) })) }, 500).length).toBeLessThanOrEqual(501);
+  });
+});

@@ -77,6 +77,9 @@ describe('Domain journeys (integration)', () => {
     expect(await status(completeActivity(learner, code, 3, { fileId: tiny.id, checklist: tick }))).toBe(400);
     const theirs = await uploadFile(other, { filename: 'canvas.png', mime: 'image/png', bytes: makePng(1280, 720, 2) }, { entityType: 'level_evidence', entityId: code });
     expect(await status(completeActivity(learner, code, 3, { fileId: theirs.id, checklist: tick }))).toBe(400);
+    // The same image another learner handed in, re-uploaded as this learner's own file: refused as not their work.
+    const copied = await uploadFile(learner, { filename: 'copy.png', mime: 'image/png', bytes: makePng(1280, 720, 2) }, { entityType: 'level_evidence', entityId: code });
+    await expect(completeActivity(learner, code, 3, { fileId: copied.id, checklist: tick })).rejects.toThrow(/another learner/);
     const good = await uploadFile(learner, { filename: 'canvas.png', mime: 'image/png', bytes: makePng(1280, 720, 3) }, { entityType: 'level_evidence', entityId: code });
     expect(await status(completeActivity(learner, code, 3, { fileId: good.id, checklist: tick.slice(1) }))).toBe(400); // every item must be ticked
     const before = await totalXp(learner.tenantId, learner.userId);

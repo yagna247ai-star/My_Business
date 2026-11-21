@@ -14,6 +14,8 @@ import { personaOf } from './profile';
 import { createHash } from 'crypto';
 import { readTable, validateDataset, DatasetError, type DatasetReport, type DatasetSchema } from './daDomains/datasetCheck';
 import { checkAll, checkAnswer, judgeAnswers } from './answerQuality';
+import { proofLinkProblem, linkUsedByOthers, reusedShot, screenshotOffTopic } from './proofRelevance';
+import { fileBytes } from './files';
 import { validateStep, stepPoints, stepsFinished, type GuidedStep, type StepState } from './guidedSteps';
 import { DAY_XP, dayStepsFrom, finished, levelComplete, moveOnMessage } from './levelFlowRules';
 
@@ -187,6 +189,7 @@ export async function completeActivity(ctx: Ctx, code: string, idx: number, payl
     if ((f.width ?? 0) < minW || (f.height ?? 0) < minH) throw badRequest(`The screenshot is too small to read (${f.width ?? '?'}×${f.height ?? '?'}). Use at least ${minW}×${minH} pixels.`, { fileId: 'Too small to read.' });
     const ticks = Array.isArray(payload.checklist) ? payload.checklist : [];
     if (ticks.length !== cfg.checklist.length || !ticks.every((x: unknown) => x === true)) throw badRequest('Confirm every item in the checklist.', { checklist: 'Tick every item.' });
+    await rejectIrrelevantShot(ctx, f, `${act.title}. It should show: ${(Array.isArray(cfg.shows) ? cfg.shows : []).join('; ')}`);
     return markComplete(ctx, st, act, { fileId: f.id, width: f.width, height: f.height, submittedAt: new Date().toISOString() });
   }
   if (cfg.kind === 'dataset') throw badRequest('Upload your CSV or Excel file to the dataset check.');
@@ -229,6 +232,9 @@ export async function submitProof(ctx: Ctx, code: string, p: { evidenceUrl: stri
   const errors: Record<string, string> = {};
   const evidence = safePublicUrl(p.evidenceUrl || ''); if (!evidence) errors.evidenceUrl = 'Use a public https link (Google Docs, Notion, GitHub…).';
   const demo = p.demoUrl ? safePublicUrl(p.demoUrl) : null; if (p.demoUrl && !demo) errors.demoUrl = 'Demo link must be a public https URL.';
+  // Irrelevant links are rejected straight away: not a place work is kept, a home page, or someone else's proof.
+  if (evidence) { const why = proofLinkProblem(evidence); if (why) errors.evidenceUrl = why; else if (await linkUsedByOthers(ctx, evidence)) errors.evidenceUrl = 'Another learner already handed in this link. Link to your own work.'; }
+  if (demo) { const why = proofLinkProblem(demo); if (why) errors.demoUrl = why; }
   const refl = checkAnswer(p.reflection, { topic: 'what you did, what surprised you, and what you learned', depth: 'detail' });
   if (!refl.ok) errors.reflection = refl.reason!;
   if (!Array.isArray(p.checklist) || p.checklist.length !== cfg.checklist.length || !p.checklist.every(Boolean)) errors.checklist = 'Confirm every item in the checklist.';
@@ -357,7 +363,7 @@ export async function completeDay(ctx: Ctx, code: string, day: number, p: { step
   const steps = dayStepsFrom(String(parseCfg(page.payload).body || ''));
   const ticks = Array.isArray(p.steps) ? p.steps : [];
   if (steps.length && (ticks.length !== steps.length || !ticks.every(x => x === true))) throw badRequest('Tick every step you completed.', { steps: 'Tick every step, or skip the day.' });
-  const f = await verifyShot(ctx, code, p.fileId);
+  const f = await verifyShot(ctx, code, p.fileId, `${page.title ?? `Day ${day}`}: the learner's own work for this day`);
   const first = prev?.state !== 'done';
   const xp = await prisma.$transaction(async tx => {
     await tx.dayProgress.upsert({ where: { enrollmentId_levelId_day: { enrollmentId: st.progress.enrollmentId, levelId: st.level.id, day } }, update: { state: 'done', steps: JSON.stringify(ticks), fileId: f.id, ...(first ? { completedAt: new Date() } : {}) }, create: { tenantId: ctx.tenantId, enrollmentId: st.progress.enrollmentId, levelId: st.level.id, userId: ctx.userId, day, state: 'done', steps: JSON.stringify(ticks), fileId: f.id, completedAt: new Date() } });
@@ -391,14 +397,24 @@ export async function skipDay(ctx: Ctx, code: string, day: number) {
 }
 
 /** The learner's own screenshot, uploaded on this level, readable. */
-async function verifyShot(ctx: Ctx, code: string, fileIdRaw: unknown) {
+async function verifyShot(ctx: Ctx, code: string, fileIdRaw: unknown, what: string) {
   const fileId = typeof fileIdRaw === 'string' ? fileIdRaw : '';
   const f = fileId ? await prisma.file.findFirst({ where: { id: fileId, tenantId: ctx.tenantId, ownerId: ctx.userId } }) : null;
   if (!f || !f.mime.startsWith('image/')) throw badRequest('Upload a screenshot of your work (PNG, JPG or WebP).', { fileId: 'Upload your screenshot.' });
   if (f.avStatus === 'infected') throw badRequest('That file failed the security check. Upload a different screenshot.');
   if (f.entityType !== 'level_evidence' || f.entityId !== code) throw badRequest('Upload the screenshot from this page.', { fileId: 'Upload it here.' });
   if ((f.width ?? 0) < 640 || (f.height ?? 0) < 360) throw badRequest(`The screenshot is too small to read (${f.width ?? '?'}×${f.height ?? '?'}). Use at least 640×360 pixels.`, { fileId: 'Too small to read.' });
+  await rejectIrrelevantShot(ctx, f, what);
   return f;
+}
+
+/** Irrelevant screenshots are rejected straight away: someone else's image, one already used for another step, or (with AI) not this work. */
+async function rejectIrrelevantShot(ctx: Ctx, f: { id: string; sha256: string | null; mime: string; s3Key: string; bucket: string }, what: string) {
+  const reused = await reusedShot(ctx, f);
+  if (reused) throw badRequest(reused, { fileId: reused });
+  const bytes = await fileBytes(f).catch(() => null);
+  const off = bytes ? await screenshotOffTopic(bytes, f.mime, what) : null;
+  if (off) throw badRequest(off, { fileId: off });
 }
 
 /* ---------- guided steps: concept → do → check → points, one step at a time ---------- */
@@ -425,14 +441,16 @@ export async function completeStep(ctx: Ctx, code: string, day: number, i: numbe
   if (!Number.isInteger(i) || i < 0 || i >= steps.length) throw badRequest('Unknown step.');
   // A day skipped as a whole: every step counts as skipped, so doing one later never re-opens the day.
   const saved = statesOf(prev?.steps).filter(x => x && typeof x === 'object');
-  const states: (StepState | null)[] = prev?.state === 'skipped' && !saved.length ? steps.map(() => ({ s: 'skipped' as const, xp: 0, at: '' })) : statesOf(prev?.steps);
+  // A day finished before it had steps stays done: every step counts as done, and its points were already given.
+  const states: (StepState | null)[] = prev?.state === 'skipped' && !saved.length ? steps.map(() => ({ s: 'skipped' as const, xp: 0, at: '' }))
+    : prev?.state === 'done' && !saved.length ? steps.map(() => ({ s: 'done' as const, xp: 0, at: '' })) : statesOf(prev?.steps);
   const firstOpen = steps.findIndex((_, k) => !states[k]);
   if (states[i]?.s === 'done') throw conflict('This step is already done.');
   if (firstOpen !== -1 && i > firstOpen) throw forbidden('Finish or skip the earlier steps first.');
   const step = steps[i];
   let fileId: string | undefined;
   if (!input.skip) {
-    if (step.check.kind === 'screenshot') fileId = (await verifyShot(ctx, code, input.fileId)).id;
+    if (step.check.kind === 'screenshot') fileId = (await verifyShot(ctx, code, input.fileId, `${step.title}: ${step.check.prompt}. ${step.do.join(' ')}`)).id;
     const r = validateStep(step, { answer: typeof input.answer === 'string' ? input.answer : undefined, paste: typeof input.paste === 'string' ? input.paste : undefined, fileOk: !!fileId });
     if (!r.ok) throw badRequest(r.reason, { step: r.reason });
   }

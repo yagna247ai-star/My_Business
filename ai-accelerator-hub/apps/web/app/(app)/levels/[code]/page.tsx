@@ -29,7 +29,7 @@ function LevelTabs({ tabs, t }: { tabs: Tab[]; t: (s: string, v?: Record<string,
   );
 }
 
-const dot = (state: string) => <span aria-hidden="true" style={{ width: 34, height: 34, borderRadius: '50%', flex: 'none', display: 'grid', placeItems: 'center', background: state === 'done' ? 'linear-gradient(135deg, #E8B94F, #C9962E)' : 'var(--surface-2, #fff)', border: state === 'done' ? 0 : '2px solid var(--border)', color: state === 'done' ? '#1b1203' : 'var(--text-3)' }}>{state === 'done' ? <Check size={16} /> : state === 'skipped' ? <SkipForward size={14} /> : state === 'locked' ? <Lock size={13} /> : null}</span>;
+const dot = (state: string) => <span aria-hidden="true" style={{ width: 34, height: 34, borderRadius: '50%', flex: 'none', display: 'grid', placeItems: 'center', background: state === 'done' ? 'var(--success, #1f9d55)' : 'var(--surface-2, #fff)', border: state === 'done' ? 0 : '2px solid var(--border)', color: state === 'done' ? '#fff' : 'var(--text-3)' }}>{state === 'done' ? <Check size={18} strokeWidth={3} /> : state === 'skipped' ? <SkipForward size={14} /> : state === 'locked' ? <Lock size={13} /> : null}</span>;
 
 function Timeline({ items }: { items: { key: string; href: string | null; label: string; title: string; get: string; state: string }[] }) {
   return (
@@ -38,7 +38,8 @@ function Timeline({ items }: { items: { key: string; href: string | null; label:
         <li key={it.key} className="row gap-12" style={{ alignItems: 'flex-start', position: 'relative', paddingBottom: 14 }}>
           {i < items.length - 1 && <span aria-hidden="true" style={{ position: 'absolute', left: 16, top: 34, bottom: 0, width: 2, background: 'var(--border)' }} />}
           {dot(it.state)}
-          {it.href ? <Link href={it.href} className="card card-pad lift" style={{ flex: 1, display: 'block', padding: 14 }}>
+          {it.href ? <Link href={it.href} className="card card-pad lift" style={{ flex: 1, display: 'block', padding: 14, position: 'relative', borderLeft: it.state === 'done' ? '4px solid var(--success, #1f9d55)' : undefined }}>
+            {it.state === 'done' && <CheckCircle2 size={20} aria-hidden="true" style={{ position: 'absolute', top: 12, right: 12, color: 'var(--success, #1f9d55)' }} />}
             <span className="muted xs">{it.label}</span>
             <b style={{ display: 'block', margin: '2px 0' }}><Tv v={it.title} /></b>
             <span className="small" style={{ color: 'var(--gold-ink, #8a6414)' }}>{it.get}</span>
@@ -60,12 +61,12 @@ async function LevelPage({ params, searchParams }: { params: Promise<{ code: str
   const level = st.level;
   const acts = d.activities as { id: string; idx: number; title: string; xp: number; state: string; config: Record<string, unknown> }[];
   const days = st.days;
-  const actDone = acts.filter(x => x.state === 'completed' || x.state === 'skipped').length;
+  const actDone = acts.filter(x => ['completed', 'in_review', 'skipped'].includes(x.state)).length;
   const words = levelWords(acts);
   const next = tabs.find(x => x.idx === level.idx + 1);
   const session = d.sessions[0];
-  const stateOf = (s: string) => (s === 'completed' || s === 'done' ? 'done' : s === 'skipped' ? 'skipped' : s === 'locked' ? 'locked' : 'open');
-  const label = (s: string) => ({ done: t('Done'), skipped: t('Skipped'), locked: t('Locked'), open: t('Open') } as Record<string, string>)[stateOf(s)];
+  const stateOf = (s: string) => (s === 'completed' || s === 'done' || s === 'in_review' ? 'done' : s === 'skipped' ? 'skipped' : s === 'locked' ? 'locked' : 'open');
+  const label = (s: string) => s === 'in_review' ? `✓ ${t('Submitted · in review')}` : s === 'needs_changes' ? t('Changes requested') : ({ done: `✓ ${t('Done')}`, skipped: t('Skipped'), locked: t('Locked'), open: t('Open') } as Record<string, string>)[stateOf(s)];
 
   return (<>
     <LevelTabs tabs={tabs} t={t} />

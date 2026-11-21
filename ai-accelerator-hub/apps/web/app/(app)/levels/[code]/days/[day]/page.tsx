@@ -50,6 +50,8 @@ async function DayPage({ params, searchParams }: { params: Promise<{ code: strin
   const guided = guidedStepsOf(content.payload);
   const stepStates = (() => { try { const v = JSON.parse(mine?.steps ?? '[]'); return Array.isArray(v) && v.every(x => x === null || typeof x === 'object') ? v : []; } catch { return []; } })();
   if (guided && mine?.state === 'skipped' && !stepStates.length) guided.forEach((_, i) => { stepStates[i] = { s: 'skipped', xp: 0, at: '' }; });
+  // Finished before this day had steps: it stays done (its points were already given), shown as done steps.
+  if (guided && mine?.state === 'done' && !stepStates.length) guided.forEach((_, i) => { stepStates[i] = { s: 'done', xp: 0, at: '' }; });
 
   return (<>
     <section className="ph ph-plain" style={{ marginBottom: 14 }}>

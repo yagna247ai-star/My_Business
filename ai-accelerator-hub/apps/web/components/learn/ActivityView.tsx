@@ -6,7 +6,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Clock, SkipForward, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bot, CheckCircle2, ChevronDown, Clock, SkipForward, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { CoachChat } from '@/components/learn/CoachChat';
 import { api, ApiError } from '@/lib/client/api';
 import { useT } from '@/components/i18n/I18nProvider';
 import { Tv } from '@/components/i18n/Tv';
@@ -19,6 +20,18 @@ type P = {
   code: string; level: { idx: number; title: string }; act: Act; count: number; brief: ActivityBrief;
   latest: WorkspaceProps['latest']; boss: WorkspaceProps['boss']; rubric: WorkspaceProps['rubric'];
   prev: Ref; next: Ref; vote: boolean | null;
+  /** AI coach for the side panel; null when the learner cannot use AI coaches. */
+  coach: { assistants: { code: string; name: string }[]; configured: boolean; creditsLeft: number } | null;
+};
+
+const STARTERS: Record<string, string[]> = {
+  briefing: ['Explain this problem in simple words', 'What makes a question measurable?', 'Give me a hint for the check question'],
+  learn: ['Explain the main idea with an everyday example', 'Which word in this lesson should I learn first?', 'How is this used at work?'],
+  build: ['How should I start this build?', 'Check my plan: what am I missing?', 'Give me a hint, not the answer'],
+  dataset: ['What should my file look like?', 'Why could my dataset check fail?', 'Give me a hint, not the answer'],
+  screenshot: ['What should my screenshot show?', 'Where do I find this screen?', 'Give me a hint, not the answer'],
+  proof: ['Where should I save my work for the link?', 'What makes a good reflection?', 'Check my checklist with me'],
+  boss: ['How should I think about these scenarios?', 'Explain the tools I can choose from', 'Give me a hint, not the answer'],
 };
 
 export function ActivityView(p: P) {
@@ -30,16 +43,17 @@ export function ActivityView(p: P) {
   const skip = async () => { setBusy(true); setErr(''); try { await api(`/api/v1/levels/${p.code}/skip`, { body: { idx: a.idx } }); router.push(p.next ? `/levels/${p.code}/activities/${p.next.idx}` : `/levels/${p.code}`); router.refresh(); } catch (e) { setErr((e as ApiError).message); } finally { setBusy(false); } };
   const rate = async (useful: boolean) => { setVote(useful); try { await api(`/api/v1/levels/${p.code}/feedback`, { body: { target: `activity:${a.idx}`, useful } }); } catch { /* a missed vote is not worth an error */ } };
   const panel = { a, code: p.code, onDone };
-  const status = a.state === 'completed' ? t('Done') : a.state === 'skipped' ? t('Skipped') : a.state === 'locked' ? t('Locked') : a.state === 'in_review' ? t('In review') : a.state === 'needs_changes' ? t('Changes requested') : t('Open');
+  const status = a.state === 'completed' ? t('Done') : a.state === 'skipped' ? t('Skipped') : a.state === 'locked' ? t('Locked') : a.state === 'in_review' ? t('Submitted · in review') : a.state === 'needs_changes' ? t('Changes requested') : t('Open');
 
   return (
-    <div className="stack gap-16" style={{ maxWidth: 860, margin: '0 auto' }}>
+    <div className="grid-12" style={{ alignItems: 'start' }}>
+    <div className={`${p.coach ? 'span-8' : 'span-12'} stack gap-16`}>
       <section className="card card-pad stack gap-12" aria-labelledby="pageTitle">
         <Link className="link small" href={`/levels/${p.code}`}><ArrowLeft size={14} /> {t('Level {n}', { n: p.level.idx })}</Link>
         <div className="row gap-8 wrap" style={{ alignItems: 'center' }}>
           <span className="eyebrow" style={{ margin: 0 }}>{t('Level {n}', { n: p.level.idx })} · {t('Activity {a} of {b}', { a: a.idx, b: p.count })}</span>
           <span className="badge badge-neutral row gap-4" style={{ alignItems: 'center' }}><Clock size={12} aria-hidden="true" /> {t('{n} min', { n: p.brief.minutes })}</span>
-          <span className={`badge ${a.state === 'completed' ? 'badge-success' : 'badge-neutral'}`}>{status}</span>
+          <span className={`badge ${['completed', 'in_review'].includes(a.state) ? 'badge-success' : 'badge-neutral'} row gap-4`} style={{ alignItems: 'center' }}>{['completed', 'in_review'].includes(a.state) && <CheckCircle2 size={13} aria-hidden="true" />}{status}</span>
           <span className="badge badge-gold">+{a.xp} XP</span>
         </div>
         <h1 className="h2" id="pageTitle" style={{ margin: 0 }}><Tv v={a.title} /></h1>
@@ -77,6 +91,14 @@ export function ActivityView(p: P) {
         {p.next ? <span className="stack" style={{ alignItems: 'flex-end', gap: 4 }}><Link className="btn btn-gold" href={`/levels/${p.code}/activities/${p.next.idx}`}>{t('Next activity')} <ArrowRight size={15} /></Link><span className="muted xs">{t('Up next')}: <Tv v={p.next.title} /></span></span>
           : <Link className="btn btn-gold" href={`/levels/${p.code}`}>{t('Back to Level {n}', { n: p.level.idx })} <ArrowRight size={15} /></Link>}
       </nav>
+    </div>
+    {p.coach && <aside className="span-4" aria-labelledby="coachT" style={{ position: 'sticky', top: 84 }}>
+      <section className="card card-pad stack gap-12">
+        <h2 className="h3 row gap-8" id="coachT" style={{ alignItems: 'center', margin: 0 }}><Bot size={18} aria-hidden="true" />{t('Ask the AI coach')}</h2>
+        <p className="muted xs" style={{ margin: 0 }}>{t('The coach already knows this activity. It explains and gives hints; it will not do the graded work for you.')}</p>
+        <CoachChat compact assistants={p.coach.assistants} configured={p.coach.configured} creditsLeft={p.coach.creditsLeft} context={{ levelCode: p.code, activityIdx: a.idx }} prompts={STARTERS[a.config.kind] ?? ['Explain this activity in simple words', 'Give me a hint, not the answer', 'Show me a real-world example']} />
+      </section>
+    </aside>}
     </div>
   );
 }

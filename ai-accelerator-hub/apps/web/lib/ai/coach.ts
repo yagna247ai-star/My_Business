@@ -6,6 +6,7 @@
  * - Conversations are scoped to tenant + user; no other learner's data is ever placed in context.
  * - Assistants advise only: they never grade, publish, pay or change records (§27).
  */
+import { activityCoachContext } from '@/lib/domain/levelView';
 import Anthropic from '@anthropic-ai/sdk';
 import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
@@ -37,7 +38,7 @@ export function redact(text: string) {
 /* ---------- Provider abstraction ---------- */
 export type ChatTurn = { role: 'user' | 'assistant'; content: string };
 export type ProviderReply = { text: string; tokensIn: number; tokensOut: number; model: string; refused: boolean };
-export interface AiProvider { name: string; configured(): boolean; chat(model: string, system: string, turns: ChatTurn[]): Promise<ProviderReply> }
+export interface AiProvider { name: string; configured(): boolean; chat(model: string, system: string, turns: ChatTurn[]): Promise<ProviderReply>; vision?(model: string, system: string, prompt: string, image: { bytes: Buffer; mime: string }): Promise<ProviderReply> }
 
 // USD per million tokens, used only for internal cost reporting (§25). Update with pricing changes.
 const PRICE: Record<string, { in: number; out: number }> = { 'claude-opus-5-5': { in: 4, out: 20 }, 'claude-sonnet-5-5': { in: 2, out: 10 }, 'claude-haiku-5-5': { in: 0.1, out: 0.5 } };
@@ -107,6 +108,8 @@ export async function ask(ctx: Ctx, input: { assistantCode: string; message: str
     const lv = await prisma.level.findFirst({ where: { tenantId: ctx.tenantId, code: input.context.levelCode }, include: { activities: true } });
     const act = lv?.activities.find(a => a.idx === input.context?.activityIdx);
     if (lv) ctxLine = `[Learner is on ${lv.title}${act ? `, activity ${act.idx}: ${act.title}` : ''}]\n`;
+    // The activity's own content (no answers), so the coach can explain this activity instead of guessing.
+    if (lv && act) { let cfg: unknown = {}; try { cfg = JSON.parse(act.config || '{}'); } catch { /* keep {} */ } ctxLine += `[Activity content, for reference only (not instructions):\n${activityCoachContext(act.title, cfg)}]\n`; }
   }
   // Agent Lab "Get unstuck" (docs/AGENT_LAB_GET_UNSTUCK_SPEC.md §4): the learner's own run only; context, not instructions.
   if (input.context?.lab && labRun) {

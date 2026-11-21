@@ -17,6 +17,7 @@ import { PrismaClient } from '@prisma/client';
 import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join, resolve } from 'path';
 import { MODULES, buildModule } from './data-analytics-activities';
+import { GENERIC_GUIDED } from '../../../apps/web/lib/domain/genericGuided';
 
 const prisma = new PrismaClient();
 const JOURNEY_SLUG = 'data-analytics-journey';
@@ -179,7 +180,8 @@ async function seedLevels(ctx: Awaited<ReturnType<typeof setupJourney>>, days: R
     const dayRows = days.filter(d => d.day >= l.days[0] && d.day <= l.days[1]);
     for (const d of dayRows) {
       const position = d.day;
-      const payload = JSON.stringify({ body: d.body, day: d.day, module: l.code });
+      const steps = GENERIC_GUIDED[d.day];
+      const payload = JSON.stringify({ body: d.body, day: d.day, module: l.code, ...(steps ? { steps } : {}) });
       const existing = await prisma.content.findFirst({ where: { levelId: lv.id, kind: 'md', position } });
       if (existing) await prisma.content.update({ where: { id: existing.id }, data: { title: `Day ${d.day} — ${d.title}`, payload, durationMin: 270 } });
       else await prisma.content.create({ data: { levelId: lv.id, kind: 'md', position, title: `Day ${d.day} — ${d.title}`, payload, durationMin: 270 } });

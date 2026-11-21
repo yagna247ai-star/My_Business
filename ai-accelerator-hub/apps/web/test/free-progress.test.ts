@@ -99,6 +99,15 @@ describe('Free progression (integration)', () => {
     expect((await levelState(me, L2)).locked).toBe(false);
   });
 
+  it('a day finished before it had steps stays done, and its steps pay no second time', async () => {
+    const row = await prisma.dayProgress.findFirstOrThrow({ where: { userId: me.userId, day: 3 } });
+    await prisma.dayProgress.update({ where: { id: row.id }, data: { state: 'done', steps: null } });
+    const before = await totalXp(me.tenantId, me.userId);
+    expect(await status(completeStep(me, L1, 3, 0, { answer: 'Measure: absence days; period: last 10 school days; breakdown: by class.' }))).toBe(409);
+    expect((await prisma.dayProgress.findUniqueOrThrow({ where: { id: row.id } })).state).toBe('done');
+    expect(await totalXp(me.tenantId, me.userId)).toBe(before);
+  });
+
   it('review approval never resets a level the learner has already opened', async () => {
     const e = await prisma.enrollment.findFirstOrThrow({ where: { userId: me.userId, state: 'active' } });
     const l2 = await prisma.level.findFirstOrThrow({ where: { code: L2, journeyId: e.journeyId } });

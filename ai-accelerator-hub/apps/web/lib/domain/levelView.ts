@@ -42,3 +42,45 @@ export function levelPrep(level: { code: string; title: string }): { item: strin
   if (/CAPSTONE/.test(k)) return [...base, { item: 'Your dashboard and model working end to end' }, { item: 'A screen recorder for your presentation' }];
   return base;
 }
+
+/**
+ * What the AI coach should know about one activity: its own content, never its answers (no correct options, no answer
+ * keys, no boss solutions), so the coach can explain and hint without doing the graded work. Plain text, capped.
+ */
+export function activityCoachContext(title: string, config: any, max = 2500): string {
+  const c = config || {};
+  const list = (xs: unknown, n = 8) => (Array.isArray(xs) ? xs.slice(0, n).map(x => `- ${typeof x === 'string' ? x : (x as any)?.label ?? (x as any)?.title ?? ''}`).filter(x => x.length > 2).join('\n') : '');
+  const parts: string[] = [`Activity: ${title}`];
+  switch (c.kind) {
+    case 'briefing':
+      parts.push(`Business problem: ${c.problem ?? ''}`, `Objective: ${c.objective ?? ''}`, `Expected outcome: ${c.outcome ?? ''}`);
+      if (c.criteria?.length) parts.push(`Evaluated on:\n${list(c.criteria)}`);
+      if (c.check?.q) parts.push(`Check question (the learner must answer it; do not say which option is right): ${c.check.q}\nOptions:\n${list(c.check.options)}`);
+      break;
+    case 'learn':
+      for (const l of (c.lessons ?? []).slice(0, 6)) parts.push(`Lesson "${l.title}": ${String(l.body ?? '').slice(0, 350)}`);
+      parts.push('The learner then takes a short quiz on these lessons; explain ideas, do not give quiz answers.');
+      break;
+    case 'explore':
+      parts.push(`Repository: ${c.repo?.fullName ?? ''} — ${c.repo?.description ?? ''}`, `Task: ${c.task ?? ''}`);
+      break;
+    case 'build':
+      parts.push(`The learner builds this with an AI tool and fills in: ${(c.fields ?? []).map((f: any) => f.label ?? f.key).join('; ')}`);
+      break;
+    case 'dataset':
+      parts.push(`The learner uploads a CSV or Excel file that must pass a dataset check.${c.instructions ? ` ${c.instructions}` : ''}`);
+      if (c.schema?.columns) parts.push(`Expected columns: ${c.schema.columns.map((x: any) => x.name ?? x).join(', ')}`);
+      break;
+    case 'screenshot':
+      parts.push(`The learner uploads a screenshot that shows:\n${list(c.shows)}`, `Checklist:\n${list(c.checklist)}`);
+      break;
+    case 'proof':
+      parts.push(`The learner submits a link to their work and a reflection. Checklist:\n${list(c.checklist)}`, `Good places for the link: ${(c.evidenceTypes ?? []).join('; ')}`);
+      break;
+    case 'boss':
+      parts.push(`Boss challenge: ${c.intro ?? ''}`, 'The learner picks the right move for each scenario and explains why; do not reveal the right choices.');
+      break;
+  }
+  const s = parts.filter(Boolean).join('\n');
+  return s.length > max ? `${s.slice(0, max)}…` : s;
+}

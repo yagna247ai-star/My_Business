@@ -110,6 +110,9 @@ export async function uploadFile(ctx: Ctx, input: { filename: string; mime: stri
   return { id: file.id, avStatus: verdict, sizeBytes: input.bytes.length, mime: input.mime, width: img?.width ?? null, height: img?.height ?? null };
 }
 
+/** Bytes of an upload the server has already checked belongs to the learner (for proof checks). */
+export async function fileBytes(f: { s3Key: string; bucket: string }): Promise<Buffer> { return loadBytes(f.s3Key, f.bucket); }
+
 export async function readFile(ctx: Ctx, fileId: string) {
   const f = await prisma.file.findFirst({ where: { id: fileId, tenantId: ctx.tenantId } });
   if (!f) throw notFound('File not found.');
