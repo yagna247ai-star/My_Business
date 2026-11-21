@@ -40,25 +40,37 @@ export async function translateStrings(locale: Locale, strings: string[]): Promi
 
 const REVIEWED = new Set(ROWS.map(r => r[0]));
 
-/** Machine-translate every interface text that has neither a reviewed nor a stored translation. Safe to rerun. */
-export async function fillUiTranslations(opts: { locales?: Locale[]; batch?: number; log?: (s: string) => void } = {}) {
-  if (!langchainProvider.configured()) { opts.log?.('i18n:fill — no AI provider configured; interface text stays English where not reviewed.'); return { added: 0 }; }
+/**
+ * Machine-translate every interface text that has neither a reviewed nor a stored translation. Safe to rerun:
+ * each batch is saved as soon as it is done, so a run that stops early continues next time.
+ * Languages run in parallel with a few batches at a time each, inside a time budget so a deploy is never held up.
+ */
+export async function fillUiTranslations(opts: { locales?: Locale[]; batch?: number; concurrency?: number; budgetMs?: number; log?: (s: string) => void } = {}) {
+  if (!langchainProvider.configured()) { opts.log?.('i18n:fill — no AI provider configured; interface text stays English where not reviewed.'); return { added: 0, left: 0 }; }
   const locales = opts.locales ?? LOCALES.filter((l): l is Exclude<Locale, 'en'> => l !== 'en');
-  const size = opts.batch ?? 40;
-  let added = 0;
-  for (const locale of locales) {
+  const size = opts.batch ?? 40, conc = opts.concurrency ?? 3;
+  const deadline = Date.now() + (opts.budgetMs ?? Number(process.env.I18N_FILL_BUDGET_MS || 6 * 60_000));
+  let added = 0, left = 0;
+  await Promise.all(locales.map(async locale => {
     const have = new Set((await prisma.uiTranslation.findMany({ where: { locale }, select: { key: true } })).map(r => r.key));
     const todo = UI_KEYS.filter(k => !REVIEWED.has(k) && !have.has(k));
-    for (let i = 0; i < todo.length; i += size) {
-      const chunk = todo.slice(i, i + size);
-      try {
-        const { out, model } = await translateStrings(locale, chunk);
-        const rows = chunk.flatMap((key, j) => (out[j] ? [{ locale, key, text: out[j]!, model }] : []));
-        if (rows.length) await prisma.uiTranslation.createMany({ data: rows, skipDuplicates: true });
-        added += rows.length;
-      } catch (e) { opts.log?.(`i18n:fill — ${locale} batch ${i / size + 1} failed: ${(e as Error).message.slice(0, 160)}`); }
-    }
-    opts.log?.(`i18n:fill — ${locale}: ${todo.length} missing before this run`);
-  }
-  return { added };
+    const chunks: string[][] = [];
+    for (let i = 0; i < todo.length; i += size) chunks.push(todo.slice(i, i + size));
+    let next = 0, done = 0;
+    const worker = async () => {
+      while (next < chunks.length && Date.now() < deadline) {
+        const chunk = chunks[next++];
+        try {
+          const { out, model } = await translateStrings(locale, chunk);
+          const rows = chunk.flatMap((key, j) => (out[j] ? [{ locale, key, text: out[j]!, model }] : []));
+          if (rows.length) await prisma.uiTranslation.createMany({ data: rows, skipDuplicates: true });
+          added += rows.length; done += rows.length;
+        } catch (e) { opts.log?.(`i18n:fill — ${locale} batch failed: ${(e as Error).message.slice(0, 160)}`); }
+      }
+    };
+    await Promise.all(Array.from({ length: conc }, worker));
+    left += todo.length - done;
+    opts.log?.(`i18n:fill — ${locale}: ${done} added, ${todo.length - done} still to do`);
+  }));
+  return { added, left };
 }
