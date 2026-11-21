@@ -75,6 +75,30 @@ export function configuredDefs(): { def: ProviderDef; apiKey: string }[] {
   return out;
 }
 
+/**
+ * Gemini model names are retired over time (gemini-2.5-flash now returns 404), so the default is not hard-coded:
+ * ask Google which models this key can use and take the newest stable Flash model. Cached for an hour.
+ */
+let geminiCache: { at: number; model: string } | null = null;
+export function pickGeminiModel(models: { name: string; supportedGenerationMethods?: string[] }[]): string | null {
+  const ok = models
+    .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+    .map(m => m.name.replace(/^models\//, ''))
+    .filter(n => /^gemini-\d+(\.\d+)?-flash$/.test(n));
+  const ver = (n: string) => Number(/^gemini-(\d+(?:\.\d+)?)/.exec(n)![1]);
+  return ok.sort((a, b) => ver(b) - ver(a))[0] ?? null;
+}
+async function geminiModel(apiKey: string, fallback: string): Promise<string> {
+  if (geminiCache && Date.now() - geminiCache.at < 3600_000) return geminiCache.model;
+  try {
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers: { 'x-goog-api-key': apiKey }, signal: AbortSignal.timeout(10_000) });
+    const j = (await r.json()) as { models?: { name: string; supportedGenerationMethods?: string[] }[] };
+    const m = pickGeminiModel(j.models ?? []) ?? fallback;
+    geminiCache = { at: Date.now(), model: m };
+    return m;
+  } catch { return fallback; }
+}
+
 function modelFor(def: ProviderDef, requested: string): string {
   const override = process.env[`AI_MODEL_${def.id.toUpperCase()}`]?.trim();
   if (override) return override;
@@ -98,7 +122,11 @@ export const langchainProvider: AiProvider = {
   async chat(model: string, system: string, turns: ChatTurn[]): Promise<ProviderReply> {
     const active = configuredDefs();
     if (active.length === 0) throw new Error('No AI provider is configured');
-    const models = active.map(({ def, apiKey }) => ({ def, runnable: def.build(apiKey, modelFor(def, model)) }));
+    const models = await Promise.all(active.map(async ({ def, apiKey }) => {
+      const override = process.env[`AI_MODEL_${def.id.toUpperCase()}`]?.trim();
+      const name = def.id === 'gemini' && !override ? await geminiModel(apiKey, def.defaultModel) : modelFor(def, model);
+      return { def, name, runnable: def.build(apiKey, name) };
+    }));
     const [primary, ...rest] = models;
     const chain = rest.length ? primary.runnable.withFallbacks({ fallbacks: rest.map(r => r.runnable) }) : primary.runnable;
     const res = await chain.invoke(toMessages(system, turns));
@@ -108,7 +136,7 @@ export const langchainProvider: AiProvider = {
       tokensIn: usage?.input_tokens ?? 0,
       tokensOut: usage?.output_tokens ?? 0,
       // Report the model that actually answered (LangChain fallbacks hide which one ran); fall back to the primary label.
-      model: String(res.response_metadata?.model_name ?? res.response_metadata?.model ?? `${primary.def.id}:${modelFor(primary.def, model)}`),
+      model: String(res.response_metadata?.model_name ?? res.response_metadata?.model ?? `${primary.def.id}:${primary.name}`),
       refused: false,
     };
   },
