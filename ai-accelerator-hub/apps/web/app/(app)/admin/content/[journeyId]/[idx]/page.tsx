@@ -38,7 +38,7 @@ async function LevelReview({ params, searchParams }: { params: Promise<{ journey
           const p = parseTarget(k)!; const n = openCount(k);
           const label = p.kind === 'level' ? 'Whole level' : p.kind === 'day' ? `Day ${p.n} · ${(r.days.find(d => d.day === p.n)?.title ?? '').replace(/^Day \d+\s+—\s+/, '').slice(0, 34)}` : `Activity ${p.n} · ${r.activities.find(a => a.idx === p.n)?.title.split(':')[0]}`;
           return <Link key={k} href={href(k)} className={`nav-item ${k === cur ? 'active' : ''}`} aria-current={k === cur ? 'page' : undefined} style={{ display: 'flex', justifyContent: 'space-between', gap: 6, fontSize: 13, padding: '6px 8px', borderRadius: 8 }}>
-            <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>{n > 0 && <span className="badge badge-gold">{n}</span>}
+            <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span><span className="row gap-4" style={{ flex: 'none' }}>{r.feedback[k] && <span className="muted xs" title="Learners: useful / not useful">👍{r.feedback[k].up} 👎{r.feedback[k].down}</span>}{n > 0 && <span className="badge badge-gold">{n}</span>}</span>
           </Link>;
         })}
       </nav>

@@ -14,9 +14,9 @@ import { moveOnText } from '@/lib/domain/levelFlowRules';
 import { Tr } from '@/components/i18n/Tr';
 import { Tv } from '@/components/i18n/Tv';
 
-type Act = { id: string; idx: number; code: string; title: string; xp: number; state: string; config: any; data: any; authored: boolean };
-type Review = { id: string; verdict: string; avg: number | null; feedback: string | null; by: string; at: string; scores: Record<string, number>; appeal: string | null };
-type Props = { code: string; idx?: number; isLast?: boolean; title: string; summary: string; xpTotal: number; xpEarned: number; levelState: string; activities: Act[]; latest: { id: string; state: string; submittedAt: string; url: string | null; reviews: Review[] } | null; boss: { attempts: number; max: number; result: any }; rubric: { code: string; threshold: number; bossMin: number; dims: { key: string; name: string; weight: number; l3?: string; l5?: string }[] } | null; initial?: number;
+export type Act = { id: string; idx: number; code: string; title: string; xp: number; state: string; config: any; data: any; authored: boolean };
+export type Review = { id: string; verdict: string; avg: number | null; feedback: string | null; by: string; at: string; scores: Record<string, number>; appeal: string | null };
+export type Props = { code: string; idx?: number; isLast?: boolean; title: string; summary: string; xpTotal: number; xpEarned: number; levelState: string; activities: Act[]; latest: { id: string; state: string; submittedAt: string; url: string | null; reviews: Review[] } | null; boss: { attempts: number; max: number; result: any }; rubric: { code: string; threshold: number; bossMin: number; dims: { key: string; name: string; weight: number; l3?: string; l5?: string }[] } | null; initial?: number;
   days?: { day: number; title: string; state: string; xp: number }[]; completion?: { complete: boolean; earned: number; total: number; next: { code: string; title: string } | null; message: string | null } };
 
 const LABEL: Record<string, string> = { completed: 'Done', skipped: 'Skipped', available: 'Open', locked: 'Locked', in_review: 'In review', needs_changes: 'Changes requested' };
@@ -102,7 +102,7 @@ type PanelProps = { a: Act; code: string; onDone: (msg: string) => void };
 async function post(path: string, body: unknown) { return api<any>(path, { body }); }
 function useBusy() { const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [fe, setFe] = useState<Record<string, string>>({}); return { busy, err, fe, run: async (fn: () => Promise<void>) => { setBusy(true); setErr(''); setFe({}); try { await fn(); } catch (e) { const a = e as ApiError; setErr(a.message); if (a.details) setFe(a.details); } finally { setBusy(false); } } }; }
 
-function Briefing({ a, code, onDone }: PanelProps) {
+export function Briefing({ a, code, onDone }: PanelProps) {
   const c = a.config; const [choice, setChoice] = useState<number | null>(a.data?.choice ?? null); const [res, setRes] = useState<{ correct: boolean; why: string } | null>(null); const b = useBusy();
   return (<div className="stack gap-16">
     <p style={{ fontSize: 16 }}><Tv v={c.problem} /></p>
@@ -118,7 +118,7 @@ function Briefing({ a, code, onDone }: PanelProps) {
   </div>);
 }
 
-function Learn({ a, code, onDone }: PanelProps) {
+export function Learn({ a, code, onDone }: PanelProps) {
   const c = a.config; const [ans, setAns] = useState<(number | null)[]>(c.quiz.map(() => null)); const [res, setRes] = useState<{ passed: boolean; score: number; wrong: number[] } | null>(null); const b = useBusy();
   return (<div className="stack gap-16">
     <div className="grid2" style={{ gap: 14 }}>{c.lessons.map((l: any, i: number) => <details key={i} className="card card-pad" open={i === 0}><summary className="bold" style={{ cursor: 'pointer' }}><Tv v={l.title} /> <span className="muted xs">· {l.minutes} <Tr>min read</Tr></span></summary><p className="text-2" style={{ marginTop: 10 }}><Tv v={l.body} /></p></details>)}</div>
@@ -132,7 +132,7 @@ function Learn({ a, code, onDone }: PanelProps) {
   </div>);
 }
 
-function Explore({ a, code, onDone }: PanelProps) {
+export function Explore({ a, code, onDone }: PanelProps) {
   const c = a.config; const [ans, setAns] = useState<(number | null)[]>(c.questions.map(() => null)); const [att, setAtt] = useState(false); const [res, setRes] = useState<{ passed: boolean; wrong: number[] } | null>(null); const b = useBusy();
   return (<div className="stack gap-16">
     <div className="card card-pad"><div className="row between wrap gap-8"><div><b><Tv v={c.repo.fullName} /></b><p className="muted small"><Tv v={c.repo.description} /></p></div><a className="btn btn-outline btn-sm" href={c.repo.url} target="_blank" rel="noopener noreferrer"><Tr>Open on GitHub</Tr> <ExternalLink size={14} /></a></div>
@@ -147,7 +147,7 @@ function Explore({ a, code, onDone }: PanelProps) {
   </div>);
 }
 
-function Build({ a, code, onDone }: PanelProps) {
+export function Build({ a, code, onDone }: PanelProps) {
   const t = useT();
   const c = a.config; const saved = a.data?.brief;
   const [tool, setTool] = useState<string>(saved?.tool || ''); const [fields, setFields] = useState<Record<string, string>>(saved?.fields || {}); const [its, setIts] = useState<{ prompt: string; output: string; change: string }[]>(saved?.iterations || Array.from({ length: c.iterations }, () => ({ prompt: '', output: '', change: '' })));
@@ -170,7 +170,7 @@ function Build({ a, code, onDone }: PanelProps) {
   </div>);
 }
 
-function Proof({ a, code, latest, onDone }: PanelProps & { latest: Props['latest'] }) {
+export function Proof({ a, code, latest, onDone }: PanelProps & { latest: Props['latest'] }) {
   const t = useT();
   const c = a.config; const [url, setUrl] = useState(''); const [demo, setDemo] = useState(''); const [refl, setRefl] = useState(''); const [checks, setChecks] = useState<boolean[]>(c.checklist.map(() => false)); const b = useBusy();
   const fb = latest?.state === 'needs_changes' ? latest.reviews[0] : null;
@@ -188,7 +188,7 @@ function Proof({ a, code, latest, onDone }: PanelProps & { latest: Props['latest
   </div>);
 }
 
-function Boss({ a, code, latest, boss, rubric, onDone }: { a: Act; code: string; latest: Props['latest']; boss: Props['boss']; rubric: Props['rubric']; onDone: (m: string) => void }) {
+export function Boss({ a, code, latest, boss, rubric, onDone }: { a: Act; code: string; latest: Props['latest']; boss: Props['boss']; rubric: Props['rubric']; onDone: (m: string) => void }) {
   const t = useT();
   const c = a.config; const [ans, setAns] = useState<{ choice: number | null; why: string }[]>(c.scenarios.map(() => ({ choice: null, why: '' }))); const [res, setRes] = useState<any>(null); const b = useBusy();
   const [appeal, setAppeal] = useState(''); const ab = useBusy();

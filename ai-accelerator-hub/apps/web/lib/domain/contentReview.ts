@@ -54,10 +54,13 @@ export async function reviewLevel(ctx: Ctx, journeyId: string, idx: number) {
   need(ctx);
   const level = await prisma.level.findFirst({ where: { journeyId, idx, journey: { tenantId: ctx.tenantId } }, include: { journey: { select: { id: true, title: true } }, stage: { select: { title: true } }, activities: { orderBy: { idx: 'asc' } }, contents: { where: { kind: 'md' }, orderBy: { position: 'asc' } } } });
   if (!level) throw notFound('Level not found.');
-  const [suggestions, levelCount] = await Promise.all([
+  const [suggestions, levelCount, votes] = await Promise.all([
     prisma.contentSuggestion.findMany({ where: { levelId: level.id }, orderBy: [{ state: 'asc' }, { createdAt: 'desc' }] }),
     prisma.level.count({ where: { journeyId } }),
+    prisma.contentFeedback.groupBy({ by: ['target', 'useful'], where: { levelId: level.id }, _count: true }),
   ]);
+  const feedback: Record<string, { up: number; down: number }> = {};
+  for (const v of votes) { const f = (feedback[v.target] ??= { up: 0, down: 0 }); if (v.useful) f.up += v._count; else f.down += v._count; }
   const people = await prisma.user.findMany({ where: { id: { in: [...new Set(suggestions.flatMap(s => [s.authorId, s.resolvedById].filter(Boolean) as string[]))] } }, select: { id: true, name: true, email: true } });
   const who = new Map(people.map(p => [p.id, p.name || p.email]));
   const parse = (s: string | null) => { try { return s ? JSON.parse(s) : {}; } catch { return {}; } };
@@ -67,6 +70,8 @@ export async function reviewLevel(ctx: Ctx, journeyId: string, idx: number) {
     activities: level.activities.map(a => ({ idx: a.idx, code: a.code, title: a.title, xp: a.xpReward, config: parse(a.config) })),
     suggestions: suggestions.map(s => ({ id: s.id, target: s.target, body: s.body, state: s.state as SuggestionState, author: who.get(s.authorId) ?? 'Unknown', createdAt: s.createdAt.toISOString(), resolvedBy: s.resolvedById ? who.get(s.resolvedById) ?? null : null, resolvedNote: s.resolvedNote, resolvedAt: s.resolvedAt?.toISOString() ?? null })),
     canPublish: ctx.superAdmin,
+    /** Learners' "Was this useful?" per day or activity. */
+    feedback,
   };
 }
 

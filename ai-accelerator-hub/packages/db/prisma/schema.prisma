@@ -1481,3 +1481,19 @@ model ContentSuggestion {
   @@index([levelId])
   @@map("content_suggestions")
 }
+
+/// "Was this useful?" from learners, on a day lesson or an activity. One vote per learner per item.
+model ContentFeedback {
+  id        String   @id @default(cuid())
+  tenantId  String
+  levelId   String
+  target    String // day:<n> | activity:<idx>
+  userId    String
+  useful    Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([levelId, target, userId])
+  @@index([tenantId, levelId])
+  @@map("content_feedback")
+}
