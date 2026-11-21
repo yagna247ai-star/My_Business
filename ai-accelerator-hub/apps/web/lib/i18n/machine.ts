@@ -45,13 +45,13 @@ const REVIEWED = new Set(ROWS.map(r => r[0]));
  * each batch is saved as soon as it is done, so a run that stops early continues next time.
  * Languages run in parallel with a few batches at a time each, inside a time budget so a deploy is never held up.
  */
-export async function fillUiTranslations(opts: { locales?: Locale[]; batch?: number; concurrency?: number; budgetMs?: number; log?: (s: string) => void } = {}) {
+export async function fillUiTranslations(opts: { locales?: Locale[]; batch?: number; concurrency?: number; budgetMs?: number; sequential?: boolean; log?: (s: string) => void } = {}) {
   if (!langchainProvider.configured()) { opts.log?.('i18n:fill — no AI provider configured; interface text stays English where not reviewed.'); return { added: 0, left: 0 }; }
   const locales = opts.locales ?? LOCALES.filter((l): l is Exclude<Locale, 'en'> => l !== 'en');
   const size = opts.batch ?? 40, conc = opts.concurrency ?? 3;
   const deadline = Date.now() + (opts.budgetMs ?? Number(process.env.I18N_FILL_BUDGET_MS || 6 * 60_000));
   let added = 0, left = 0;
-  await Promise.all(locales.map(async locale => {
+  const runLocale = async (locale: Locale) => {
     const have = new Set((await prisma.uiTranslation.findMany({ where: { locale }, select: { key: true } })).map(r => r.key));
     const todo = UI_KEYS.filter(k => !REVIEWED.has(k) && !have.has(k));
     const chunks: string[][] = [];
@@ -65,12 +65,18 @@ export async function fillUiTranslations(opts: { locales?: Locale[]; batch?: num
           const rows = chunk.flatMap((key, j) => (out[j] ? [{ locale, key, text: out[j]!, model }] : []));
           if (rows.length) await prisma.uiTranslation.createMany({ data: rows, skipDuplicates: true });
           added += rows.length; done += rows.length;
-        } catch (e) { opts.log?.(`i18n:fill — ${locale} batch failed: ${(e as Error).message.slice(0, 160)}`); }
+        } catch (e) {
+          const m = (e as Error).message;
+          opts.log?.(`i18n:fill — ${locale} batch failed: ${m.slice(0, 160)}`);
+          // Rate limited: put the batch back and wait before the next call (the key is shared with the AI coaches).
+          if (/\b429\b|quota|rate/i.test(m)) { next--; chunks.splice(next, 1); chunks.push(chunk); await new Promise(r => setTimeout(r, 20_000)); }
+        }
       }
     };
     await Promise.all(Array.from({ length: conc }, worker));
     left += todo.length - done;
     opts.log?.(`i18n:fill — ${locale}: ${done} added, ${todo.length - done} still to do`);
-  }));
+  };
+  if (opts.sequential) for (const l of locales) await runLocale(l); else await Promise.all(locales.map(runLocale));
   return { added, left };
 }
