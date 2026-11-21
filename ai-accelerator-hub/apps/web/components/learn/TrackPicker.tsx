@@ -4,12 +4,14 @@
  * The learner chooses; the quiz only recommends. The track can change until Module 1 is complete, then it is fixed.
  */
 import { useState } from 'react';
-import { EDUCATION_TRACKS, IKIGAI_QUIZ, TRACK_LABEL, recommendTrack } from '@/lib/domain/daDomains/dossiers/education-tracks';
+import { TRACK_LABEL } from '@/lib/domain/daDomains/dossiers/education-tracks';
+import { TRACK_PACKS } from '@/lib/domain/daDomains/trackPacks';
+import { quizFor, recommendFrom } from '@/lib/domain/daDomains/trackPacks/types';
+import { useT } from '@/components/i18n/I18nProvider';
 import type { TrackLevel } from '@/lib/domain/daDomains/dossiers/types';
 import { Tr } from '@/components/i18n/Tr';
 import { Tv } from '@/components/i18n/Tv';
 
-export const TRACK_META: Record<string, { tracks: typeof EDUCATION_TRACKS }> = { education: { tracks: EDUCATION_TRACKS } };
 
 type Option = { slug: string; track: string };
 const CIRCLE: Record<string, string> = { love: 'What you love', skills: 'What you are good at', needs: 'What the world needs', paid: 'What you can be paid for', time: 'Your time' };
@@ -17,22 +19,23 @@ const CIRCLE: Record<string, string> = { love: 'What you love', skills: 'What yo
 export function TrackPicker({ domain, options, value, onPick, ack, onAck, disabled, error }: {
   domain: string; options: Option[]; value: string; onPick: (slug: string) => void; ack: boolean; onAck: (v: boolean) => void; disabled?: boolean; error?: string;
 }) {
-  const meta = TRACK_META[domain];
+  const meta = TRACK_PACKS[domain]; const t = useT();
   const [answers, setAnswers] = useState<number[]>([]);
   if (!meta) return null;
+  const quiz = quizFor(meta);
   const chosen = options.find(o => o.slug === value)?.track as TrackLevel | undefined;
-  const done = answers.filter(a => a !== undefined).length === IKIGAI_QUIZ.length;
-  const rec = done ? recommendTrack(answers).level : null;
+  const done = answers.filter(a => a !== undefined).length === quiz.length;
+  const rec = done ? recommendFrom(quiz, answers) : null;
   const slugFor = (l: TrackLevel) => options.find(o => o.track === l)?.slug;
 
   return (
     <div className="stack gap-8" style={{ marginTop: 12 }}>
       <span className="field-label" id="trackLabel"><Tr>Your track</Tr></span>
-      <span className="small text-2"><Tr>Each track is a different problem from the same school group, with its own data, steps and solution. You can change track until you finish Module 1; after that your track stays fixed to Day 45.</Tr></span>
+      <span className="small text-2">{t('Each track is a different problem from the same {org}, with its own data, steps and solution. You can change track until you finish Module 1; after that your track stays fixed to Day 45.', { org: t(meta.org) })}</span>
       <details className="card card-pad" style={{ padding: 12 }}>
         <summary style={{ cursor: 'pointer', fontWeight: 700 }}><Tr>Not sure? Find your track (5 questions)</Tr></summary>
         <div className="stack gap-8" style={{ marginTop: 10 }}>
-          {IKIGAI_QUIZ.map((q, i) => (
+          {quiz.map((q, i) => (
             <fieldset key={i} style={{ border: 0, padding: 0, margin: 0 }}>
               <legend className="small"><span className="text-2" style={{ textTransform: 'uppercase', letterSpacing: '.06em', fontSize: 11 }}>{CIRCLE[q.circle]}</span><br /><b><Tv v={q.question} /></b></legend>
               {q.options.map((o, j) => (
@@ -70,7 +73,7 @@ export function TrackPicker({ domain, options, value, onPick, ack, onAck, disabl
       {chosen === 'critical' && (
         <label className="small callout warn" htmlFor="trackAck" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', margin: 0 }}>
           <input id="trackAck" type="checkbox" checked={ack} onChange={e => onAck(e.target.checked)} disabled={disabled} style={{ marginTop: 3, flex: 'none', width: 16, height: 16 }} />
-          <span><Tr>I understand the Critical track rules: I will use synthetic data only and never real disclosures; a person always decides, and the system never contacts a child or family; children’s data is shown only to people who need it.</Tr></span>
+          <span><Tv v={meta.criticalAck} /></span>
         </label>
       )}
       {error && <div className="field-err" role="alert"><Tv v={error} /></div>}

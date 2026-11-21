@@ -112,7 +112,7 @@ export async function changeOwnTrack(ctx: Ctx, input: { level: unknown; mode: Ch
   const s = await trackState(ctx.tenantId, ctx.userId);
   if (!s) throw badRequest('Your journey has no tracks to choose from.');
   const t = targetOf(s, input.level);
-  if (t.level === 'critical' && !input.ack) throw badRequest('Confirm the safeguarding and data-ethics rules to start the Critical track.', { ack: 'Tick the box to confirm the rules.' });
+  if (t.level === 'critical' && !input.ack) throw badRequest('Confirm the Critical track rules to start the Critical track.', { ack: 'Tick the box to confirm the rules.' });
   const m = await prisma.membership.findUnique({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.userId } }, select: { cohortId: true } });
   await prisma.$transaction(async tx => {
     await tx.trackChange.updateMany({ where: { tenantId: ctx.tenantId, userId: ctx.userId, state: 'pending' }, data: { state: 'cancelled', decidedAt: new Date() } });
@@ -154,7 +154,7 @@ export async function decideTrackChange(ctx: Ctx, changeId: string, input: { mod
   const t = s.options.find(o => o.journeyId === c.toJourneyId);
   if (!t) throw badRequest('That track is no longer open.');
   if (!s.changeable) throw badRequest('Module 1 is complete, so your track is now fixed until Day 45.');
-  if (t.level === 'critical' && !input.ack) throw badRequest('Confirm the safeguarding and data-ethics rules to start the Critical track.', { ack: 'Tick the box to confirm the rules.' });
+  if (t.level === 'critical' && !input.ack) throw badRequest('Confirm the Critical track rules to start the Critical track.', { ack: 'Tick the box to confirm the rules.' });
   const m = await prisma.membership.findUnique({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.userId } }, select: { cohortId: true } });
   await prisma.$transaction(async tx => {
     await applyMove(tx, { tenantId: ctx.tenantId, userId: ctx.userId, fromEnrollmentId: s.enrollmentId, toJourneyId: t.journeyId, mode: input.mode, cohortId: m?.cohortId ?? null });

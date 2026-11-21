@@ -37,7 +37,7 @@ describe('track journeys (Education: easy, intermediate, hard, critical)', () =>
   it('builds four Education journeys, the Hard one keeping the original slug', () => {
     expect(specs.map(s => s.track!.level).sort()).toEqual([...TRACK_ORDER].sort());
     expect(built.map(j => j.slug).sort()).toEqual(['da-education', 'da-education-critical', 'da-education-easy', 'da-education-intermediate']);
-    expect(JOURNEY_SPECS).toHaveLength(20);
+    expect(JOURNEY_SPECS).toHaveLength(23); // 17 domains + 3 extra Education tracks + 3 extra BFSI tracks
     expect(TRACKED_DOMAINS.education.tracks).toHaveLength(4);
   });
   it('slugs, level-code prefixes and catalogs are unique across every journey', () => {
@@ -104,5 +104,40 @@ describe('track-change permissions', () => {
     expect(canEditTrackSettings({ role: 'program_mgr', superAdmin: false })).toBe(true);
     expect(canEditTrackSettings({ role: 'tenant_admin', superAdmin: false })).toBe(true);
     expect(canEditTrackSettings({ role: 'instructor', superAdmin: false })).toBe(false);
+  });
+});
+
+import { TRACK_PACKS } from '../lib/domain/daDomains/trackPacks';
+import { quizFor, recommendFrom } from '../lib/domain/daDomains/trackPacks/types';
+
+describe('track packs beyond Education (BFSI first)', () => {
+  it('BFSI has four journeys; Hard keeps the original da-bfsi slug so existing learners stay put', () => {
+    const bfsi = JOURNEY_SPECS.filter(s => s.track?.of === 'bfsi').map(s => buildDomainJourney(s));
+    expect(bfsi.map(j => (j.config as { track: string }).track).sort()).toEqual(['critical', 'easy', 'hard', 'intermediate']);
+    expect(bfsi.find(j => (j.config as { track: string }).track === 'hard')!.slug).toBe('da-bfsi');
+    expect(new Set(bfsi.map(j => j.slug)).size).toBe(4);
+    expect(new Set(bfsi.map(j => j.levels[0].code.split('_')[0])).size).toBe(4); // distinct level codes per track
+  });
+  it('every track pack has four tracks with nine deliverables, quiz answers, and a Critical confirmation', () => {
+    for (const p of Object.values(TRACK_PACKS)) {
+      expect(p.tracks.map(t => t.level), p.domain).toEqual(TRACK_ORDER);
+      for (const t of p.tracks) expect(t.steps, `${p.domain} ${t.level}`).toHaveLength(9);
+      expect(p.criticalAck).toMatch(/synthetic data/);
+      expect(TRACKED_DOMAINS[p.domain].tracks).toBe(p.tracks);
+    }
+  });
+  it('the quiz can recommend every track of a pack', () => {
+    const quiz = quizFor(TRACK_PACKS.bfsi);
+    expect(quiz).toHaveLength(5);
+    expect(new Set([0, 1, 2, 3].map(i => recommendFrom(quiz, [i, i, i, i, i])))).toEqual(new Set(TRACK_ORDER));
+  });
+  it('every new track dataset and gold table is satisfiable', () => {
+    for (const s of JOURNEY_SPECS.filter(x => x.track?.of === 'bfsi' && x.track.level !== 'hard')) {
+      const j = buildDomainJourney(s);
+      for (const layer of ['dataset', 'silver', 'gold'] as const) {
+        const report = validateDataset(readTable(Buffer.from(sampleCsv(j.schemas[layer], 60)), 'sample.csv'), j.schemas[layer]);
+        expect(report.passed, `${s.slug} ${layer}: ${report.checks.filter(c => !c.ok).map(c => c.detail).join(' | ')}`).toBe(true);
+      }
+    }
   });
 });

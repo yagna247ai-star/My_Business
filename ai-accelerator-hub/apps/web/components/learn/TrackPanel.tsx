@@ -11,9 +11,11 @@ import { Tr } from '@/components/i18n/Tr';
 import { Tv } from '@/components/i18n/Tv';
 
 type Opt = { level: string; name: string; title: string; current: boolean };
-export type TrackView = { level: string; levelName: string; title: string; changeable: boolean; options: Opt[]; pending: { id: string; level: string; name: string; title: string; reason: string | null; by: string } | null };
+export type TrackView = { domain: string; level: string; levelName: string; title: string; changeable: boolean; options: Opt[]; pending: { id: string; level: string; name: string; title: string; reason: string | null; by: string } | null };
 
-const ACK = 'I understand the Critical track rules: synthetic data only, never real disclosures; a person always decides and the system never contacts a child or family; children’s data is shown only to people who need it.';
+import { TRACK_PACKS } from '@/lib/domain/daDomains/trackPacks';
+/** What a Critical-track learner confirms, in the words of their domain. */
+const ackFor = (domain: string) => TRACK_PACKS[domain]?.criticalAck ?? TRACK_PACKS.education.criticalAck;
 
 function ModeChoice({ value, onChange, disabled }: { value: 'continue' | 'restart'; onChange: (m: 'continue' | 'restart') => void; disabled: boolean }) {
   const t = useT();
@@ -63,7 +65,7 @@ export function TrackPanel({ track }: { track: TrackView }) {
           <p style={{ margin: 0 }}><b>{track.pending.by} <Tr>moved you to the</Tr> {track.pending.name} <Tr>track:</Tr> <Tv v={track.pending.title} />.</b>{track.pending.reason ? ` Reason: ${track.pending.reason}` : ''}</p>
           <div className="stack gap-8" style={{ marginTop: 10 }}>
             <ModeChoice value={mode} onChange={setMode} disabled={busy} />
-            {target === 'critical' && <label className="small" style={{ display: 'flex', gap: 8 }}><input type="checkbox" id="trackAck" checked={ack} onChange={e => setAck(e.target.checked)} disabled={busy} style={{ flex: 'none', marginTop: 3 }} /><span>{ACK}</span></label>}
+            {target === 'critical' && <label className="small" style={{ display: 'flex', gap: 8 }}><input type="checkbox" id="trackAck" checked={ack} onChange={e => setAck(e.target.checked)} disabled={busy} style={{ flex: 'none', marginTop: 3 }} /><span><Tv v={ackFor(track.domain)} /></span></label>}
             <div><button type="button" className="btn btn-gold btn-sm" disabled={busy} onClick={() => go(`/api/v1/me/track/${track.pending!.id}`, { mode, ack })}>{busy ? <Tr>Moving…</Tr> : `Start the ${track.pending.name} track`}</button></div>
           </div>
         </div>
@@ -81,7 +83,7 @@ export function TrackPanel({ track }: { track: TrackView }) {
             ))}
           </fieldset>
           {level && <ModeChoice value={mode} onChange={setMode} disabled={busy} />}
-          {level === 'critical' && <label className="small" style={{ display: 'flex', gap: 8 }}><input type="checkbox" id="trackAck" checked={ack} onChange={e => setAck(e.target.checked)} disabled={busy} style={{ flex: 'none', marginTop: 3 }} /><span>{ACK}</span></label>}
+          {level === 'critical' && <label className="small" style={{ display: 'flex', gap: 8 }}><input type="checkbox" id="trackAck" checked={ack} onChange={e => setAck(e.target.checked)} disabled={busy} style={{ flex: 'none', marginTop: 3 }} /><span><Tv v={ackFor(track.domain)} /></span></label>}
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="button" className="btn btn-gold btn-sm" disabled={busy || !level} onClick={() => go('/api/v1/me/track', { level, mode, ack })}>{busy ? t('Moving…') : t('Move to this track')}</button>
             <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => { setOpen(false); setLevel(''); }}>{t('Cancel')}</button>

@@ -14,6 +14,8 @@ import { EDUCATION_DOSSIER } from './dossiers/education';
 import { LEVEL2_SCENES } from './dossiers/level2';
 import { EDUCATION_TRACKS, EDUCATION_CANDIDATES, IKIGAI_QUIZ, TRACK_LABEL } from './dossiers/education-tracks';
 import type { ProblemTrack } from './dossiers/types';
+import { bfsiTrackSpecs } from './trackPacks/bfsi';
+import { TRACK_PACKS, quizForDomain } from './trackPacks';
 
 export const TRACK_ORDER: TrackLevelName[] = ['easy', 'intermediate', 'hard', 'critical'];
 
@@ -168,16 +170,34 @@ const educationCritical: DomainSpec = {
   situations: undefined,
 };
 
-/** Every journey the seed builds: all 17 domains (Education as its Hard track) plus the extra Education tracks. */
+const withLevel2 = (d: DomainSpec): DomainSpec => ({ ...d, situations: { ...(d.situations ?? {}), ...(LEVEL2_SCENES[d.slug] ?? {}) } });
+const packTrack = (domain: string, level: TrackLevelName) => TRACK_PACKS[domain].tracks.find(t => t.level === level)!;
+
+/** Domains with tracks beyond Education: the three new journeys per domain, built from each pack's specs. */
+const PACK_SPECS: { domain: string; specs: (base: DomainSpec) => Record<'easy' | 'intermediate' | 'critical', DomainSpec> }[] = [
+  { domain: 'bfsi', specs: bfsiTrackSpecs },
+];
+const packed = new Set(PACK_SPECS.map(p => p.domain));
+
+/**
+ * Every journey the seed builds: all 17 domains (each tracked domain's original journey becomes its Hard track,
+ * same slug), plus Easy, Intermediate and Critical for Education and every domain in PACK_SPECS.
+ * Every other domain gets the Level 2 (Days 6–10) field scenes, like the approved Education Level 2.
+ */
 export const JOURNEY_SPECS: DomainSpec[] = [
-  // Every other domain gets the Level 2 (Days 6–10) field scenes, like the approved Education Level 2.
-  ...DOMAINS.map(d => (d.slug === 'education' ? educationHard : { ...d, situations: { ...(d.situations ?? {}), ...(LEVEL2_SCENES[d.slug] ?? {}) } })),
+  ...DOMAINS.map(d => d.slug === 'education' ? educationHard
+    : packed.has(d.slug) ? { ...withLevel2(d), track: info(d.slug, packTrack(d.slug, 'hard')) }
+    : withLevel2(d)),
   educationEasy, educationIntermediate, educationCritical,
+  ...PACK_SPECS.flatMap(({ domain, specs }) => {
+    const built = specs(DOMAINS.find(d => d.slug === domain)!);
+    return (['easy', 'intermediate', 'critical'] as const).map(l => ({ ...built[l], track: info(domain, packTrack(domain, l)) }));
+  }),
 ];
 
 /** Domains that offer tracks, with what the registration form needs. */
-export const TRACKED_DOMAINS: Record<string, { tracks: ProblemTrack[]; quiz: typeof IKIGAI_QUIZ; candidates: typeof EDUCATION_CANDIDATES }> = {
-  education: { tracks: EDUCATION_TRACKS, quiz: IKIGAI_QUIZ, candidates: EDUCATION_CANDIDATES },
-};
+export const TRACKED_DOMAINS: Record<string, { tracks: ProblemTrack[]; quiz: typeof IKIGAI_QUIZ; candidates: typeof EDUCATION_CANDIDATES }> = Object.fromEntries(
+  Object.values(TRACK_PACKS).map(p => [p.domain, { tracks: p.tracks, quiz: p.domain === 'education' ? IKIGAI_QUIZ : quizForDomain(p.domain), candidates: p.domain === 'education' ? EDUCATION_CANDIDATES : [] }]),
+);
 
 export { trackChangeAllowed } from '../trackRules';
