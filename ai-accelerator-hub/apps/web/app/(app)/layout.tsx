@@ -41,6 +41,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (hasPerm(ctx, 'analytics:read')) nav.push({ href: '/admin', label: 'Cohort Analytics', icon: 'chart', group: 'Program' });
   if (hasPerm(ctx, 'members:read')) nav.push({ href: '/settings/people', label: 'People', icon: 'users', group: 'Program' });
   if (hasPerm(ctx, 'cohort:read')) nav.push({ href: '/admin/cohorts', label: 'Cohorts & Sessions', icon: 'layers', group: 'Program' });
+  if (hasPerm(ctx, 'content:manage')) nav.push({ href: '/admin/content', label: 'Content review', icon: 'book', group: 'Program' });
   if (hasPerm(ctx, 'content:manage')) nav.push({ href: '/admin/journeys', label: 'Journey Builder', icon: 'map', group: 'Program' });
   if (hasPerm(ctx, 'cohort:manage')) nav.push({ href: '/admin/hackathons', label: 'Hackathon Builder', icon: 'users', group: 'Program' });
   if (hasPerm(ctx, 'audit:read')) nav.push({ href: '/admin/audit', label: 'Audit Log', icon: 'shield', group: 'Program' });

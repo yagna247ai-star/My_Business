@@ -1460,3 +1460,24 @@ model UiTranslation {
   @@unique([locale, key])
   @@map("ui_translations")
 }
+
+/// A reviewer's suggestion on journey content: a whole level, one day lesson ("day:7") or one activity ("activity:3").
+/// Tracked open → done / wontfix so content improves from review.
+model ContentSuggestion {
+  id           String    @id @default(cuid())
+  tenantId     String
+  journeyId    String
+  levelId      String
+  target       String // level | day:<n> | activity:<idx>
+  body         String
+  state        String    @default("open") // open | done | wontfix
+  authorId     String
+  resolvedById String?
+  resolvedNote String?
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+
+  @@index([tenantId, journeyId, state])
+  @@index([levelId])
+  @@map("content_suggestions")
+}

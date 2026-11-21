@@ -18,7 +18,7 @@ async function Journeys() {
         <h2 className="h3" id="jl">Your journeys ({journeys.length})</h2>
         {journeys.length === 0 && <p className="muted small">None yet. Create one below.</p>}
         <ul className="checklist">{journeys.map(j => <li key={j.id}><span className="bold">{j.title}</span> <span className="muted xs">· /{j.slug} · {j._count.levels} levels · {j.isPublished ? 'published' : 'unpublished'}</span></li>)}</ul>
-        <Link className="link small" href="/levels">See the learner view →</Link>
+        <Link className="link small" href="/admin/content">Review levels, read the content and leave suggestions →</Link> <Link className="link small" href="/levels">See the learner view →</Link>
       </section>
       <JourneyBuilder />
     </div>
