@@ -16,7 +16,7 @@ import { readTable, validateDataset, DatasetError, type DatasetReport, type Data
 import { checkAll, checkAnswer, judgeAnswers } from './answerQuality';
 import { proofLinkProblem, linkUsedByOthers, reusedShot, screenshotOffTopic } from './proofRelevance';
 import { fileBytes } from './files';
-import { validateStep, stepPoints, stepsFinished, type GuidedStep, type StepState } from './guidedSteps';
+import { doText, validateStep, stepPoints, stepsFinished, type GuidedStep, type StepState } from './guidedSteps';
 import { DAY_XP, dayStepsFrom, finished, levelComplete, moveOnMessage } from './levelFlowRules';
 
 /* ---------- config helpers ---------- */
@@ -299,7 +299,7 @@ export async function levelDays(levelId: string, enrollmentId: string) {
   const by = new Map(rows.map(r => [r.day, r]));
   return pages.map(p => {
     const steps = guidedStepsOf(p.payload);
-    return { day: p.position, title: p.title ?? `Day ${p.position}`, state: by.get(p.position)?.state ?? 'open', xp: by.get(p.position)?.xpEarned ?? 0, points: steps ? steps.reduce((n, x) => n + stepPoints(x), 0) : DAY_XP };
+    return { day: p.position, title: p.title ?? `Day ${p.position}`, state: by.get(p.position)?.state ?? 'open', xp: by.get(p.position)?.xpEarned ?? 0, points: steps ? steps.reduce((n, x) => n + stepPoints(x), 0) : DAY_XP, stepCount: steps?.length ?? 0 };
   });
 }
 
@@ -450,7 +450,7 @@ export async function completeStep(ctx: Ctx, code: string, day: number, i: numbe
   const step = steps[i];
   let fileId: string | undefined;
   if (!input.skip) {
-    if (step.check.kind === 'screenshot') fileId = (await verifyShot(ctx, code, input.fileId, `${step.title}: ${step.check.prompt}. ${step.do.join(' ')}`)).id;
+    if (step.check.kind === 'screenshot') fileId = (await verifyShot(ctx, code, input.fileId, `${step.title}: ${step.check.prompt}. ${step.do.map(doText).join(' ')}`)).id;
     const r = validateStep(step, { answer: typeof input.answer === 'string' ? input.answer : undefined, paste: typeof input.paste === 'string' ? input.paste : undefined, fileOk: !!fileId });
     if (!r.ok) throw badRequest(r.reason, { step: r.reason });
   }

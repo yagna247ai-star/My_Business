@@ -4,13 +4,14 @@
  * and checks it (tick, written answer, pasted output or screenshot) before awarding its points. Skipping is allowed.
  */
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { Check, CheckCircle2, Copy, ImageUp, Lightbulb, Lock, SkipForward } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Check, CheckCircle2, ImageUp, Lightbulb, LifeBuoy, Lock, SkipForward } from 'lucide-react';
+import { Keys, TermBlock } from '@/components/learn/SetupGuide';
 import { api, ApiError } from '@/lib/client/api';
 import { useT } from '@/components/i18n/I18nProvider';
 import { Tv } from '@/components/i18n/Tv';
 import { moveOnText } from '@/lib/domain/levelFlowRules';
-import { STEP_POINTS, type GuidedStep, type StepState } from '@/lib/domain/guidedSteps';
+import { STEP_POINTS, hasOsItems, type GuidedStep, type StepOS, type StepState } from '@/lib/domain/guidedSteps';
 
 type Advanced = { earned: number; total: number; nextTitle: string | null } | null;
 
@@ -24,6 +25,11 @@ export function GuidedDay({ code, day, steps, states: initial }: { code: string;
   const earned = states.reduce((n, s) => n + (s?.xp ?? 0), 0);
   const total = steps.reduce((n, s) => n + STEP_POINTS[s.check.kind], 0);
   const [open, setOpen] = useState<number | null>(null);
+  // Windows or Mac: only for steps whose actions differ by computer. Remembered on this device.
+  const [os, setOs] = useState<StepOS>('windows');
+  useEffect(() => { try { const v = localStorage.getItem('aih_os'); setOs(v === 'macos' || v === 'windows' ? v : /Mac/i.test(navigator.platform || navigator.userAgent) ? 'macos' : 'windows'); } catch { /* keep default */ } }, []);
+  const pickOs = (v: StepOS) => { setOs(v); try { localStorage.setItem('aih_os', v); } catch { /* fine */ } };
+  const anyOs = steps.some(hasOsItems);
 
   const onSaved = (i: number, st: StepState, advanced: Advanced) => {
     setStates(x => x.map((v, k) => (k === i ? st : v)));
@@ -32,13 +38,14 @@ export function GuidedDay({ code, day, steps, states: initial }: { code: string;
   };
 
   return (
-    <section className="card card-pad stack gap-12" style={{ maxWidth: 820, marginTop: 18 }} aria-labelledby="gdT">
+    <section id="steps" className="card card-pad stack gap-12" style={{ maxWidth: 860, marginTop: 18, scrollMarginTop: 80 }} aria-labelledby="gdT">
       <div className="row between wrap gap-8" style={{ alignItems: 'center' }}>
         <h2 className="h3" id="gdT" style={{ margin: 0 }}>{t('Your steps today')}</h2>
         <span className="badge badge-gold">{t('{a} of {b} points', { a: earned, b: total })}</span>
       </div>
       <div className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={finished} aria-label={t('Steps finished')}><i style={{ width: `${Math.max(2, (finished / steps.length) * 100)}%` }} /></div>
       <p className="muted small" style={{ margin: 0 }}>{t('{a} of {b} steps done. Each step explains the idea, tells you what to do, and checks your work.', { a: done, b: steps.length })}</p>
+      {anyOs && <div className="row gap-8 wrap small" role="radiogroup" aria-label={t('Your computer')} style={{ alignItems: 'center' }}><span className="muted">{t('Your computer')}:</span>{(['windows', 'macos'] as const).map(v => <button key={v} type="button" role="radio" aria-checked={os === v} className={`btn btn-sm ${os === v ? 'btn-gold' : 'btn-outline'}`} onClick={() => pickOs(v)}>{v === 'windows' ? 'Windows' : 'Mac'}</button>)}</div>}
       {msg && <p className="callout ok" role="status"><CheckCircle2 size={18} /><span>{msg}</span></p>}
       {current === -1 && !msg && <p className="callout ok small" role="status"><CheckCircle2 size={16} /><span>{t('You finished every step of this day.')}</span></p>}
       <ol className="stack gap-8" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -51,9 +58,9 @@ export function GuidedDay({ code, day, steps, states: initial }: { code: string;
                 onClick={() => !locked && !isCur && setOpen(open === i ? null : i)} aria-expanded={expanded} disabled={locked}>
                 <span className="avatar avatar-sm" aria-hidden="true" style={{ background: st?.s === 'done' ? 'var(--success)' : undefined, color: st?.s === 'done' ? '#fff' : undefined, flex: 'none' }}>{st?.s === 'done' ? <Check size={15} /> : locked ? <Lock size={13} /> : i + 1}</span>
                 <span style={{ flex: 1, minWidth: 0 }}><b><Tv v={s.title} /></b>
-                  <span className="muted xs" style={{ display: 'block' }}>{st?.s === 'done' ? t('Done · +{xp} points', { xp: st.xp }) : st?.s === 'skipped' ? t('Skipped · 0 points') : t('+{xp} points', { xp: STEP_POINTS[s.check.kind] })}</span></span>
+                  <span className="muted xs" style={{ display: 'block' }}>{st?.s === 'done' ? t('Done · +{xp} points', { xp: st.xp }) : st?.s === 'skipped' ? t('Skipped · 0 points') : t('+{xp} points', { xp: STEP_POINTS[s.check.kind] })}{s.minutes ? ` · ${t('{n} min', { n: s.minutes })}` : ''}</span></span>
               </button>
-              {expanded && <StepBody code={code} day={day} i={i} step={s} state={st} isCurrent={isCur} onSaved={onSaved} />}
+              {expanded && <StepBody code={code} day={day} i={i} step={s} state={st} isCurrent={isCur} onSaved={onSaved} os={os} />}
             </li>
           );
         })}
@@ -62,12 +69,12 @@ export function GuidedDay({ code, day, steps, states: initial }: { code: string;
   );
 }
 
-function StepBody({ code, day, i, step, state, isCurrent, onSaved }: { code: string; day: number; i: number; step: GuidedStep; state: StepState | null; isCurrent: boolean; onSaved: (i: number, s: StepState, a: Advanced) => void }) {
+function StepBody({ code, day, i, step, state, isCurrent, onSaved, os }: { code: string; day: number; i: number; step: GuidedStep; state: StepState | null; isCurrent: boolean; onSaved: (i: number, s: StepState, a: Advanced) => void; os: StepOS }) {
   const t = useT();
   const [text, setText] = useState(state?.answer ?? state?.paste ?? '');
   const [file, setFile] = useState<File | null>(null);
   const [ticked, setTicked] = useState(false);
-  const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [copied, setCopied] = useState(false);
+  const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
   const c = step.check;
 
   const send = async (skip = false) => {
@@ -91,12 +98,14 @@ function StepBody({ code, day, i, step, state, isCurrent, onSaved }: { code: str
 
   return (
     <div className="stack gap-12" style={{ padding: '0 14px 14px' }}>
-      <div className="callout info small" style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}><Lightbulb size={16} style={{ flex: 'none', marginTop: 2 }} aria-hidden="true" /><span><b>{t('The idea')}:</b> <Tv v={step.concept} /></span></div>
-      <div><b className="small">{t('Do this')}</b><ol className="small" style={{ margin: '6px 0 0', paddingLeft: 22, lineHeight: 1.7, listStyle: 'decimal' }}>{step.do.map((x, k) => <li key={k}><Tv v={x} /></li>)}</ol></div>
-      {step.code && <div style={{ position: 'relative' }}>
-        <pre className="mono" style={{ margin: 0, padding: 12, borderRadius: 10, background: 'var(--surface-3)', overflowX: 'auto', fontSize: 12.5, lineHeight: 1.5, maxHeight: 320 }}><code>{step.code.text}</code></pre>
-        <button type="button" className="btn btn-ghost btn-sm" style={{ position: 'absolute', top: 6, right: 6 }} onClick={() => { navigator.clipboard?.writeText(step.code!.text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}><Copy size={13} aria-hidden="true" />{copied ? t('Copied') : t('Copy')}</button>
-      </div>}
+      <div className="callout info small" style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}><Lightbulb size={16} style={{ flex: 'none', marginTop: 2 }} aria-hidden="true" /><span><b>{t('Why')}:</b> <Tv v={step.concept} /></span></div>
+      <div><b className="small">{t('Do this')}</b><ol className="small" style={{ margin: '6px 0 0', paddingLeft: 22, lineHeight: 1.7, listStyle: 'decimal', display: 'grid', gap: 6 }}>
+        {step.do.filter(d => typeof d === 'string' || !d.os || d.os === os).map((d, k) => typeof d === 'string' ? <li key={k}><Tv v={d} /></li>
+          : <li key={k}><Tv v={d.text} />{d.keys && <> <Keys keys={d.keys} /></>}{d.cmd && <TermBlock text={d.cmd} lang={d.lang} shell={d.lang === 'ps' ? 'ps' : 'sh'} />}</li>)}
+      </ol></div>
+      {step.code && <TermBlock text={step.code.text} lang={step.code.lang} />}
+      {!!step.see?.length && <div><b className="small">{t('You should see')}</b><div className="stack gap-6" style={{ marginTop: 6 }}>{step.see.map((x, k) => <div key={k} className="small"><Tv v={x.text} />{x.sample && <TermBlock text={x.sample} output label={t('Example of a working result')} />}</div>)}</div></div>}
+      {!!step.fix?.length && <details className="stuck-toggle"><summary className="small"><LifeBuoy size={14} aria-hidden="true" /> {t('Stuck? Common problems and fixes')}</summary><ul className="small" style={{ margin: '8px 0 0', paddingLeft: 18, display: 'grid', gap: 8 }}>{step.fix.map((f, k) => <li key={k}><b><Tv v={f.problem} />:</b> <Tv v={f.solution} />{f.cmd && <TermBlock text={f.cmd} lang={f.lang} />}</li>)}</ul></details>}
       {state?.s === 'done' && !isCurrent ? <p className="callout ok small" style={{ margin: 0 }}><CheckCircle2 size={15} /><span>{t('Done · +{xp} points', { xp: state.xp })}</span></p> : (
         <div className="stack gap-8">
           <b className="small">{t('Check')}: <Tv v={c.prompt} /></b>

@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Lock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Lock, ChevronLeft, ChevronRight, ListChecks } from 'lucide-react';
+import { STEP_POINTS } from '@/lib/domain/guidedSteps';
 import { prisma } from '@/lib/prisma';
 import { requirePerm } from '@/lib/server/context';
 import { getEnrollment } from '@/lib/domain/journey';
@@ -63,6 +64,16 @@ async function DayPage({ params, searchParams }: { params: Promise<{ code: strin
       </div>
     </section>
     {translated ? <p className="muted small" style={{ maxWidth: 820, marginBottom: 10 }}>{t('Machine translation. Code, SQL and Excel formulas stay in English.')} <Link className="link" href={`/levels/${code}/days/${dayNo}?orig=1`}>{t('Show the English original')}</Link></p> : <TranslateLesson code={code} day={dayNo} />}
+    {guided && (() => {
+      // Steps first: say how many there are and jump to the open one, so nobody misses them under a long lesson.
+      const doneN = stepStates.filter(Boolean).length; const pts = guided.reduce((n, x) => n + STEP_POINTS[x.check.kind], 0);
+      const mins = guided.reduce((n, x) => n + (x.minutes ?? 0), 0);
+      return <section className="callout info" style={{ maxWidth: 820, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }} aria-label={t('Your steps today')}>
+        <ListChecks size={20} aria-hidden="true" />
+        <span style={{ flex: 1, minWidth: 220 }}><b>{t('Today: {n} guided steps for up to {p} points', { n: guided.length, p: pts })}{mins ? ` · ${t('about {n} min', { n: mins })}` : ''}</b><br /><span className="small">{doneN === guided.length ? t('You finished every step of this day.') : t('Read the lesson, then follow the steps one by one. Each step shows what to do, what you should see, and how to fix common problems.')}</span></span>
+        {doneN < guided.length && <a className="btn btn-gold btn-sm" href="#steps">{doneN ? t('Continue at step {n}', { n: doneN + 1 }) : t('Start step 1')} ↓</a>}
+      </section>;
+    })()}
     <article className="card card-pad" style={{ maxWidth: 820 }} aria-label={content.title || `Day ${dayNo}`}>
       {blocks.map((b, i) => <Render key={i} block={b} />)}
     </article>

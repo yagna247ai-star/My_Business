@@ -15,15 +15,35 @@ export type StepCheck =
   | { kind: 'paste'; prompt: string; pattern: string; sample?: string; fail: string }
   | { kind: 'screenshot'; prompt: string };
 
+export type StepOS = 'windows' | 'macos';
+/** One action. cmd is copied with one click (lang: sh, ps, sql, python, dax, m, excel, csv). keys: a key press. os: only on that computer. */
+export type DoItem = string | { text: string; cmd?: string; lang?: string; keys?: string[]; os?: StepOS };
+/** What the learner should see when it worked, with an example. */
+export type SeeItem = { text: string; sample?: string };
+/** A common problem and its fix. */
+export type FixItem = { problem: string; solution: string; cmd?: string; lang?: string };
+
+/**
+ * One step, like the Agent Lab setup guide: why → do (with copyable commands and code) → what you should see →
+ * if it does not work → check. see and fix are optional so short thinking steps stay short.
+ */
 export type GuidedStep = {
   title: string;
   /** What this is and why it matters, at the moment the learner needs it (2–3 sentences). */
   concept: string;
-  /** Exactly what to do. */
-  do: string[];
+  /** Exactly what to do, in order. */
+  do: DoItem[];
   code?: { lang: string; text: string };
+  see?: SeeItem[];
+  fix?: FixItem[];
+  /** About how long the step takes, in minutes. */
+  minutes?: number;
   check: StepCheck;
 };
+
+export const doText = (d: DoItem) => (typeof d === 'string' ? d : d.text);
+/** Do the step's actions depend on the learner's computer? */
+export const hasOsItems = (s: GuidedStep) => s.do.some(d => typeof d !== 'string' && !!d.os);
 
 export const STEP_POINTS: Record<StepCheck['kind'], number> = { tick: 2, answer: 3, paste: 5, screenshot: 5 };
 export const stepPoints = (s: GuidedStep) => STEP_POINTS[s.check.kind];

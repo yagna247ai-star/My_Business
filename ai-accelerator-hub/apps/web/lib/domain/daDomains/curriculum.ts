@@ -8,6 +8,7 @@ import type { ColumnRule, DatasetSchema } from './datasetCheck';
 
 import { isAdvanced, PYSPARK, legacyDay } from './advanced';
 import { GUIDED } from './guided';
+import { detailStep } from './guidedDetail';
 import type { GuidedStep } from '../guidedSteps';
 import { labCols, excelLoadSteps, excelKpiFormulas, excelDailyFormulas, excelWhyFunctions, DIALECTS, INSTALL, checkInstall, createDatabase, ddl, loadCsv, checkData, copyClean, kpiQueries, perDialect } from './dataLab';
 
@@ -546,7 +547,9 @@ export function buildDomainJourney(d: DomainSpec): DomainJourney {
         ...(lg ? lg.steps.map(x => ({ title: 'Reverse engineering', concept: 'You inherited a legacy pipeline with no documentation. Understanding it before replacing it is how real migrations avoid breaking the business.', do: [x], check: { kind: 'answer' as const, prompt: x } })) : []),
       ] : undefined;
       const r = { ...r0, ...(py ? { pyspark: py } : {}), ...(lg ? { legacy: lg.section, steps: [...r0.steps, ...lg.steps] } : {}), ...(guided ? { guided: true } : {}) };
-      return { day, title: r.title, body: dayMarkdown(d, m.stage, day, r), ...(guided ? { steps: guided } : {}) };
+      // Agent Lab–style detail: exact clicks, the day's own code to copy, what you should see, fixes, time.
+      const detailed = guided?.map(s => detailStep(s, { code: r0.code, pyspark: py }, adv));
+      return { day, title: r.title, body: dayMarkdown(d, m.stage, day, r), ...(detailed ? { steps: detailed } : {}) };
     });
     const evidenceTitle = m.evidence === 'dataset' ? `Dataset Check: ${m.layer === 'gold' ? 'Gold KPI Mart' : m.layer === 'silver' ? 'Silver Table' : 'Structured Dataset'}` : 'Screenshot Evidence';
     const activities: ActivityRow[] = [

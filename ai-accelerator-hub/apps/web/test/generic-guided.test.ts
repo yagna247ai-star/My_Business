@@ -9,7 +9,12 @@ describe('guided steps for the AI-Powered Data Analytics journey', () => {
       expect(steps, `day ${d}`).toBeTruthy();
       expect(steps.length, `day ${d}`).toBeGreaterThanOrEqual(2);
       expect(steps.length, `day ${d}`).toBeLessThanOrEqual(5);
-      for (const s of steps) { expect(s.title && s.concept.length > 30 && s.do.length > 0, `day ${d}: ${s.title}`).toBeTruthy(); }
+      for (const s of steps) {
+        expect(s.title && s.concept.length > 30 && s.do.length > 0, `day ${d}: ${s.title}`).toBeTruthy();
+        expect(s.minutes, `day ${d}: ${s.title} has a time estimate`).toBeGreaterThan(0);
+      }
+      // Like the Agent Lab guide: every day shows code to copy or what you should see.
+      expect(steps.some(s => s.code || s.see?.length || s.do.some(x => typeof x !== 'string' && (x.cmd || x.os))), `day ${d} has detailed instructions`).toBe(true);
     }
   });
   it('every paste check compiles, accepts its own sample and rejects empty or unrelated text', () => {
@@ -31,5 +36,17 @@ describe('guided steps for the AI-Powered Data Analytics journey', () => {
     const s = GENERIC_GUIDED[13][1];
     expect(validateStep(s, { paste: '85 A\n84.9 B\n70 B\n50 C\n49.5 Fail' }).ok).toBe(true);
     expect(validateStep(s, { paste: '85 A\n84.9 A\n70 B\n50 C\n49.5 C' }).ok).toBe(false);
+  });
+});
+
+describe('detailed instructions', () => {
+  it('setup steps give per-computer instructions and fixes', () => {
+    const py = GENERIC_GUIDED[12][0];
+    expect(py.do.some(x => typeof x !== 'string' && x.os === 'windows' && x.cmd === 'py --version')).toBe(true);
+    expect(py.do.some(x => typeof x !== 'string' && x.os === 'macos' && x.cmd === 'python3 --version')).toBe(true);
+    expect(py.fix!.length).toBeGreaterThanOrEqual(3);
+  });
+  it('every SQL day starts by creating its own practice tables', () => {
+    for (const d of [6, 7, 8, 9, 10, 11]) expect(GENERIC_GUIDED[d][0].code?.text, `day ${d}`).toMatch(/CREATE TABLE/);
   });
 });

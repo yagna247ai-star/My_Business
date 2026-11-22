@@ -99,7 +99,7 @@ async function LevelPage({ params, searchParams }: { params: Promise<{ code: str
         {days.length > 0 && <section aria-labelledby="daysT">
           <h2 className="h3 row gap-8" id="daysT" style={{ alignItems: 'center', marginBottom: 4 }}><CalendarDays size={18} aria-hidden="true" /><Tr>Your days</Tr></h2>
           <p className="small text-2" style={{ margin: '0 0 12px' }}><Tr>Each day teaches one step of the project. Follow its steps; each step explains the idea, tells you what to do, and checks your work.</Tr></p>
-          <Timeline items={days.map(x => ({ key: `d${x.day}`, href: `/levels/${code}/days/${x.day}`, label: `${t('Day {n}', { n: x.day })} · ${x.state === 'in_progress' ? t('In progress') : label(x.state === 'done' ? 'done' : x.state)}`, title: x.title.replace(/^Day \d+\s+—\s+/, ''), get: x.state === 'done' ? t('Done · +{xp} points', { xp: x.xp }) : t('You get: up to {xp} points', { xp: x.points }), state: stateOf(x.state) }))} />
+          <Timeline items={days.map(x => ({ key: `d${x.day}`, href: `/levels/${code}/days/${x.day}`, label: `${t('Day {n}', { n: x.day })} · ${x.state === 'in_progress' ? t('In progress') : label(x.state === 'done' ? 'done' : x.state)}`, title: x.title.replace(/^Day \d+\s+—\s+/, ''), get: x.state === 'done' ? t('Done · +{xp} points', { xp: x.xp }) : x.stepCount ? t('{n} guided steps · up to {xp} points', { n: x.stepCount, xp: x.points }) : t('You get: up to {xp} points', { xp: x.points }), state: stateOf(x.state) }))} />
         </section>}
         {level.isPublished && <section aria-labelledby="actsT">
           <h2 className="h3 row gap-8" id="actsT" style={{ alignItems: 'center', marginBottom: 4 }}><ListChecks size={18} aria-hidden="true" /><Tr>Your activities</Tr></h2>

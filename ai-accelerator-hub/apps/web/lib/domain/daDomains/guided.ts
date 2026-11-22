@@ -3,6 +3,7 @@
  * Module suffix → day index (0–4) → steps. Days without an entry keep their plain step list for now.
  * Written once here; every journey gets them with its own problem, people, KPIs, tables and columns.
  */
+import { RUN_IT, PBI_CONNECT, PBI_FIX } from './guidedDetail';
 import type { DomainSpec } from './types';
 import type { GuidedStep } from '../guidedSteps';
 import { labCols, DIALECTS, checkInstall, createDatabase, ddl, loadCsv, checkData, copyClean, kpiQueries, excelKpiFormulas, excelDailyFormulas } from './dataLab';
@@ -103,12 +104,16 @@ export const GUIDED: Record<string, Record<number, Gen>> = {
 
 /* ───────── Modules 3–9 (Days 11–45) ───────── */
 const has = (...words: string[]) => words.map(w => `(?=[\\s\\S]*${esc(w)})`).join('');
-const runIt = 'Run the code from the lesson above (Hard and Critical tracks: run the PySpark version too and keep that notebook).';
+const runIt = RUN_IT;
 
 Object.assign(GUIDED, {
   UNITY_CATALOG: {
     0: (d: DomainSpec) => [
-      { title: 'Create your workspace', concept: `Databricks is where the ${d.name} data will be stored, cleaned and modelled. Free Edition gives you a real workspace with serverless compute and no payment.`, do: ['Sign up for Databricks Free Edition with your email.', 'Find Workspace (notebooks), Catalog (data), SQL Editor and Compute.'], check: { kind: 'screenshot', prompt: 'Your workspace home with the left menu visible' } },
+      { title: 'Create your workspace', concept: `Databricks is where the ${d.name} data will be stored, cleaned and modelled. Free Edition gives you a real workspace with serverless compute and no payment.`, minutes: 15,
+        do: ['Open databricks.com/learn/free-edition and click Sign up.', 'Sign up with your email (or Google/Microsoft account) and confirm the email code.', 'When the workspace opens, look at the left menu: Workspace (notebooks), Catalog (data), SQL Editor, Jobs & Pipelines, Compute.', 'Bookmark the workspace address in your browser; you will come back every day.'],
+        see: [{ text: 'A workspace home page with the left menu and a search bar at the top. The address looks like https://dbc-….cloud.databricks.com.' }],
+        fix: [{ problem: 'No verification email', solution: 'Check spam, wait two minutes, then click Resend.' }, { problem: 'You are asked for a cloud account or payment', solution: 'You are on the free trial page, not Free Edition. Go back to databricks.com/learn/free-edition.' }],
+        check: { kind: 'screenshot', prompt: 'Your workspace home with the left menu visible' } },
       { title: 'Your first query', concept: 'Every table lives at catalog.schema.table. current_catalog() and current_schema() tell you where your queries run.', do: ['Open the SQL Editor and run: SELECT current_catalog(), current_schema();'], check: { kind: 'paste', prompt: 'Paste the result row', pattern: '\\b[a-z_][a-z0-9_]*\\b[\\s|,]+\\b[a-z_][a-z0-9_]*\\b', sample: 'workspace | default', fail: 'Paste the two names the query returned (a catalog and a schema).' } },
     ],
     1: (d: DomainSpec) => [
@@ -181,19 +186,40 @@ Object.assign(GUIDED, {
   },
   POWER_BI: {
     0: (d: DomainSpec) => [
-      { title: 'Connect Power BI', concept: 'Power BI reads the gold tables through a SQL warehouse, so every page shows governed, current numbers.', do: ['Power BI Desktop → Get Data → Azure Databricks; use your SQL warehouse’s server and HTTP path.', `Load ${d.gold.name}.`], check: { kind: 'screenshot', prompt: `Power BI with ${d.gold.name} in the Data pane` } },
+      { title: 'Connect Power BI to the gold tables', concept: 'Power BI reads the gold tables through a SQL warehouse, so every page shows governed, current numbers. A personal access token proves who you are without sharing your password.', minutes: 25,
+        do: [...PBI_CONNECT, `In the Navigator, open your catalog → gold, tick ${d.gold.name} (and the dimension tables if you made them), then Load.`],
+        see: [{ text: `The Data pane on the right lists ${d.gold.name} with its columns; Table view shows the rows.` }], fix: PBI_FIX,
+        check: { kind: 'screenshot', prompt: `Power BI with ${d.gold.name} in the Data pane` } },
     ],
     1: () => [
-      { title: 'Star model and row-level security', concept: 'Relationships from dimensions to the fact make filters work; a date table makes time intelligence work; row-level security shows each role only its rows.', do: ['Create the relationships and mark the date table.', 'Create one role with a row filter and test it with View as role.'], check: { kind: 'screenshot', prompt: 'Model view with relationships, or the View as role result' } },
+      { title: 'Star model and a date table', concept: 'Relationships from dimensions to the fact make filters work; a date table makes month and last-year comparisons work.', minutes: 20,
+        do: ['Click Model view (left icons). Drag each dimension key onto the same column in the fact table.', 'Double-click each line: Cardinality Many to one (*:1), Cross filter direction Single.', { text: 'Table view → New table, paste:', cmd: 'Date = ADDCOLUMNS(CALENDARAUTO(), "Month", FORMAT([Date], "yyyy-mm"), "Year", YEAR([Date]))', lang: 'dax' }, 'Right-click Date → Mark as date table → Date column. Link Date[Date] to the fact’s date column.'],
+        see: [{ text: 'A star: the fact table in the middle, lines with 1 and * to each dimension and to Date.' }], fix: PBI_FIX,
+        check: { kind: 'screenshot', prompt: 'Model view with the relationships' } },
+      { title: 'Row-level security', concept: 'Row-level security shows each role only its rows (a branch manager sees one branch), enforced in the published report.', minutes: 15,
+        do: ['Modeling → Manage roles → New role. Pick the table with the branch/region column and write a filter, for example [region] = "South".', 'Modeling → View as → tick the role → OK. Check the visuals show only that region, then Stop viewing.'],
+        see: [{ text: 'With the role on, every total is smaller and only the chosen rows remain.' }], fix: PBI_FIX,
+        check: { kind: 'screenshot', prompt: 'The View as role result' } },
     ],
     2: (d: DomainSpec) => [
-      { title: 'DAX measures', concept: 'Measures calculated in DAX give one number everywhere; numbers calculated inside visuals disagree from page to page.', do: d.dashboard.measures.map(m => `${m.name} = ${m.dax}`), check: { kind: 'paste', prompt: 'Paste one of your DAX measures', pattern: 'CALCULATE|DIVIDE|SUM|AVERAGE|COUNTROWS', sample: d.dashboard.measures[0]?.dax ?? 'DIVIDE(…)', fail: 'Paste the DAX formula of one measure.' } },
+      { title: 'DAX measures', concept: 'Measures calculated in DAX give one number everywhere; numbers calculated inside visuals disagree from page to page. DIVIDE avoids divide-by-zero errors; CALCULATE changes the filter.', minutes: 25,
+        do: ['In the Data pane, right-click your fact table → New measure. Create each measure below (one at a time):', ...d.dashboard.measures.map(m => ({ text: `${m.name}:`, cmd: `${m.name} = ${m.dax}`, lang: 'dax' })), 'Put each measure on a Card visual and check one value against your gold SQL result.'],
+        see: [{ text: 'Each measure appears in the Data pane with a calculator icon, and its card shows a number, not an error.' }],
+        fix: [{ problem: 'The formula bar shows a red error', solution: 'Table and column names must match your model exactly. Start typing the table name and pick it from the list.' }, ...PBI_FIX.slice(0, 1)],
+        check: { kind: 'paste', prompt: 'Paste one of your DAX measures', pattern: 'CALCULATE|DIVIDE|SUM|AVERAGE|COUNTROWS', sample: d.dashboard.measures[0]?.dax ?? 'DIVIDE(…)', fail: 'Paste the DAX formula of one measure.' } },
     ],
     3: (d: DomainSpec) => [
-      { title: 'The report pages', concept: 'One page per audience, each answering one decision. A crowded page serves nobody.', do: d.dashboard.pages.map(p => `${p.name}: ${p.visuals.join(', ')}.`), check: { kind: 'screenshot', prompt: 'Your main report page' } },
+      { title: 'The report pages', concept: 'One page per audience, each answering one decision. Titles are questions; slicers let people choose; a crowded page serves nobody.', minutes: 40,
+        do: [...d.dashboard.pages.map(p => `Page “${p.name}”: ${p.visuals.join(', ')}.`), 'Rename each page (double-click its tab at the bottom).', 'Add a date slicer and test that every visual changes.'],
+        see: [{ text: 'Each page fits one screen, every visual has a question as its title, and the slicers change all of them.' }], fix: PBI_FIX,
+        check: { kind: 'screenshot', prompt: 'Your main report page' } },
     ],
     4: () => [
-      { title: 'Publish safely', concept: 'Enterprises release reports through Dev, Test and Prod workspaces with a scheduled refresh, so nobody edits the live report.', do: ['Publish to a workspace and set a scheduled refresh.'], check: { kind: 'paste', prompt: 'Paste the link to your published report (or the workspace name)', pattern: 'powerbi\\.com|workspace|app\\.', sample: 'https://app.powerbi.com/groups/…', fail: 'Paste the Power BI link or workspace name.' } },
+      { title: 'Publish and schedule a refresh', concept: 'Enterprises release reports through Dev, Test and Prod workspaces with a scheduled refresh, so nobody edits the live report and numbers stay current.', minutes: 20,
+        do: ['Home → Publish → choose a workspace (My workspace is fine for this course) → Select.', 'Open app.powerbi.com → the workspace → the semantic model → … → Settings.', 'Under Data source credentials, enter your access token; under Scheduled refresh, turn it on and pick a daily time → Apply.'],
+        see: [{ text: 'Power BI says “Publishing to Power BI — Success!” with a link to open the report online.' }],
+        fix: [{ problem: 'Publish asks you to sign in', solution: 'Sign in with a work or school account. Personal Gmail/Outlook accounts cannot publish; export a PDF instead and paste the workspace name you would use.' }, ...PBI_FIX.slice(0, 1)],
+        check: { kind: 'paste', prompt: 'Paste the link to your published report (or the workspace name)', pattern: 'powerbi\\.com|workspace|app\\.', sample: 'https://app.powerbi.com/groups/…', fail: 'Paste the Power BI link or workspace name.' } },
     ],
   },
   ML_AI: {
@@ -208,7 +234,7 @@ Object.assign(GUIDED, {
     ],
     3: () => [
       { title: 'Score every day', concept: 'Batch scoring writes predictions back to gold on a schedule, so the dashboard and the business always see fresh predictions.', do: [runIt], check: { kind: 'paste', prompt: 'Paste how many predictions were written', pattern: '\\b\\d{2,}\\b', sample: '119', fail: 'Paste the number of prediction rows.' } },
-      { title: 'Ask in plain English', concept: 'AI/BI Genie lets business users ask questions of your gold tables in plain English, governed by the same permissions.', do: ['Create a Genie space on your gold tables and ask one business question.'], check: { kind: 'screenshot', prompt: 'Genie answering a business question' } },
+      { title: 'Ask in plain English', concept: 'AI/BI Genie lets business users ask questions of your gold tables in plain English, governed by the same permissions.', minutes: 15, do: ['Click Genie in the left menu → + New.', 'Add your gold tables as the data, choose the Serverless Starter Warehouse, and give the space a name.', 'Ask one question your stakeholder would ask, in plain English. Click Show code to see the SQL Genie wrote, and check one number against your own query.'], see: [{ text: 'Genie answers with a table or chart and the SQL it used.' }], check: { kind: 'screenshot', prompt: 'Genie answering a business question' } },
     ],
     4: () => [
       { title: 'Fair, explainable, watched', concept: 'A model must work equally well for different groups, explain its reasons, and be monitored for drift after go-live.', do: ['Compare model performance across two groups; list the top reasons for predictions; write what you would monitor.'], check: { kind: 'answer', prompt: 'Your fairness check, the main reasons the model uses, and what you would monitor', hint: 'recall by group, top features, drift' } },

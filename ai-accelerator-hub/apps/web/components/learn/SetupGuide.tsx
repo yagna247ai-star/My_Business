@@ -16,12 +16,15 @@ export function Keys({ keys }: { keys: string[] }) {
   return <span className="row gap-4" style={{ display: 'inline-flex', flexWrap: 'wrap' }} aria-label={keys.join(' + ')}>{keys.map((k, i) => <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>{i > 0 && <span aria-hidden="true">+</span>}<kbd className="key">{k}</kbd></span>)}</span>;
 }
 
-export function TermBlock({ text, shell = 'sh', output = false, label }: { text: string; shell?: 'sh' | 'ps'; output?: boolean; label?: string }) {
+const LANG: Record<string, string> = { sql: 'SQL', python: 'Python', dax: 'DAX', m: 'Power Query (M)', csv: 'CSV file', text: 'Text', excel: 'Excel formula', json: 'JSON' };
+/** A copyable block. Shell commands get a prompt; code (lang: sql, python, dax…) is shown as-is with its language as the label. */
+export function TermBlock({ text, shell = 'sh', output = false, label, lang }: { text: string; shell?: 'sh' | 'ps'; output?: boolean; label?: string; lang?: string }) {
+  const code = !!lang && lang !== 'sh' && lang !== 'ps';
   const [copied, setCopied] = useState(false);
   const copy = () => { navigator.clipboard?.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {}); };
   return (<div className={`guide-term${output ? ' output' : ''}`}>
-    <div className="term-bar"><span>{label || (output ? <Tr>Example output</Tr> : shell === 'ps' ? <Tr>PowerShell</Tr> : <Tr>Terminal</Tr>)}</span>{!output && <button type="button" onClick={copy} aria-label={`Copy command: ${text}`}>{copied ? <><Check size={12} /><Tr>Copied</Tr></> : <><Copy size={12} /><Tr>Copy</Tr></>}</button>}</div>
-    <pre>{!output && <span className="ps" aria-hidden="true">{shell === 'ps' ? 'PS> ' : '$ '}</span>}{text}</pre>
+    <div className="term-bar"><span>{label || (output ? <Tr>Example output</Tr> : code ? (LANG[lang!] ?? lang) : shell === 'ps' ? <Tr>PowerShell</Tr> : <Tr>Terminal</Tr>)}</span>{!output && <button type="button" onClick={copy} aria-label={code ? `Copy ${LANG[lang!] ?? lang}` : `Copy command: ${text}`}>{copied ? <><Check size={12} /><Tr>Copied</Tr></> : <><Copy size={12} /><Tr>Copy</Tr></>}</button>}</div>
+    <pre>{!output && !code && <span className="ps" aria-hidden="true">{shell === 'ps' ? 'PS> ' : '$ '}</span>}{text}</pre>
   </div>);
 }
 
