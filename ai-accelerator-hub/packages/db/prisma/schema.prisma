@@ -996,12 +996,19 @@ model Project {
   description String?
   coverUrl    String?
   isPublic    Boolean  @default(false)
+  /// Showcase moderation: visible | hidden. Hidden projects are seen only by their author and moderators.
+  status         String    @default("visible")
+  featured       Boolean   @default(false)
+  moderatedById  String?
+  moderatedAt    DateTime?
+  moderationNote String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tenant Tenant        @relation(fields: [tenantId], references: [id])
-  user   User          @relation(fields: [userId], references: [id])
-  repos  ProjectRepo[]
+  tenant  Tenant          @relation(fields: [tenantId], references: [id])
+  user    User            @relation(fields: [userId], references: [id])
+  repos   ProjectRepo[]
+  reports ShowcaseReport[]
 
   @@index([tenantId, userId])
   @@index([isPublic])
@@ -1496,4 +1503,22 @@ model ContentFeedback {
   @@unique([levelId, target, userId])
   @@index([tenantId, levelId])
   @@map("content_feedback")
+}
+
+/// A member's report of a showcase project (one per member per project); moderators resolve it.
+model ShowcaseReport {
+  id           String    @id @default(cuid())
+  tenantId     String
+  projectId    String
+  userId       String
+  reason       String
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+  resolvedById String?
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([tenantId, resolvedAt])
+  @@map("showcase_reports")
 }

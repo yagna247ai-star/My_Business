@@ -46,6 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (hasPerm(ctx, 'cohort:manage')) nav.push({ href: '/admin/hackathons', label: 'Hackathon Builder', icon: 'users', group: 'Program' });
   if (hasPerm(ctx, 'audit:read')) nav.push({ href: '/admin/audit', label: 'Audit Log', icon: 'shield', group: 'Program' });
   if (hasPerm(ctx, 'community:moderate')) nav.push({ href: '/admin/moderation', label: 'Moderation', icon: 'shield', group: 'Program' });
+  if (hasPerm(ctx, 'community:moderate')) nav.push({ href: '/admin/showcase', label: 'Showcase', icon: 'star', group: 'Program' });
   if (!learner) nav.push({ href: '/library', label: 'Open-source Library', icon: 'book', group: 'Resources' });
   if (learner) nav.push({ href: '/career', label: 'Career', icon: 'award', group: 'Grow' });
   if (hasPerm(ctx, 'talent:discover')) nav.push({ href: '/talent', label: 'Talent', icon: 'users', group: 'Program' });

@@ -91,3 +91,52 @@ export async function screenshotOffTopic(bytes: Buffer, mime: string, what: stri
     return j.ok === false ? `This screenshot does not look like your work for this step. ${String(j.feedback || '').slice(0, 200)}`.trim() : null;
   } catch { return null; }
 }
+
+/* ---------- does the link open for everyone? ---------- */
+
+const LOGIN_HOSTS = ['accounts.google.com', 'login.microsoftonline.com', 'login.live.com', 'login.windows.net'];
+const PRIVATE_TEXT = /You need access|Request access|ServiceLogin|Sign in to continue|You need permission|This item might not exist or is no longer available/i;
+
+/** How to make a link viewable by anyone, for the site it is on. */
+export function shareHelp(raw: string): string {
+  let host = ''; try { host = new URL(raw).hostname.replace(/^www\./, ''); } catch { /* keep '' */ }
+  if (/google\.com$/.test(host)) return 'In Google Drive or Docs: Share → General access → “Anyone with the link” → Viewer, then copy the link again.';
+  if (/(onedrive\.live\.com|1drv\.ms|sharepoint\.com|office\.com|live\.com)$/.test(host)) return 'In OneDrive or SharePoint: Share → change to “Anyone with the link can view”, then copy the link again. If your institution blocks this, upload the file to Google Drive or GitHub instead.';
+  if (/github\.com$/.test(host)) return 'Make the repository public (Settings → General → Danger Zone → Change visibility → Public), or use a public repository for your proof.';
+  if (/powerbi\.com$/.test(host)) return 'Power BI links need a sign-in. Export the report to PDF and share it from Google Drive, or record a short walkthrough video (Loom or YouTube “Unlisted”).';
+  if (/databricks/.test(host)) return 'Databricks workspaces need a sign-in. Export the notebook (File → Export → HTML or .ipynb) and share it from GitHub or Google Drive.';
+  if (/kaggle\.com$/.test(host)) return 'On Kaggle, open the notebook → Share → Public.';
+  return 'Change the sharing setting to “anyone with the link can view”, then copy the link again.';
+}
+
+/**
+ * Does the link open without signing in? Follows up to 5 redirects itself, only over https and only to the allowed
+ * work sites (or their sign-in pages, which mean "private"). Returns why it is private, or null when it opens or when
+ * the check cannot tell (network error, timeout, server error) — a flaky network never blocks a learner.
+ * `fetchImpl` is injectable for tests. Off in tests unless PROOF_LINK_CHECK=on; PROOF_LINK_CHECK=off disables it.
+ */
+export async function linkPrivateProblem(raw: string, fetchImpl: typeof fetch = fetch): Promise<string | null> {
+  if (process.env.PROOF_LINK_CHECK === 'off' || (process.env.NODE_ENV === 'test' && process.env.PROOF_LINK_CHECK !== 'on' && fetchImpl === fetch)) return null;
+  const isPrivate = () => `Only you can open this link, so reviewers and other learners see “Request access”. ${shareHelp(raw)}`;
+  let url = raw;
+  try {
+    for (let hop = 0; hop < 6; hop++) {
+      const u = new URL(url);
+      const host = u.hostname.toLowerCase();
+      if (u.protocol !== 'https:') return null;
+      if (LOGIN_HOSTS.some(h => host === h) || /\/login\b|\/ServiceLogin|\/signin/i.test(u.pathname)) return isPrivate();
+      if (!WORK_HOSTS.some(d => hostIs(host.replace(/^www\./, ''), d))) return null; // never follow a link off the allowed sites
+      const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 8000);
+      let res: Response;
+      try { res = await fetchImpl(url, { redirect: 'manual', signal: ctl.signal, headers: { 'user-agent': 'Mozilla/5.0 (compatible; LinkCheck/1.0)', accept: 'text/html,*/*' } }); }
+      finally { clearTimeout(timer); }
+      if (res.status >= 300 && res.status < 400) { const loc = res.headers.get('location'); if (!loc) return null; url = new URL(loc, url).toString(); continue; }
+      if (res.status === 401 || res.status === 403) return isPrivate();
+      if (res.status === 404) return `This link does not open (page not found). It may be private or mistyped. ${shareHelp(raw)}`;
+      if (res.status >= 500 || res.status !== 200) return null;
+      const body = (await res.text()).slice(0, 200_000);
+      return PRIVATE_TEXT.test(body) ? isPrivate() : null;
+    }
+    return null;
+  } catch { return null; }
+}

@@ -14,7 +14,7 @@ import { personaOf } from './profile';
 import { createHash } from 'crypto';
 import { readTable, validateDataset, DatasetError, type DatasetReport, type DatasetSchema } from './daDomains/datasetCheck';
 import { checkAll, checkAnswer, judgeAnswers } from './answerQuality';
-import { proofLinkProblem, linkUsedByOthers, reusedShot, screenshotOffTopic } from './proofRelevance';
+import { proofLinkProblem, linkUsedByOthers, linkPrivateProblem, reusedShot, screenshotOffTopic } from './proofRelevance';
 import { fileBytes } from './files';
 import { doText, validateStep, stepPoints, stepsFinished, type GuidedStep, type StepState } from './guidedSteps';
 import { DAY_XP, dayStepsFrom, finished, levelComplete, moveOnMessage } from './levelFlowRules';
@@ -233,7 +233,7 @@ export async function submitProof(ctx: Ctx, code: string, p: { evidenceUrl: stri
   const evidence = safePublicUrl(p.evidenceUrl || ''); if (!evidence) errors.evidenceUrl = 'Use a public https link (Google Docs, Notion, GitHub…).';
   const demo = p.demoUrl ? safePublicUrl(p.demoUrl) : null; if (p.demoUrl && !demo) errors.demoUrl = 'Demo link must be a public https URL.';
   // Irrelevant links are rejected straight away: not a place work is kept, a home page, or someone else's proof.
-  if (evidence) { const why = proofLinkProblem(evidence); if (why) errors.evidenceUrl = why; else if (await linkUsedByOthers(ctx, evidence)) errors.evidenceUrl = 'Another learner already handed in this link. Link to your own work.'; }
+  if (evidence) { const why = proofLinkProblem(evidence); if (why) errors.evidenceUrl = why; else if (await linkUsedByOthers(ctx, evidence)) errors.evidenceUrl = 'Another learner already handed in this link. Link to your own work.'; else { const priv = await linkPrivateProblem(evidence); if (priv) errors.evidenceUrl = priv; } }
   if (demo) { const why = proofLinkProblem(demo); if (why) errors.demoUrl = why; }
   const refl = checkAnswer(p.reflection, { topic: 'what you did, what surprised you, and what you learned', depth: 'detail' });
   if (!refl.ok) errors.reflection = refl.reason!;

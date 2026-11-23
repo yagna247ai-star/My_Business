@@ -580,6 +580,46 @@ describe('Showcase (opt-in, approved work only)', () => {
     await expectErr(unpublish(reviewer, p.id), 403);
     await expectErr(publish(otherLearner, { submissionId: ok.id, title: 'Stolen work', description: 'Trying to publish another learner submission from another tenant.' }), 404);
   });
+  it('moderators feature, hide with a reason, show again and remove; members report once; learners cannot moderate', async () => {
+    const { publish, listShowcase, unpublish, moderate, report, adminShowcase } = await import('@/lib/domain/showcase');
+    await prisma.project.deleteMany({ where: { userId: learner.userId } });
+    const ok = await prisma.submission.findFirstOrThrow({ where: { userId: learner.userId, state: 'approved' } });
+    const p = await publish(learner, { submissionId: ok.id, title: 'Clinic reminders', description: 'Bilingual appointment reminders drafted by AI and checked by staff before sending.' });
+    // Learners and reviewers cannot moderate or open the admin list.
+    await expectErr(moderate(learner, p.id, 'feature'), 403);
+    await expectErr(adminShowcase(reviewer), 403);
+    // A member reports it once; the author cannot report their own project.
+    await report(mentor, p.id, 'The link asks for access when I open it.');
+    await expectErr(report(mentor, p.id, 'Reporting the same project again.'), 409);
+    await expectErr(report(learner, p.id, 'My own project should not be reportable.'), 400);
+    const before = (await adminShowcase(tenantAdmin)).find(x => x.id === p.id)!;
+    expect(before.openReports).toHaveLength(1);
+    // Feature puts it first; hide needs a reason, hides it from others, closes reports, and tells the author why.
+    await moderate(tenantAdmin, p.id, 'feature');
+    expect((await listShowcase(reviewer))[0]).toMatchObject({ id: p.id, featured: true });
+    await expectErr(moderate(tenantAdmin, p.id, 'hide', ''), 400);
+    await moderate(tenantAdmin, p.id, 'hide', 'The link asks for access. Share it as Anyone with the link.');
+    expect((await listShowcase(reviewer)).some(x => x.id === p.id)).toBe(false);
+    expect((await listShowcase(learner)).find(x => x.id === p.id)).toMatchObject({ hidden: true, hiddenNote: expect.stringMatching(/Anyone with the link/) });
+    expect((await adminShowcase(pm)).find(x => x.id === p.id)!.openReports).toHaveLength(0);
+    expect(await prisma.notification.findFirst({ where: { userId: learner.userId, template: 'showcase_hidden' } })).toBeTruthy();
+    await moderate(tenantAdmin, p.id, 'show');
+    expect((await listShowcase(reviewer)).some(x => x.id === p.id)).toBe(true);
+    // A moderator removes with a reason (the author is told); every step is audited.
+    await expectErr(unpublish(mentor, p.id), 400);
+    await unpublish(mentor, p.id, 'Not the learner’s own work: copied from a public tutorial.');
+    expect(await prisma.project.findUnique({ where: { id: p.id } })).toBeNull();
+    expect(await prisma.notification.findFirst({ where: { userId: learner.userId, template: 'showcase_removed' } })).toBeTruthy();
+    const actions = (await prisma.auditLog.findMany({ where: { resourceId: p.id }, select: { action: true } })).map(a => a.action);
+    expect(actions).toEqual(expect.arrayContaining(['showcase.reported', 'showcase.feature', 'showcase.hide', 'showcase.show', 'showcase.removed_by_moderator']));
+  });
+  it('the author removes their own project without a reason', async () => {
+    const { publish, unpublish } = await import('@/lib/domain/showcase');
+    const ok = await prisma.submission.findFirstOrThrow({ where: { userId: learner.userId, state: 'approved' } });
+    const p = await publish(learner, { submissionId: ok.id, title: 'Clinic reminders', description: 'Bilingual appointment reminders drafted by AI and checked by staff before sending.' });
+    await unpublish(learner, p.id);
+    expect(await prisma.project.findUnique({ where: { id: p.id } })).toBeNull();
+  });
   it('requires guardian consent for minors', async () => {
     const { publish } = await import('@/lib/domain/showcase');
     await prisma.userSetting.update({ where: { tenantId_userId: { tenantId: learner.tenantId, userId: learner.userId } }, data: { ageBand: 'minor', guardianConsent: 'pending' } });
