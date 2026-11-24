@@ -1,7 +1,7 @@
 /**
  * Small, safe markdown reader for course day content (docs/data-analytics-journey/days/*.md).
  * Supports: headings (#, ##, ###), paragraphs, bullet and numbered lists, tables, code fences,
- * block quotes, and inline **bold** and `code`. It produces plain data; the page renders it as
+ * block quotes, images on their own line (`![caption](/help/img/x.jpg)`, own-site paths only), and inline **bold** and `code`. It produces plain data; the page renders it as
  * React elements, so no raw HTML from content is ever inserted.
  */
 
@@ -12,7 +12,9 @@ export type Block =
   | { type: 'ul'; items: string[] }
   | { type: 'ol'; items: string[] }
   | { type: 'table'; header: string[]; rows: string[][] }
-  | { type: 'code'; text: string };
+  | { type: 'code'; text: string }
+  /** `![caption](/path.png)` alone on a line. Only images served by this site (a path starting with /). */
+  | { type: 'img'; src: string; alt: string };
 
 const cells = (line: string) => line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
 
@@ -37,6 +39,9 @@ export function parseMarkdown(md: string): Block[] {
       continue;
     }
     if (t === '') { flush(); i++; continue; }
+
+    const img = /^!\[([^\]]*)\]\((\/[A-Za-z0-9/_.-]+\.(?:png|jpe?g|webp|gif|svg))\)$/.exec(t);
+    if (img) { flush(); out.push({ type: 'img', alt: img[1], src: img[2] }); i++; continue; }
 
     const h = /^(#{1,3})\s+(.*)$/.exec(t);
     if (h) { flush(); out.push({ type: 'h', level: h[1].length as 1 | 2 | 3, text: h[2] }); i++; continue; }

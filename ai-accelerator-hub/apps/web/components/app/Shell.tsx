@@ -1,4 +1,5 @@
 'use client';
+import { HelpButton } from '@/components/help/HelpButton';
 import Link from 'next/link';
 import { Crown } from '@/components/app/Crown';
 import { usePathname, useRouter } from 'next/navigation';
@@ -114,6 +115,7 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
           <div className="top-right">
             {sv && streak && <Link href="/dashboard#streak" className={`pill pill-streak ${sv.cls}`} title={`Streak: ${streak.current} (${streak.status})`}><sv.I size={15} aria-hidden="true" /><span><b>{streak.current}</b><span className="days-word"> {sv.w}</span></span></Link>}
             {typeof xp === 'number' && <Link href="/achievements" className="pill pill-rank" title={t('Total XP')}>{xp.toLocaleString('en-IN')} XP</Link>}
+            <HelpButton />
             <button className="icon-btn" type="button" onClick={toggleTheme} aria-label={t('Theme: {a}. Switch to {b}', { a: t(THEME_LABEL[theme]), b: t(THEME_LABEL[NEXT_THEME[theme]]) })} title={`Theme: ${THEME_LABEL[theme]} (click for ${THEME_LABEL[NEXT_THEME[theme]]})`}>{theme === 'dark' ? <Moon size={18} /> : theme === 'sln' ? <Palette size={18} /> : <Sun size={18} />}</button>
             <div className="user-wrap" ref={bellRef}>
               <button className="icon-btn" type="button" aria-haspopup="true" aria-expanded={notifOpen} aria-label={unread ? t('Notifications, {n} unread', { n: unread }) : t('Notifications')} onClick={openNotifs}><Bell size={18} />{unread > 0 && <span className="count">{unread > 9 ? '9+' : unread}</span>}</button>

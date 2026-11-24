@@ -24,6 +24,13 @@ export function Render({ block }: { block: Block }) {
         </table>
       </div>
     );
+    case 'img': return (
+      <figure style={{ margin: '14px 0' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- own-site screenshots, sized by CSS */}
+        <img src={block.src} alt={block.alt} loading="lazy" style={{ width: '100%', height: 'auto', borderRadius: 12, border: '1px solid var(--border)', boxShadow: '0 6px 24px rgba(10,15,30,.08)' }} />
+        {block.alt && <figcaption className="muted small" style={{ marginTop: 6, textAlign: 'center' }}><Tv v={block.alt} /></figcaption>}
+      </figure>
+    );
     case 'code': return <pre className="mono" style={{ margin: '12px 0', padding: 14, borderRadius: 12, background: 'var(--surface-3)', overflowX: 'auto', fontSize: 13, lineHeight: 1.5 }}><code>{block.text}</code></pre>;
   }
 }
