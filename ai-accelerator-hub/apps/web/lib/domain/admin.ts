@@ -40,12 +40,12 @@ export async function addSession(ctx: Ctx, cohortId: string, s: { title: string;
 
 export async function listMembers(ctx: Ctx) {
   if (!hasPerm(ctx, 'members:read')) throw forbidden();
-  const ms = await prisma.membership.findMany({ where: { tenantId: ctx.tenantId }, include: { user: { select: { id: true, name: true, email: true, createdAt: true } }, role: true }, orderBy: { createdAt: 'asc' } });
+  const ms = await prisma.membership.findMany({ where: { tenantId: ctx.tenantId }, include: { user: { select: { id: true, name: true, email: true, area: true, createdAt: true } }, role: true }, orderBy: { createdAt: 'asc' } });
   const settings = await prisma.userSetting.findMany({ where: { tenantId: ctx.tenantId }, select: { userId: true, ageBand: true, guardianConsent: true } });
   const st = new Map(settings.map(s => [s.userId, s]));
   const enr = await prisma.enrollment.findMany({ where: { tenantId: ctx.tenantId, state: 'active' }, select: { userId: true, journeyId: true, journey: { select: { title: true } } } });
   const journeyOf = new Map(enr.map(e => [e.userId, { id: e.journeyId, title: e.journey.title }]));
-  return ms.map(m => ({ userId: m.userId, name: m.user.name, email: m.user.email, role: m.role.code, roleLabel: ROLE_LABEL[m.role.code as Role] || m.role.code, status: m.status, cohortId: m.cohortId, joinedAt: m.joinedAt, minor: (st.get(m.userId)?.ageBand || 'adult') !== 'adult', guardianConsent: st.get(m.userId)?.guardianConsent || 'not_required', journey: journeyOf.get(m.userId) ?? null }));
+  return ms.map(m => ({ userId: m.userId, name: m.user.name, email: m.user.email, area: m.user.area, role: m.role.code, roleLabel: ROLE_LABEL[m.role.code as Role] || m.role.code, status: m.status, cohortId: m.cohortId, joinedAt: m.joinedAt, minor: (st.get(m.userId)?.ageBand || 'adult') !== 'adult', guardianConsent: st.get(m.userId)?.guardianConsent || 'not_required', journey: journeyOf.get(m.userId) ?? null }));
 }
 
 export async function changeRole(ctx: Ctx, userId: string, role: string) {

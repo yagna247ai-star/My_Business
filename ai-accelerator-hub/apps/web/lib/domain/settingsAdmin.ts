@@ -166,9 +166,9 @@ export async function createPerson(ctx: Ctx, input: { name: string; email: strin
   });
 }
 
-export async function updatePerson(ctx: Ctx, userId: string, input: { name?: string; role?: string; status?: 'active' | 'suspended'; cohortId?: string | null }) {
+export async function updatePerson(ctx: Ctx, userId: string, input: { name?: string; role?: string; status?: 'active' | 'suspended'; cohortId?: string | null; area?: string }) {
   need(hasPerm(ctx, 'members:manage'));
-  const m = await prisma.membership.findUnique({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId } }, include: { role: true, user: { select: { name: true } } } });
+  const m = await prisma.membership.findUnique({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId } }, include: { role: true, user: { select: { name: true, area: true } } } });
   if (!m) throw notFound('Member not found in this institution.');
   const problem = memberActionProblem({ actorId: ctx.userId, targetId: userId, targetRole: m.role.code });
   if (problem) throw forbidden(problem);
@@ -186,7 +186,9 @@ export async function updatePerson(ctx: Ctx, userId: string, input: { name?: str
     if (Object.keys(data).length) await tx.membership.update({ where: { id: m.id }, data });
     if (data.cohortId !== undefined) await tx.enrollment.updateMany({ where: { tenantId: ctx.tenantId, userId, state: 'active' }, data: { cohortId: data.cohortId } });
     if (name && name !== m.user.name) await tx.user.update({ where: { id: userId }, data: { name: name.slice(0, 100) } });
-    await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'member.updated', resourceType: 'Membership', resourceId: m.id, before: { role: m.role.code, status: m.status, cohortId: m.cohortId, name: m.user.name }, after: { role: newRole, status: data.status, cohortId: data.cohortId, name } });
+    const area = input.area !== undefined && input.area !== m.user.area ? input.area : undefined; // already validated by areaSchema
+    if (area) await tx.user.update({ where: { id: userId }, data: { area } });
+    await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'member.updated', resourceType: 'Membership', resourceId: m.id, before: { role: m.role.code, status: m.status, cohortId: m.cohortId, name: m.user.name, area: m.user.area }, after: { role: newRole, status: data.status, cohortId: data.cohortId, name, area } });
     if (newRole) await notify(tx, ctx.tenantId, userId, 'role_changed', { title: `Your role is now ${ROLE_LABEL[newRole as Role]}`, tone: 'info' });
   });
   return { ok: true as const };

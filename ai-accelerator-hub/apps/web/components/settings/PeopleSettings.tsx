@@ -1,7 +1,7 @@
 'use client';
 /**
  * The one People screen (Settings → People). /admin/people redirects here, so every people action lives in one
- * place: view profile, nudge, add, edit (name, role, cohort, status, and journey for a Super Admin), remove,
+ * place: view profile, nudge, add, edit (name, area, role, cohort, status, and journey for a Super Admin), remove,
  * and for learners under 18 guardian consent and "turned 18". `canManage` false = read-only staff (view + nudge).
  */
 import Link from 'next/link';
@@ -9,12 +9,14 @@ import { useMemo, useState } from 'react';
 import { Eye, KeyRound, Pencil, Send, UserPlus } from 'lucide-react';
 import { api } from '@/lib/client/api';
 import { ConfirmDelete, Field, Modal, useRun } from './ui';
+import { AreaPicker } from './AreaPicker';
+import { DEFAULT_AREA } from '@/lib/domain/areas';
 
 type Risk = { status: string; message: string; level: string; activitiesDone: number; lastActive: string | null; needsAttention: boolean };
-type Row = { userId: string; name: string | null; email: string; role: string; roleLabel: string; status: string; cohortId: string | null; joinedAt: string; journey: { id: string; title: string } | null; minor?: boolean; guardianConsent?: string; risk?: Risk };
+type Row = { userId: string; name: string | null; email: string; area?: string | null; role: string; roleLabel: string; status: string; cohortId: string | null; joinedAt: string; journey: { id: string; title: string } | null; minor?: boolean; guardianConsent?: string; risk?: Risk };
 type Opt = { code: string; label: string };
 type Add = { name: string; email: string; role: string; password: string; cohortId: string };
-type Edit = { userId: string; name: string; role: string; status: string; cohortId: string; journeyId: string; originalJourneyId: string };
+type Edit = { userId: string; name: string; area: string; role: string; status: string; cohortId: string; journeyId: string; originalJourneyId: string };
 
 /** A readable starting password that always meets the 10+ characters / letter / number rule. */
 function makePassword() {
@@ -78,7 +80,7 @@ export function PeopleSettings({ rows, roles, cohorts, meId, canManage, journeys
           <Link className="btn btn-soft btn-sm" href={`/settings/people/${x.userId}`} title="View profile" aria-label={`View profile of ${who(x)}`}><Eye size={14} /></Link>
           {x.risk && <button className="btn btn-soft btn-sm" type="button" title="Send a nudge" aria-label={`Nudge ${who(x)}`} onClick={() => setNudging({ row: x, text: `Hi ${x.name?.split(' ')[0] || ''}, we miss you! Even 15 minutes on your next activity keeps your momentum. Need help? Ask your mentor or the coach.` })}><Send size={14} /></button>}
           {canManage && !locked(x) && <>
-            <button className="btn btn-outline btn-sm" type="button" title="Edit" aria-label={`Edit ${who(x)}`} onClick={() => setEdit({ userId: x.userId, name: x.name ?? '', role: x.role, status: x.status, cohortId: x.cohortId ?? '', journeyId: x.journey?.id ?? '', originalJourneyId: x.journey?.id ?? '' })}><Pencil size={14} /></button>
+            <button className="btn btn-outline btn-sm" type="button" title="Edit" aria-label={`Edit ${who(x)}`} onClick={() => setEdit({ userId: x.userId, name: x.name ?? '', area: x.area ?? DEFAULT_AREA, role: x.role, status: x.status, cohortId: x.cohortId ?? '', journeyId: x.journey?.id ?? '', originalJourneyId: x.journey?.id ?? '' })}><Pencil size={14} /></button>
             <ConfirmDelete label={`Remove ${who(x)}`} confirmText="Remove" disabled={r.busy} onConfirm={() => r.run(() => api(`/api/v1/settings/people/${x.userId}`, { method: 'DELETE' }), `${who(x)} removed from the institute. Their account still exists.`)} />
           </>}
         </div></td>
@@ -136,13 +138,14 @@ export function PeopleSettings({ rows, roles, cohorts, meId, canManage, journeys
       <form className="stack gap-16" onSubmit={async e => {
         e.preventDefault();
         const ok = await r.run(async () => {
-          await api(`/api/v1/settings/people/${edit.userId}`, { method: 'PATCH', body: { name: edit.name, role: edit.role, status: edit.status as 'active' | 'suspended', cohortId: edit.cohortId || null } });
+          await api(`/api/v1/settings/people/${edit.userId}`, { method: 'PATCH', body: { name: edit.name, area: edit.area, role: edit.role, status: edit.status as 'active' | 'suspended', cohortId: edit.cohortId || null } });
           if (journeys && edit.journeyId && edit.journeyId !== edit.originalJourneyId) await api(`/api/v1/admin/members/${edit.userId}`, { method: 'PATCH', body: { journeyId: edit.journeyId } });
         }, `${edit.name} updated.`);
         if (ok) setEdit(null);
       }}>
         {r.err && <p className="callout warn small" role="alert">{r.err}</p>}
         <Field label="Full name" error={r.fieldErrs.name}><input className="input" required minLength={2} maxLength={100} value={edit.name} onChange={e => setEdit({ ...edit, name: e.target.value })} /></Field>
+        <Field label="Area" hint="District or city in Telangana or Andhra Pradesh. Used for area crowns and ranks."><AreaPicker value={edit.area} label="Area" onChange={v => setEdit({ ...edit, area: v })} /></Field>
         <Field label="Role"><select className="select" value={edit.role} onChange={e => setEdit({ ...edit, role: e.target.value })}>{roles.map(o => <option key={o.code} value={o.code}>{o.label}</option>)}</select></Field>
         <Field label="Cohort"><select className="select" value={edit.cohortId} onChange={e => setEdit({ ...edit, cohortId: e.target.value })}><option value="">No cohort</option>{cohorts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
         {journeys && <Field label="Journey" hint="Super Admin only. Their progress on the old journey is kept and comes back if they are moved back."><select className="select" value={edit.journeyId} onChange={e => setEdit({ ...edit, journeyId: e.target.value })}>{!edit.originalJourneyId && <option value="">Not enrolled</option>}{edit.originalJourneyId && !journeys.some(j => j.id === edit.originalJourneyId) && <option value={edit.originalJourneyId}>Current journey (unpublished)</option>}{journeys.map(j => <option key={j.id} value={j.id}>{j.title}</option>)}</select></Field>}

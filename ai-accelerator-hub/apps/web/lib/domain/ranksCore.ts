@@ -5,6 +5,8 @@
  * - Privacy matches the other leaderboards: private learners and minors show as "Anonymous learner" to others,
  *   and other learners' ids never leave the server.
  */
+import { areaState } from './areas';
+
 export const MIN_CITY_MEMBERS = 10;
 
 const CITY_STATE: Record<string, string> = {
@@ -17,7 +19,8 @@ const CITY_STATE: Record<string, string> = {
 };
 
 export function stateOf(city: string | null | undefined): string | null {
-  return city ? CITY_STATE[city.trim().toLowerCase()] ?? null : null;
+  // The area list (Telangana, Andhra Pradesh) first; older free-text cities keep their old mapping.
+  return city ? areaState(city) ?? CITY_STATE[city.trim().toLowerCase()] ?? null : null;
 }
 
 export type Scope = { kind: 'city' | 'state' | 'all'; name: string };

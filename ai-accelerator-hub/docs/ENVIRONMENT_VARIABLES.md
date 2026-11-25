@@ -68,6 +68,8 @@ Online payment is off unless the active gateway's keys are set; checkout then sa
 | Variable | Need | What it does |
 |---|---|---|
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Feature | Enables "Sign in with GitHub". |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Required in prod for Forgot password | Outgoing mail for password-reset links ([FORGOT_PASSWORD_SPEC.md](./FORGOT_PASSWORD_SPEC.md)). Gmail: `smtp.gmail.com`, port `465`, the full Gmail address as user, and a 16-character **App Password** (Google Account → Security → 2-Step Verification → App passwords) as `SMTP_PASS`. Without it: in development the link is printed to the server log; in production no email is sent and the error is logged. |
+| `MAIL_FROM` | Optional | Sender shown on emails, e.g. `AI Accelerator Hub <you@gmail.com>`. Defaults to `SMTP_USER`. Gmail only allows the account's own address or a verified alias. |
 | `REDIS_URL` | Feature | Shared cache and rate limits. Without it, an in-memory fallback is used (not safe with several server instances). |
 | `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, `NEO4J_DATABASE` | Feature | Graph features. Off without `NEO4J_URI`. |
 

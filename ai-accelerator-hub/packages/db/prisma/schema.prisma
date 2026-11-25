@@ -69,7 +69,7 @@ model User {
   passwordHash      String? // for credentials auth (bcrypt)
   name              String?
   avatarUrl         String?
-  area              String? // city or area, for area rankings and crowns (e.g. Hyderabad)
+  area              String?  @default("Bhagyanagar") // one of lib/domain/areas.ts (docs/AREA_PICKER_SPEC.md); used for area crowns and ranks
   githubId          String?  @unique
   githubUsername    String?
   globalRole        String? // super_admin (platform-wide)
@@ -78,6 +78,7 @@ model User {
   updatedAt         DateTime @updatedAt
 
   memberships       Membership[]
+  passwordResets    PasswordResetToken[]
   enrollments       Enrollment[]
   progress          Progress[]
   submissions       Submission[]
@@ -1206,6 +1207,20 @@ model NotificationPreference {
 
   @@unique([userId, channel, event])
   @@map("notification_preferences")
+}
+
+// Forgot password (docs/FORGOT_PASSWORD_SPEC.md): only the SHA-256 hash of the emailed token is stored.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("password_reset_tokens")
 }
 
 // ── Audit & Idempotency ──

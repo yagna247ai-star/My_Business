@@ -32,14 +32,14 @@ test('whole journey: top 3 crowns in each area, global ranking and bracket', asy
   await signIn(page);
   await page.goto('/leaderboard/areas');
   await expect(page.getByRole('heading', { name: 'Area standings' })).toBeVisible({ timeout: 60_000 });
-  for (const area of ['Hyderabad', 'Danda', 'Bengaluru', 'Chennai', 'Pune']) {
+  for (const area of ['Bhagyanagar', 'Warangal', 'Vijayawada', 'Visakhapatnam', 'Tirupati']) {
     const card = page.getByRole('region', { name: `${area} top 3` });
     await expect(card).toBeVisible();
     expect(await card.locator('li').count()).toBeLessThanOrEqual(3);
   }
-  // Hyderabad has 5 ranked learners (4 demo + the main learner when they have XP); only 3 get crowns.
-  await expect(page.getByRole('region', { name: 'Hyderabad top 3' }).locator('li')).toHaveCount(3);
-  await expect(page.getByRole('region', { name: 'Hyderabad top 3' }).getByText('👑 1st')).toBeVisible();
+  // Bhagyanagar has 5 ranked learners (4 demo + the main learner when they have XP); only 3 get crowns.
+  await expect(page.getByRole('region', { name: 'Bhagyanagar top 3' }).locator('li')).toHaveCount(3);
+  await expect(page.getByRole('region', { name: 'Bhagyanagar top 3' }).getByText('👑 1st')).toBeVisible();
   await expect(page.getByRole('table', { name: 'Global ranking by points' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Final fight bracket' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Round 1' })).toBeVisible();
@@ -51,11 +51,11 @@ test('one level: crowns are per level', async ({ page }) => {
   await signIn(page);
   await page.goto('/leaderboard/areas?level=DA02_SQL');
   await expect(page.getByText(/Level 2 — /).first()).toBeVisible({ timeout: 60_000 });
-  // Lakshmi (Danda) approved 2 levels, so she is ranked at level 2 but not at level 3.
-  await expect(page.getByRole('region', { name: 'Danda top 3' }).getByText('Lakshmi Bai')).toBeVisible();
+  // Lakshmi (Warangal) approved 2 levels, so she is ranked at level 2 but not at level 3.
+  await expect(page.getByRole('region', { name: 'Warangal top 3' }).getByText('Lakshmi Bai')).toBeVisible();
   await shot(page, '02-area-crowns-level-2.png');
   await page.goto('/leaderboard/areas?level=DA03_PYTHON_FUNDAMENTALS');
-  await expect(page.getByRole('region', { name: 'Danda top 3' }).getByText('Lakshmi Bai')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Warangal top 3' }).getByText('Lakshmi Bai')).toHaveCount(0);
   await shot(page, '03-area-crowns-level-3.png');
 });
 
@@ -63,16 +63,16 @@ test('a learner sets their area in settings', async ({ page }) => {
   await signIn(page);
   await page.goto('/settings/profile');
   const box = page.getByLabel('My area');
-  await expect(box).toHaveValue('Hyderabad', { timeout: 60_000 });
-  await box.fill('Danda');
+  await expect(box).toHaveValue('Bhagyanagar', { timeout: 60_000 });
+  await box.fill('Warangal');
   const saved = page.waitForResponse(r => r.url().includes('/api/v1/settings') && r.request().method() === 'PATCH');
   await page.getByRole('button', { name: 'Save area' }).click();
   expect((await saved).status()).toBe(200);
   await page.reload();
-  await expect(page.getByLabel('My area')).toHaveValue('Danda');
+  await expect(page.getByLabel('My area')).toHaveValue('Warangal');
   await shot(page, '04-settings-area-saved.png');
   // put it back for the other demos
-  await page.getByLabel('My area').fill('Hyderabad');
+  await page.getByLabel('My area').fill('Bhagyanagar');
   const back = page.waitForResponse(r => r.url().includes('/api/v1/settings') && r.request().method() === 'PATCH');
   await page.getByRole('button', { name: 'Save area' }).click();
   expect((await back).status()).toBe(200);

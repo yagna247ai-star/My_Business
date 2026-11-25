@@ -17,6 +17,8 @@ const failures = new Map<string, { n: number; until: number }>();
 const DUMMY_HASH = bcrypt.hashSync('timing-equaliser-not-a-password', 10);
 const LOCK_MS = 15 * 60 * 1000, MAX_FAILS = 5;
 export const _resetLoginFailures = () => failures.clear();
+/** After a successful password reset the owner proved they hold the inbox, so lift any sign-in lock. */
+export const clearLoginFailures = (email: string) => { failures.delete(email.trim().toLowerCase()); };
 function locked(email: string) { const f = failures.get(email); return !!f && f.n >= MAX_FAILS && f.until > Date.now(); }
 function fail(email: string) { const f = failures.get(email); const now = Date.now(); if (!f || f.until < now) failures.set(email, { n: 1, until: now + LOCK_MS }); else f.n += 1; }
 

@@ -9,6 +9,7 @@ import type { Ctx } from '@/lib/server/context';
 import { badRequest, conflict } from '@/lib/server/errors';
 import { audit, notify } from '@/lib/server/audit';
 import { defaultJourney, enrollInJourney, registrationJourneys } from './journeyAccess';
+import { areaSchema, DEFAULT_AREA } from './areas';
 
 export const registerSchema = z.object({
   name: z.string({ error: 'Enter your name.' }).trim().min(2, 'Enter your full name.').max(100, 'Keep your name under 100 characters.'),
@@ -65,7 +66,7 @@ export async function register(input: z.infer<typeof registerSchema>) {
   const hash = await bcrypt.hash(input.password, 11);
 
   return prisma.$transaction(async tx => {
-    const user = await tx.user.create({ data: { email: input.email, name: input.name, passwordHash: hash, emailVerified: false } });
+    const user = await tx.user.create({ data: { email: input.email, name: input.name, passwordHash: hash, emailVerified: false, area: DEFAULT_AREA } });
     await tx.membership.create({ data: { tenantId, userId: user.id, roleId: learner.id, cohortId, status: 'active' } });
     await tx.userSetting.create({ data: { tenantId, userId: user.id, ageBand: minor ? 'minor' : 'adult', guardianEmail: minor ? input.guardianEmail || null : null, guardianConsent: minor ? 'pending' : 'not_required', leaderboardVisibility: minor ? 'private' : 'cohort', globalOptIn: false } });
     await tx.streak.create({ data: { tenantId, userId: user.id } });
@@ -85,7 +86,7 @@ export async function getSettings(ctx: Ctx) {
   return prisma.userSetting.upsert({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.userId } }, update: {}, create: { tenantId: ctx.tenantId, userId: ctx.userId } });
 }
 
-export const settingsSchema = z.object({ leaderboardVisibility: z.enum(['cohort', 'private']).optional(), globalOptIn: z.boolean().optional(), quietHours: z.boolean().optional(), preferredLanguage: z.enum(['en', 'hi', 'te', 'ta', 'kn', 'ml']).optional(), area: z.string().trim().max(60).regex(/^[\p{L}\p{M} .'-]*$/u, 'Use letters only for your area.').optional() });
+export const settingsSchema = z.object({ leaderboardVisibility: z.enum(['cohort', 'private']).optional(), globalOptIn: z.boolean().optional(), quietHours: z.boolean().optional(), preferredLanguage: z.enum(['en', 'hi', 'te', 'ta', 'kn', 'ml']).optional(), area: areaSchema.optional() });
 export async function updateSettings(ctx: Ctx, input: z.infer<typeof settingsSchema>) {
   const cur = await getSettings(ctx);
   if (cur.ageBand === 'minor' && (input.globalOptIn || input.leaderboardVisibility === 'cohort') && cur.guardianConsent !== 'granted') throw badRequest('Your guardian needs to approve this setting first.');
@@ -93,7 +94,7 @@ export async function updateSettings(ctx: Ctx, input: z.infer<typeof settingsSch
   return prisma.$transaction(async tx => {
     const s = await tx.userSetting.update({ where: { id: cur.id }, data: rest });
     if (preferredLanguage) await tx.user.update({ where: { id: ctx.userId }, data: { preferredLanguage } });
-    if (area !== undefined) await tx.user.update({ where: { id: ctx.userId }, data: { area: area || null } });
+    if (area !== undefined) await tx.user.update({ where: { id: ctx.userId }, data: { area } });
     if (input.globalOptIn !== undefined && input.globalOptIn !== cur.globalOptIn) await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: input.globalOptIn ? 'consent.global_granted' : 'consent.global_withdrawn', resourceType: 'UserSetting', resourceId: s.id });
     if (input.leaderboardVisibility && input.leaderboardVisibility !== cur.leaderboardVisibility) await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'privacy.visibility_changed', resourceType: 'UserSetting', resourceId: s.id, after: { v: input.leaderboardVisibility } });
     return s;
