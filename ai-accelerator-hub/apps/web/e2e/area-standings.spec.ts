@@ -30,8 +30,8 @@ const shot = async (page: Page, name: string) => { await page.waitForLoadState('
 
 test('whole journey: top 3 crowns in each area, global ranking and bracket', async ({ page }) => {
   await signIn(page);
-  await page.goto('/leaderboard/areas');
-  await expect(page.getByRole('heading', { name: 'Area standings' })).toBeVisible({ timeout: 60_000 });
+  await page.goto('/ranks?tab=areas');
+  await expect(page.getByRole('heading', { name: 'Ranks', exact: true })).toBeVisible({ timeout: 60_000 });
   for (const area of ['Bhagyanagar', 'Warangal', 'Vijayawada', 'Visakhapatnam', 'Tirupati']) {
     const card = page.getByRole('region', { name: `${area} top 3` });
     await expect(card).toBeVisible();
@@ -49,12 +49,12 @@ test('whole journey: top 3 crowns in each area, global ranking and bracket', asy
 
 test('one level: crowns are per level', async ({ page }) => {
   await signIn(page);
-  await page.goto('/leaderboard/areas?level=DA02_SQL');
+  await page.goto('/ranks?tab=areas&level=DA02_SQL');
   await expect(page.getByText(/Level 2 — /).first()).toBeVisible({ timeout: 60_000 });
   // Lakshmi (Warangal) approved 2 levels, so she is ranked at level 2 but not at level 3.
   await expect(page.getByRole('region', { name: 'Warangal top 3' }).getByText('Lakshmi Bai')).toBeVisible();
   await shot(page, '02-area-crowns-level-2.png');
-  await page.goto('/leaderboard/areas?level=DA03_PYTHON_FUNDAMENTALS');
+  await page.goto('/ranks?tab=areas&level=DA03_PYTHON_FUNDAMENTALS');
   await expect(page.getByRole('region', { name: 'Warangal top 3' }).getByText('Lakshmi Bai')).toHaveCount(0);
   await shot(page, '03-area-crowns-level-3.png');
 });

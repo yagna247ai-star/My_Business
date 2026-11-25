@@ -34,9 +34,10 @@ describe('area rankings (top 3 per area)', () => {
     expect(top.Hyderabad.map(x => x.name)).toEqual(['Asha', 'Ravi', 'Meera']);
     expect(top.Danda.map(x => x.name)).toEqual(['Lata', 'Dev']);
   });
-  it('ties are broken by name, so the result is stable', () => {
-    const tie = [e('1', 'Zed', 'Pune', 50), e('2', 'Amy', 'Pune', 50)];
-    expect(topByArea(tie, 1).Pune[0].name).toBe('Amy');
+  it('ties keep the order the caller ranked them in (docs/RANKS_UNIFIED_SPEC.md: earliest to reach the points first)', () => {
+    const tie = [e('1', 'Zed', 'Pune', 50), e('2', 'Amy', 'Pune', 50)]; // Zed reached 50 first, so the caller put Zed first
+    expect(topByArea(tie, 1).Pune[0].name).toBe('Zed');
+    expect(topByArea([...tie].reverse(), 1).Pune[0].name).toBe('Amy');
   });
   it('hackathon ranking is split by area and has one global order', () => {
     const r = hackathonRanking(entries);

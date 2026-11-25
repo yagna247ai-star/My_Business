@@ -27,20 +27,8 @@ export async function requestPasswordReset(emailRaw: string, ip?: string | null)
   const sent = await prisma.passwordResetToken.count({ where: { userId: user.id, createdAt: { gt: new Date(Date.now() - 3600_000) } } });
   if (overEmailLimit(sent)) { await log('email_limit'); return generic; }
 
-  const { raw, hash } = newResetToken();
-  await prisma.$transaction([
-    // Only the newest link works.
-    prisma.passwordResetToken.updateMany({ where: { userId: user.id, usedAt: null }, data: { usedAt: new Date() } }),
-    prisma.passwordResetToken.create({ data: { userId: user.id, tokenHash: hash, expiresAt: new Date(Date.now() + RESET_TTL_MS) } }),
-  ]);
-  const link = resetLink(appUrl(), raw);
   try {
-    await sendMail({
-      to: user.email,
-      subject: 'Reset your AI Accelerator Hub password',
-      text: `Hi ${user.name || 'there'},\n\nSomeone (hopefully you) asked to reset the password for this email on AI Accelerator Hub.\n\nSet a new password here (the link works once and expires in 30 minutes):\n${link}\n\nIf you did not ask for this, ignore this email. Your password stays the same.\n`,
-      html: `<p>Hi ${escapeHtml(user.name || 'there')},</p><p>Someone (hopefully you) asked to reset the password for this email on AI Accelerator Hub.</p><p><a href="${link}" style="display:inline-block;padding:10px 18px;background:#3878F6;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Set a new password</a></p><p style="color:#666;font-size:13px">The link works once and expires in 30 minutes. If you did not ask for this, ignore this email.</p>`,
-    });
+    await issueResetLink(user, { ttlMs: RESET_TTL_MS, kind: 'reset' });
     await log('sent');
   } catch (e) {
     console.error('[password-reset] email failed', (e as Error).message);
@@ -65,7 +53,7 @@ export async function resetPassword(rawToken: string, password: string, ip?: str
     const c = await tx.passwordResetToken.updateMany({ where: { id: row.id, usedAt: null }, data: { usedAt: now } });
     if (c.count !== 1) return false;
     await tx.passwordResetToken.updateMany({ where: { userId: row.userId, usedAt: null }, data: { usedAt: now } });
-    await tx.user.update({ where: { id: row.userId }, data: { passwordHash: hash, emailVerified: true } });
+    await tx.user.update({ where: { id: row.userId }, data: { passwordHash: hash, emailVerified: true, mustChangePassword: false } });
     const tenantId = await auditTenant(row.userId);
     if (tenantId) await audit(tx, { tenantId, actorUserId: row.userId, action: 'auth.password_reset_completed', resourceType: 'User', resourceId: row.userId, after: { email: row.user.email }, ip: ip ?? null });
     return true;
@@ -78,6 +66,32 @@ export async function resetPassword(rawToken: string, password: string, ip?: str
     text: `Hi ${row.user.name || 'there'},\n\nThe password for your AI Accelerator Hub account was just changed. If this was you, there is nothing to do.\n\nIf it was not you, reset it now at ${appUrl().replace(/\/+$/, '')}/forgot-password and tell your institution admin.\n`,
   }).catch(e => console.error('[password-reset] confirmation email failed', (e as Error).message));
   return { ok: true as const };
+}
+
+/**
+ * Create a single-use link for a user and email it. kind 'reset' (forgot password, 30 min), 'admin' (an admin sent it),
+ * or 'invite' (CSV import / new account, 7 days). Earlier unused links stop working. Throws if the email cannot be sent.
+ */
+export async function issueResetLink(user: { id: string; email: string; name: string | null }, opts: { ttlMs: number; kind: 'reset' | 'admin' | 'invite'; institution?: string }) {
+  const { raw, hash } = newResetToken();
+  await prisma.$transaction([
+    prisma.passwordResetToken.updateMany({ where: { userId: user.id, usedAt: null }, data: { usedAt: new Date() } }),
+    prisma.passwordResetToken.create({ data: { userId: user.id, tokenHash: hash, expiresAt: new Date(Date.now() + opts.ttlMs) } }),
+  ]);
+  const link = resetLink(appUrl(), raw);
+  const hi = escapeHtml(user.name || 'there');
+  const expiry = opts.ttlMs >= 86_400_000 ? `${Math.round(opts.ttlMs / 86_400_000)} days` : `${Math.round(opts.ttlMs / 60_000)} minutes`;
+  const intro = opts.kind === 'invite'
+    ? `You have been added to ${opts.institution ?? 'AI Accelerator Hub'}. Choose a password to sign in.`
+    : opts.kind === 'admin' ? 'An administrator asked us to send you a link to set a new password.'
+    : 'Someone (hopefully you) asked to reset the password for this email on AI Accelerator Hub.';
+  const button = opts.kind === 'invite' ? 'Choose your password' : 'Set a new password';
+  await sendMail({
+    to: user.email,
+    subject: opts.kind === 'invite' ? `You're invited to ${opts.institution ?? 'AI Accelerator Hub'}` : 'Reset your AI Accelerator Hub password',
+    text: `Hi ${user.name || 'there'},\n\n${intro}\n\n${button} here (the link works once and expires in ${expiry}):\n${link}\n\nIf you did not expect this, ignore this email.\n`,
+    html: `<p>Hi ${hi},</p><p>${escapeHtml(intro)}</p><p><a href="${link}" style="display:inline-block;padding:10px 18px;background:#3878F6;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">${button}</a></p><p style="color:#666;font-size:13px">The link works once and expires in ${expiry}. If you did not expect this, ignore this email.</p>`,
+  });
 }
 
 function escapeHtml(s: string) {

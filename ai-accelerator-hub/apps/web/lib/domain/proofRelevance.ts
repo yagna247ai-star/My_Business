@@ -10,6 +10,7 @@
 import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { langchainProvider } from '@/lib/ai/providers/langchain';
+import { classifyResponse, personalDriveView, type LinkStatus } from './linkHealthCore';
 
 /* ---------- links (pure, exported for tests) ---------- */
 
@@ -43,6 +44,7 @@ export function proofLinkProblem(raw: string): string | null {
   const ownSite = ['streamlit.app', 'vercel.app', 'netlify.app', 'github.io', 'notion.site'].some(d => host.endsWith(`.${d}`));
   if (!path && !u.search && !ownSite) return 'This is the site’s home page. Open your own file or project there and copy its link.';
   if (!yt) return 'Link to your walkthrough video itself, not a channel or search page.';
+  if (personalDriveView(raw)) return 'This is your own Drive view, which only you can open. Open the file or folder → Share → General access “Anyone with the link” → Copy link, and paste that link.';
   if (hostIs(host, 'github.com') && path.split('/').filter(Boolean).length < 2) return 'Link to your repository or file on GitHub (github.com/you/project), not a profile or GitHub page.';
   return null;
 }
@@ -95,7 +97,6 @@ export async function screenshotOffTopic(bytes: Buffer, mime: string, what: stri
 /* ---------- does the link open for everyone? ---------- */
 
 const LOGIN_HOSTS = ['accounts.google.com', 'login.microsoftonline.com', 'login.live.com', 'login.windows.net'];
-const PRIVATE_TEXT = /You need access|Request access|ServiceLogin|Sign in to continue|You need permission|This item might not exist or is no longer available/i;
 
 /** How to make a link viewable by anyone, for the site it is on. */
 export function shareHelp(raw: string): string {
@@ -117,26 +118,40 @@ export function shareHelp(raw: string): string {
  */
 export async function linkPrivateProblem(raw: string, fetchImpl: typeof fetch = fetch): Promise<string | null> {
   if (process.env.PROOF_LINK_CHECK === 'off' || (process.env.NODE_ENV === 'test' && process.env.PROOF_LINK_CHECK !== 'on' && fetchImpl === fetch)) return null;
-  const isPrivate = () => `Only you can open this link, so reviewers and other learners see “Request access”. ${shareHelp(raw)}`;
+  const st = await probeLink(raw, fetchImpl);
+  if (st === 'private') return `Only you can open this link, so reviewers and other learners see “Request access”. ${shareHelp(raw)}`;
+  if (st === 'broken') return `This link does not open (page not found). It may be private or mistyped. ${shareHelp(raw)}`;
+  return null; // open, or the site would not say (rate limits, timeouts): never block a learner on that
+}
+
+/**
+ * open | private | broken | unknown for a link, without signing in (docs/SHOWCASE_LINK_HEALTH_SPEC.md).
+ * Follows up to 5 redirects itself, only over https and only to the allowed work sites. "unknown" (429, 5xx,
+ * Google's unusual-traffic or consent pages, timeouts) is retried once after a short pause.
+ */
+export async function probeLink(raw: string, fetchImpl: typeof fetch = fetch, retry = true): Promise<LinkStatus> {
   let url = raw;
   try {
     for (let hop = 0; hop < 6; hop++) {
       const u = new URL(url);
       const host = u.hostname.toLowerCase();
-      if (u.protocol !== 'https:') return null;
-      if (LOGIN_HOSTS.some(h => host === h) || /\/login\b|\/ServiceLogin|\/signin/i.test(u.pathname)) return isPrivate();
-      if (!WORK_HOSTS.some(d => hostIs(host.replace(/^www\./, ''), d))) return null; // never follow a link off the allowed sites
+      if (u.protocol !== 'https:') return 'unknown';
+      if (LOGIN_HOSTS.some(h => host === h) || /\/login\b|\/ServiceLogin|\/signin/i.test(u.pathname)) return 'private';
+      if (!WORK_HOSTS.some(d => hostIs(host.replace(/^www\./, ''), d))) return 'unknown'; // never follow a link off the allowed sites
       const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 8000);
       let res: Response;
-      try { res = await fetchImpl(url, { redirect: 'manual', signal: ctl.signal, headers: { 'user-agent': 'Mozilla/5.0 (compatible; LinkCheck/1.0)', accept: 'text/html,*/*' } }); }
+      try { res = await fetchImpl(url, { redirect: 'manual', signal: ctl.signal, headers: { 'user-agent': 'Mozilla/5.0 (compatible; LinkCheck/1.0)', accept: 'text/html,*/*', 'accept-language': 'en' } }); }
       finally { clearTimeout(timer); }
-      if (res.status >= 300 && res.status < 400) { const loc = res.headers.get('location'); if (!loc) return null; url = new URL(loc, url).toString(); continue; }
-      if (res.status === 401 || res.status === 403) return isPrivate();
-      if (res.status === 404) return `This link does not open (page not found). It may be private or mistyped. ${shareHelp(raw)}`;
-      if (res.status >= 500 || res.status !== 200) return null;
-      const body = (await res.text()).slice(0, 200_000);
-      return PRIVATE_TEXT.test(body) ? isPrivate() : null;
+      const loc = res.headers.get('location');
+      if (res.status >= 300 && res.status < 400 && loc) {
+        const next = new URL(loc, url);
+        if (classifyResponse(res.status, next.toString(), '') === 'private') return 'private';
+        url = next.toString(); continue;
+      }
+      const st = classifyResponse(res.status, loc, res.status === 200 ? (await res.text()).slice(0, 200_000) : '');
+      if (st === 'unknown' && retry) { await new Promise(r => setTimeout(r, 1500)); return probeLink(raw, fetchImpl, false); }
+      return st;
     }
-    return null;
-  } catch { return null; }
+    return 'unknown';
+  } catch { return retry ? probeLink(raw, fetchImpl, false) : 'unknown'; }
 }

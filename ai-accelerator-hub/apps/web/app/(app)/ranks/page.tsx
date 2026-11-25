@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { Trophy, RefreshCw, ArrowUp, ArrowDown } from 'lucide-react';
 import { requireCtx } from '@/lib/server/context';
 import { ranks, type Tab } from '@/lib/domain/ranks';
+import { areaStandings } from '@/lib/domain/standings';
+import { AreaCrowns } from '@/components/ranks/AreaCrowns';
 import { guarded } from '@/lib/server/page';
 import { Crown } from '@/components/app/Crown';
 import { Tr } from '@/components/i18n/Tr';
@@ -24,35 +26,48 @@ function Move({ n }: { n: number }) {
     : <span className="rk-move down" aria-label={`Down ${-n}`}><ArrowDown size={11} aria-hidden="true" />{-n}</span>;
 }
 
-async function Ranks({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+type PageTab = Tab | 'areas';
+
+async function Ranks({ searchParams }: { searchParams: Promise<{ tab?: string; level?: string }> }) {
   const t = await getT();
   const ctx = await requireCtx();
-  const q = (await searchParams).tab;
-  const tab: Tab = q === 'state' || q === 'all' ? q : 'city';
-  const r = await ranks(ctx, tab);
+  const sp = await searchParams;
+  const tab: PageTab = sp.tab === 'state' || sp.tab === 'all' || sp.tab === 'cohort' || sp.tab === 'areas' ? sp.tab : 'city';
+  // One page, one points rule (docs/RANKS_UNIFIED_SPEC.md). The level filter applies to every tab.
+  const s = await areaStandings(ctx, sp.level);
+  const href = (p: { tab?: PageTab; level?: string | null }) => { const q = new URLSearchParams(); const tb = p.tab ?? tab; if (tb !== 'city') q.set('tab', tb); const lv = p.level === undefined ? sp.level : p.level; if (lv) q.set('level', lv); const qs = q.toString(); return qs ? `/ranks?${qs}` : '/ranks'; };
+  const tabsAll: { key: PageTab; label: string }[] = [{ key: 'city', label: 'City' }, { key: 'state', label: 'State' }, { key: 'all', label: 'Everyone' }, { key: 'cohort', label: 'My cohort' }, { key: 'areas', label: 'Area crowns' }];
+  const topBar = (<>
+    <nav className="tabs-line" aria-label={t('Rank scope')} style={{ marginTop: 12, flexWrap: 'wrap' }}>
+      {tabsAll.map(x => <Link key={x.key} href={href({ tab: x.key })} aria-current={tab === x.key ? 'page' : undefined}><Tv v={x.label} /></Link>)}
+    </nav>
+    {s && <nav className="tabs-line" aria-label={t('Level')} style={{ marginTop: 6, flexWrap: 'wrap' }}>
+      <Link href={href({ level: null })} aria-current={!s.level ? 'page' : undefined}><Tr>All levels</Tr></Link>
+      {s.journey.levels.map(l => <Link key={l.code} href={href({ level: l.code })} aria-current={s.level?.code === l.code ? 'page' : undefined}>L{l.idx}</Link>)}
+    </nav>}
+    <p className="muted xs" style={{ margin: '6px 0 12px' }}><Tr>Points are the XP earned on journey levels. The same rule is used on every tab.</Tr></p>
+  </>);
+  if (tab === 'areas') return (<div className="rk">
+    <section className="rk-head"><span className="rk-head-ic" aria-hidden="true"><Trophy size={20} /></span><div><span className="eyebrow"><Tr>Leaderboard</Tr></span><h1 id="pageTitle"><Tr>Ranks</Tr></h1><p className="muted small">{s ? <><Tv v={s.level ? `Level ${s.level.idx}: ${s.level.title}` : 'Whole journey'} />. <Tr>The top 3 in each area wear a crown.</Tr> {s.me ? `You are #${s.me} overall.` : ''}</> : <Tr>Area standings appear once a journey is set up.</Tr>}</p></div></section>
+    {topBar}
+    {s && <AreaCrowns s={s} />}
+  </div>);
+  const r = await ranks(ctx, tab, s?.level ? [s.level.id] : null);
   if (!r) return <div className="card empty"><h1 className="h3"><Tr>No ranks yet</Tr></h1><p className="text-2"><Tr>Ranks appear once the journey is set up.</Tr></p></div>;
   const { board, scope } = r;
   const [first, second, third] = board.list;
   const rest = board.list.slice(3);
-  const tabs: { key: Tab; label: string; sub: string }[] = [
-    { key: 'city', label: 'City', sub: r.city ?? 'Not set' },
-    { key: 'state', label: 'State', sub: r.state ?? 'Not set' },
-    { key: 'all', label: 'The hackathon', sub: 'Everyone' },
-  ];
   const where = scope.kind === 'all' ? 'everyone' : scope.name;
 
   return (<div className="rk">
     <section className="rk-head">
       <span className="rk-head-ic" aria-hidden="true"><Trophy size={20} /></span>
-      <div><span className="eyebrow"><Tr>Leaderboard</Tr></span><h1 id="pageTitle"><Tr>Ranks</Tr></h1><p className="muted small"><Tr>Ranks refresh every 15 minutes. Movement is since yesterday.</Tr></p></div>
+      <div><span className="eyebrow"><Tr>Leaderboard</Tr></span><h1 id="pageTitle"><Tr>Ranks</Tr></h1><p className="muted small"><Tr>Movement is since yesterday.</Tr> {r.city ? <>· <Tr>City</Tr>: <Tv v={r.city} /></> : null}{r.state ? <> · <Tr>State</Tr>: <Tv v={r.state} /></> : null}</p></div>
     </section>
+    {topBar}
 
     <div className="rk-grid">
       <aside className="rk-side">
-        <nav className="rk-tabs" aria-label={t('Rank scope')}>
-          {tabs.map(t => <Link key={t.key} href={`/ranks?tab=${t.key}`} aria-current={tab === t.key ? 'page' : undefined}><b><Tv v={t.label} /></b><span><Tv v={t.sub} /></span></Link>)}
-        </nav>
-
         {board.me ? (
           <section className="rk-standing" aria-label={t('Your standing')}>
             <div className="rk-standing-top">
@@ -78,7 +93,7 @@ async function Ranks({ searchParams }: { searchParams: Promise<{ tab?: string }>
           </section>
         )}
         {r.note && <p className="callout info small"><Tv v={r.note} /></p>}
-        <p className="muted xs rk-foot"><RefreshCw size={12} aria-hidden="true" /><span><Tr>Cities with fewer than 10 ranked learners are ranked at state level.</Tr> <Link className="link bold" href="/leaderboard/areas"><Tr>Area crowns and the final fight</Tr></Link></span></p>
+        <p className="muted xs rk-foot"><RefreshCw size={12} aria-hidden="true" /><span><Tr>Cities with fewer than 10 ranked learners are ranked at state level.</Tr> <Link className="link bold" href={href({ tab: 'areas' })}><Tr>Area crowns and the final fight</Tr></Link></span></p>
       </aside>
 
       <section className="rk-main" aria-labelledby="rk-title">

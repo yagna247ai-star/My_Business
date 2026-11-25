@@ -2,6 +2,8 @@
 import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { runBracket } from './points';
+import { loadRankPoints } from './rankPointsDb';
+import { compareRanked } from './pointsRule';
 import { toEntries, areaBoard, type StandingRow } from './standingsCore';
 
 const JOURNEY = 'data-analytics-journey';
@@ -12,23 +14,25 @@ export async function areaStandings(ctx: Ctx, levelCode?: string) {
   const journey = await prisma.journey.findFirst({ where: mine ? { id: mine.journeyId } : { tenantId: ctx.tenantId, slug: JOURNEY }, include: { levels: { orderBy: { idx: 'asc' }, select: { id: true, code: true, title: true, idx: true } } } });
   if (!journey) return null;
   const level = journey.levels.find(l => l.code === levelCode) ?? null;
-  const levelIds = level ? [level.id] : journey.levels.map(l => l.id);
 
   const members = await prisma.membership.findMany({
     where: { tenantId: ctx.tenantId, status: 'active', role: { code: { in: ['learner', 'team_lead'] } } },
     include: { user: { select: { id: true, name: true, area: true } } },
   });
   const ids = members.map(m => m.userId);
-  const [sums, finals, settings] = await Promise.all([
-    prisma.xpLedger.groupBy({ by: ['userId'], where: { tenantId: ctx.tenantId, userId: { in: ids }, levelId: { in: levelIds } }, _sum: { amount: true } }),
+  // The one points rule (docs/RANKS_UNIFIED_SPEC.md): level XP from any journey; a level filter narrows to that level.
+  const [pts, finals, settings] = await Promise.all([
+    loadRankPoints(ctx.tenantId, ids, { levelIds: level ? [level.id] : null }),
     prisma.xpLedger.groupBy({ by: ['userId'], where: { tenantId: ctx.tenantId, userId: { in: ids }, levelId: journey.levels[journey.levels.length - 1]?.id ?? '-' }, _sum: { amount: true } }),
     prisma.userSetting.findMany({ where: { tenantId: ctx.tenantId, userId: { in: ids } } }),
   ]);
+
   const priv = new Set(settings.filter(s => s.leaderboardVisibility === 'private' || s.ageBand === 'minor').map(s => s.userId));
-  const xpBy = new Map(sums.map(s => [s.userId, s._sum.amount || 0]));
   const finalBy = new Map(finals.map(s => [s.userId, s._sum.amount || 0]));
 
-  const rows: StandingRow[] = members.map(m => ({ userId: m.userId, name: m.user.name, area: m.user.area, xp: xpBy.get(m.userId) || 0, private: priv.has(m.userId) }));
+  const rows: StandingRow[] = members
+    .map(m => ({ userId: m.userId, name: m.user.name, area: m.user.area, xp: pts.get(m.userId)?.points || 0, private: priv.has(m.userId), reachedAt: pts.get(m.userId)?.reachedAt }))
+    .sort((a, b) => compareRanked({ userId: a.userId, name: a.name || '', points: a.xp, reachedAt: a.reachedAt }, { userId: b.userId, name: b.name || '', points: b.xp, reachedAt: b.reachedAt }));
   const board = areaBoard(toEntries(rows, ctx.userId));
 
   // Final fight: the top 8 by points, seeded best-vs-worst, each match decided by the final-challenge score.
@@ -38,7 +42,7 @@ export async function areaStandings(ctx: Ctx, levelCode?: string) {
 
   return {
     journey: { title: journey.title, levels: journey.levels.map(l => ({ code: l.code, title: l.title, idx: l.idx })) },
-    level: level ? { code: level.code, title: level.title, idx: level.idx } : null,
+    level: level ? { id: level.id, code: level.code, title: level.title, idx: level.idx } : null,
     areas: board.areas.map(a => ({ ...a, top: a.top.map(strip) })),
     global: board.global.slice(0, 20).map((g, i) => ({ ...strip(g), pos: i + 1 })),
     me: board.global.findIndex(g => g.me) + 1 || null,

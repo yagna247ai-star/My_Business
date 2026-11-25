@@ -74,11 +74,14 @@ model User {
   githubUsername    String?
   globalRole        String? // super_admin (platform-wide)
   preferredLanguage String   @default("en") // en | hi | te | ta | kn | ml
+  mustChangePassword Boolean @default(false) // docs/SUPER_ADMIN_CONTROL_SPEC.md
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   memberships       Membership[]
   passwordResets    PasswordResetToken[]
+  githubAccount     GithubAccount?
+  contributions     ProjectContributor[]
   enrollments       Enrollment[]
   progress          Progress[]
   submissions       Submission[]
@@ -127,6 +130,9 @@ model Membership {
   teamId    String?
   cohortId  String?
   status    String   @default("active") // active | suspended | invited
+  /// docs/SUPER_ADMIN_CONTROL_SPEC.md: per-person permissions on top of the role (JSON Permission[])
+  grants    String   @default("[]")
+  revokes   String   @default("[]")
   joinedAt  DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1003,6 +1009,12 @@ model Project {
   moderatedById  String?
   moderatedAt    DateTime?
   moderationNote String?
+  /// docs/SHOWCASE_GITHUB_SPEC.md: the project definition
+  problem  String?
+  solution String?
+  tech     String   @default("[]") // JSON string[]
+  links    String   @default("[]") // JSON { url, label, status, checkedAt }[]
+  stage    String   @default("reviewed") // defined | building | reviewed
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1010,6 +1022,7 @@ model Project {
   user    User            @relation(fields: [userId], references: [id])
   repos   ProjectRepo[]
   reports ShowcaseReport[]
+  contributors ProjectContributor[]
 
   @@index([tenantId, userId])
   @@index([isPublic])
@@ -1022,6 +1035,12 @@ model ProjectRepo {
   repoUrl   String
   provider  String   @default("github")
   analysis  String? // JSON
+  /// docs/SHOWCASE_LINK_HEALTH_SPEC.md: open | private | broken | unknown, re-checked daily
+  linkStatus    String    @default("unknown")
+  linkCheckedAt DateTime?
+  /// docs/SHOWCASE_GITHUB_SPEC.md: owner/name for GitHub repos; true when the app created it
+  fullName      String?
+  createdByApp  Boolean   @default(false)
   createdAt DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -1221,6 +1240,34 @@ model PasswordResetToken {
 
   @@index([userId, createdAt])
   @@map("password_reset_tokens")
+}
+
+// docs/SHOWCASE_GITHUB_SPEC.md: a learner's connected GitHub account. The OAuth token is AES-256-GCM encrypted.
+model GithubAccount {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  username    String
+  tokenEnc    String
+  scope       String   @default("")
+  connectedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("github_accounts")
+}
+
+// docs/SHOWCASE_GITHUB_SPEC.md: members invited to contribute to a showcase repo
+model ProjectContributor {
+  id             String   @id @default(cuid())
+  projectId      String
+  userId         String
+  githubUsername String
+  permission     String   @default("push") // push | maintain | admin
+  createdAt      DateTime @default(now())
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("project_contributors")
 }
 
 // ── Audit & Idempotency ──

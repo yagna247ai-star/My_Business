@@ -50,3 +50,16 @@ export const isRole = (r: string): r is Role => r in MATRIX;
 export const can = (role: string | undefined | null, p: Permission) => !!role && isRole(role) && MATRIX[role].includes(p);
 /** Roles a tenant admin may assign. Super admin is platform-level only and can never be granted per tenant. */
 export const ASSIGNABLE: Role[] = ['tenant_admin', 'program_mgr', 'instructor', 'mentor', 'reviewer', 'learner', 'team_lead', 'finance', 'support'];
+
+/**
+ * Permissions a member actually has: their role's, plus per-person grants, minus revokes
+ * (docs/SUPER_ADMIN_CONTROL_SPEC.md). Super Admins always keep everything. Unknown names are ignored.
+ */
+export function effectivePerms(role: string, grantsJson: string | null | undefined, revokesJson: string | null | undefined): Permission[] {
+  if (!isRole(role)) return [];
+  if (role === 'super_admin') return [...ALL];
+  const list = (j: string | null | undefined): Permission[] => { try { const a = JSON.parse(j || '[]'); return Array.isArray(a) ? a.filter((p): p is Permission => (ALL as string[]).includes(p)) : []; } catch { return []; } };
+  const revoked = new Set(list(revokesJson));
+  return [...new Set([...MATRIX[role], ...list(grantsJson)])].filter(p => !revoked.has(p));
+}
+export const ALL_PERMISSIONS: readonly Permission[] = ALL;

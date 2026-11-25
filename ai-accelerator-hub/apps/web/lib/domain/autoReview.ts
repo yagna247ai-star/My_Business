@@ -11,6 +11,7 @@ import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { parseCfg } from './journey';
 import { checkAnswer } from './answerQuality';
+import { rubricOrDefault } from './autoReviewCore';
 
 export type ReviewInput = {
   bossBest: number;      // scenarios answered correctly
@@ -98,17 +99,16 @@ export async function autoReviewSubmission(tenantId: string, progressId: string)
   const a6 = progress.level.activities.find(a => a.idx === 6);
   const cfg4 = parseCfg(a4?.config);
   const cfg6 = parseCfg(a6?.config);
-  const rubric = await prisma.rubric.findUnique({ where: { code: cfg6.rubric || 'GENERIC_RUBRIC' } });
-  if (!rubric) return null;
-  const dims = JSON.parse(rubric.dimensions) as Record<string, { weight: number }>;
-  const weights = Object.fromEntries(Object.entries(dims).map(([k, v]) => [k, v.weight]));
+  const rubric = await prisma.rubric.findUnique({ where: { code: cfg6.rubric || 'GENERIC_RUBRIC' } })
+    ?? await prisma.rubric.findUnique({ where: { code: 'GENERIC_RUBRIC' } });
+  const { weights, threshold } = rubricOrDefault(rubric);
 
   const harness = JSON.parse(progress.bossProgress.harnessResult) as { best?: number; total?: number };
   const buildRow = a4 ? await prisma.activityProgress.findFirst({ where: { progressId, activityId: a4.id } }) : null;
   const fields: Record<string, string> = buildRow?.data ? (JSON.parse(buildRow.data).brief?.fields ?? {}) : {};
   const fieldSpec: { key: string; label: string; hint?: string }[] = cfg4.fields ?? [];
   const good = (f: { key: string; label: string; hint?: string }) => checkAnswer(fields[f.key], { topic: f.label, hint: f.hint, depth: 'detail' }).ok;
-  const briefFieldsMet = fieldSpec.length > 0 && fieldSpec.every(good);
+  const briefFieldsMet = fieldSpec.every(good); // a level with no build fields has nothing to fail here
   const limitField = fieldSpec.find(f => /limit/i.test(f.key));
   const limitsWritten = limitField ? good(limitField) : false;
 
@@ -119,7 +119,7 @@ export async function autoReviewSubmission(tenantId: string, progressId: string)
     reflectionScore: (() => { const q = checkAnswer(sub.reflectionMd, { topic: 'what you did, what surprised you, and what you learned', depth: 'detail' }); return q.ok ? q.score : Math.min(q.score, 2); })(),
     briefFieldsMet,
     limitsWritten,
-  }, weights, rubric.passThreshold);
+  }, weights, threshold);
 
   const reviewer = await ensureAutoReviewer(tenantId);
   const ctx: Ctx = {
@@ -129,4 +129,34 @@ export async function autoReviewSubmission(tenantId: string, progressId: string)
   const { decide } = await import('./review');
   await decide(ctx, sub.id, review.scores, review.verdict, review.feedback);
   return { submissionId: sub.id, ...review };
+}
+
+/**
+ * Decide every pending submission that is ready (Boss done), oldest first. Escalate to people only the ones
+ * automation still cannot decide after ESCALATE_AFTER_MS, once each (docs/AUTO_REVIEW_ONLY_SPEC.md).
+ */
+export async function sweepPendingReviews(limit = 50) {
+  const { needsHuman } = await import('./autoReviewCore');
+  const { notifyMany } = await import('@/lib/server/audit');
+  const pending = await prisma.submission.findMany({
+    where: { state: 'pending' }, orderBy: { submittedAt: 'asc' }, take: limit,
+    select: { id: true, tenantId: true, progressId: true, submittedAt: true, metadata: true, user: { select: { name: true } }, progress: { select: { bossProgress: { select: { harnessResult: true } }, level: { select: { title: true } } } } },
+  });
+  let decided = 0, escalated = 0, waiting = 0;
+  for (const s of pending) {
+    const bossDone = !!s.progress.bossProgress?.harnessResult;
+    if (!bossDone) { waiting++; continue; }
+    try { if (await autoReviewSubmission(s.tenantId, s.progressId)) { decided++; continue; } }
+    catch (e) { console.error('[auto-review sweep]', s.id, (e as Error).message); }
+    const meta = (() => { try { return JSON.parse(s.metadata || '{}'); } catch { return {}; } })() as { escalatedAt?: string };
+    if (!meta.escalatedAt && needsHuman({ state: 'pending', submittedAt: s.submittedAt, bossDone })) {
+      await prisma.$transaction(async tx => {
+        await tx.submission.update({ where: { id: s.id }, data: { metadata: JSON.stringify({ ...meta, escalatedAt: new Date().toISOString() }) } });
+        const reviewers = await tx.membership.findMany({ where: { tenantId: s.tenantId, status: 'active', role: { code: { in: ['reviewer', 'mentor', 'instructor'] } } }, select: { userId: true } });
+        await notifyMany(tx, s.tenantId, reviewers.map(r => r.userId), 'submission_needs_review', { title: `Needs a person: ${s.user.name ?? 'learner'}`, body: `${s.progress.level.title}: automated review could not decide.`, href: `/review/${s.id}`, tone: 'warn' });
+      });
+      escalated++;
+    }
+  }
+  return { checked: pending.length, decided, escalated, waitingForBoss: waiting };
 }

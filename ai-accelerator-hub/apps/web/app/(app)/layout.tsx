@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getCtx();
   if (!ctx) redirect('/login');
+  if (ctx.mustChangePassword) redirect('/settings/password'); // an admin asked for a new password (lives outside this layout)
   const nav: NavItem[] = [];
   const learner = isLearner(ctx);
   if (learner) nav.push(
@@ -23,8 +24,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     { href: '/hackathons', label: 'Hackathons', icon: 'users', group: 'Learn' },
     { href: '/achievements', label: 'Achievements', icon: 'award', group: 'Learn' },
     { href: '/ranks', label: 'Ranks', icon: 'ranks', group: 'Community' },
-    { href: '/leaderboard', label: 'Standings', icon: 'ranks', group: 'Community' },
-    { href: '/leaderboard/areas', label: 'Area crowns', icon: 'ranks', group: 'Community' },
     { href: '/feed', label: 'Feed', icon: 'compass', group: 'Community' },
     { href: '/showcase', label: 'Showcase', icon: 'award', group: 'Community' },
     { href: '/library', label: 'Open-source Library', icon: 'book', group: 'Community' },

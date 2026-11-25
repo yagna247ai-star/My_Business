@@ -6,7 +6,7 @@ import { api, ApiError } from '@/lib/client/api';
 import { useT } from '@/components/i18n/I18nProvider';
 import { Tv } from '@/components/i18n/Tv';
 
-type Item = { id: string; title: string; description: string | null; author: string; link: string | null; at: string; status: 'visible' | 'hidden'; featured: boolean; note: string | null; moderatedAt: string | null; openReports: { id: string; reason: string; at: string }[]; resolvedReports: number };
+type Item = { id: string; title: string; description: string | null; author: string; link: string | null; linkStatus?: string; linkCheckedAt?: string | null; at: string; status: 'visible' | 'hidden'; featured: boolean; note: string | null; moderatedAt: string | null; openReports: { id: string; reason: string; at: string }[]; resolvedReports: number };
 type Action = 'feature' | 'unfeature' | 'hide' | 'show' | 'dismiss_reports' | 'remove';
 
 export function ShowcaseAdmin({ initial }: { initial: Item[] }) {
@@ -44,7 +44,10 @@ function Row({ i, onDone }: { i: Item; onDone: (id: string, a: Action, reason?: 
           {i.description && <p className="small text-2" style={{ margin: '6px 0 0' }}><Tv v={i.description} /></p>}
           {i.status === 'hidden' && i.note && <p className="callout warn small" style={{ margin: '6px 0 0' }}>{t('Hidden because')}: {i.note}</p>}
         </div>
-        {i.link && <a className="btn btn-outline btn-sm" href={i.link} target="_blank" rel="noopener noreferrer nofollow">{t('Open project')} <ExternalLink size={13} /></a>}
+        {i.link && <span className="stack gap-4" style={{ alignItems: 'flex-end' }}>
+          <a className="btn btn-outline btn-sm" href={i.link} target="_blank" rel="noopener noreferrer nofollow">{t('Open project')} <ExternalLink size={13} /></a>
+          <LinkHealth id={i.id} status={i.linkStatus ?? 'unknown'} checkedAt={i.linkCheckedAt ?? null} />
+        </span>}
       </div>
       {i.openReports.length > 0 && <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>{i.openReports.map(r => <li key={r.id}>“{r.reason}” <span className="muted xs">· {new Date(r.at).toLocaleDateString('en-IN')}</span></li>)}</ul>}
       {ask ? <div className="stack gap-6">
@@ -61,4 +64,17 @@ function Row({ i, onDone }: { i: Item; onDone: (id: string, a: Action, reason?: 
       {err && <p className="field-err" role="alert" style={{ margin: 0 }}>{err}</p>}
     </article>
   );
+}
+
+/** docs/SHOWCASE_LINK_HEALTH_SPEC.md: does the link open for everyone? Re-check on demand. */
+function LinkHealth({ id, status: initial, checkedAt }: { id: string; status: string; checkedAt: string | null }) {
+  const t = useT();
+  const [status, setStatus] = useState(initial); const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
+  const label: Record<string, string> = { open: t('Link opens for everyone'), private: t('Link asks for access'), broken: t('Link not found'), unknown: t('Link not checked yet') };
+  const cls = status === 'open' ? 'badge-success' : status === 'unknown' ? 'badge-neutral' : 'badge-warn';
+  return (<span className="row gap-4 wrap" style={{ justifyContent: 'flex-end' }}>
+    <span className={`badge ${cls}`} title={checkedAt ? new Date(checkedAt).toLocaleString('en-IN') : undefined}>{label[status] ?? status}</span>
+    <button type="button" className="btn btn-text btn-sm" disabled={busy} onClick={async () => { setBusy(true); setErr(''); try { const r = await api<{ links: { status: string }[] }>(`/api/v1/admin/showcase/${id}/recheck`, { method: 'POST' }); setStatus(r.links[0]?.status ?? status); } catch (e) { setErr((e as ApiError).message); } finally { setBusy(false); } }}>{busy ? t('Checking…') : t('Re-check')}</button>
+    {err && <span className="field-err xs">{err}</span>}
+  </span>);
 }

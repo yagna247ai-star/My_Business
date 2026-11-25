@@ -5,7 +5,7 @@
 import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { badRequest, conflict, forbidden, notFound } from '@/lib/server/errors';
-import { audit, notify, notifyMany } from '@/lib/server/audit';
+import { audit, notify } from '@/lib/server/audit';
 import { awardXp } from './xp';
 import { touchStreak } from './streak';
 import { evaluateBadges } from './badges';
@@ -14,6 +14,7 @@ import { personaOf } from './profile';
 import { createHash } from 'crypto';
 import { readTable, validateDataset, DatasetError, type DatasetReport, type DatasetSchema } from './daDomains/datasetCheck';
 import { checkAll, checkAnswer, judgeAnswers } from './answerQuality';
+import { normaliseShareUrl } from './linkHealthCore';
 import { proofLinkProblem, linkUsedByOthers, linkPrivateProblem, reusedShot, screenshotOffTopic } from './proofRelevance';
 import { fileBytes } from './files';
 import { doText, validateStep, stepPoints, stepsFinished, type GuidedStep, type StepState } from './guidedSteps';
@@ -230,8 +231,8 @@ export async function submitProof(ctx: Ctx, code: string, p: { evidenceUrl: stri
   if (st.locked) throw forbidden();
   if (st.latest && (st.latest.state === 'pending' || st.latest.state === 'approved')) throw conflict(st.latest.state === 'approved' ? 'This level is already approved.' : 'Your proof is already waiting for review.');
   const errors: Record<string, string> = {};
-  const evidence = safePublicUrl(p.evidenceUrl || ''); if (!evidence) errors.evidenceUrl = 'Use a public https link (Google Docs, Notion, GitHub…).';
-  const demo = p.demoUrl ? safePublicUrl(p.demoUrl) : null; if (p.demoUrl && !demo) errors.demoUrl = 'Demo link must be a public https URL.';
+  const evidence = safePublicUrl(normaliseShareUrl(p.evidenceUrl || '')); if (!evidence) errors.evidenceUrl = 'Use a public https link (Google Docs, Notion, GitHub…).';
+  const demo = p.demoUrl ? safePublicUrl(normaliseShareUrl(p.demoUrl)) : null; if (p.demoUrl && !demo) errors.demoUrl = 'Demo link must be a public https URL.';
   // Irrelevant links are rejected straight away: not a place work is kept, a home page, or someone else's proof.
   if (evidence) { const why = proofLinkProblem(evidence); if (why) errors.evidenceUrl = why; else if (await linkUsedByOthers(ctx, evidence)) errors.evidenceUrl = 'Another learner already handed in this link. Link to your own work.'; else { const priv = await linkPrivateProblem(evidence); if (priv) errors.evidenceUrl = priv; } }
   if (demo) { const why = proofLinkProblem(demo); if (why) errors.demoUrl = why; }
@@ -250,9 +251,8 @@ export async function submitProof(ctx: Ctx, code: string, p: { evidenceUrl: stri
     await tx.progress.update({ where: { id: st.progress.id }, data: { state: 'submitted', attempts: { increment: 1 }, ...(xp.awarded ? { xpEarned: { increment: xp.amount } } : {}) } });
     await touchStreak(tx, ctx.tenantId, ctx.userId);
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'submission.created', resourceType: 'Submission', resourceId: sub.id, after: { attempt, level: code } });
-    await notify(tx, ctx.tenantId, ctx.userId, 'submission_received', { title: 'Proof received', body: `Attempt ${attempt} is in the review queue. Try the Boss challenge while you wait.`, href: `/levels/${code}?a=6`, tone: 'info' });
-    const reviewers = await tx.membership.findMany({ where: { tenantId: ctx.tenantId, status: 'active', role: { code: { in: ['reviewer', 'mentor', 'instructor'] } } } });
-    await notifyMany(tx, ctx.tenantId, reviewers.map(r => r.userId), 'submission_needs_review', { title: `New proof: ${ctx.name}`, body: `${st.level.title} · attempt ${attempt}`, href: `/review/${sub.id}`, tone: 'gold' });
+    await notify(tx, ctx.tenantId, ctx.userId, 'submission_received', { title: 'Proof received', body: `Attempt ${attempt} is in. It is reviewed automatically as soon as your Boss challenge is done.`, href: `/levels/${code}?a=6`, tone: 'info' });
+    // No reviewer notification: the automated reviewer decides (docs/AUTO_REVIEW_ONLY_SPEC.md). People are asked only on escalation.
     return { submissionId: sub.id, attempt, xp: xp.amount };
   });
   await runAutoReview(ctx.tenantId, st.progress.id);

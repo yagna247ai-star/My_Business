@@ -1,0 +1,115 @@
+'use client';
+/**
+ * Super Admin control centre tools on the People screen (docs/SUPER_ADMIN_CONTROL_SPEC.md):
+ * the bulk-action bar, CSV import, and the per-person password menu.
+ */
+import { useState } from 'react';
+import { Upload, KeyRound } from 'lucide-react';
+import { api } from '@/lib/client/api';
+import { Field, Modal, useRun } from './ui';
+import { AreaPicker } from './AreaPicker';
+import { DEFAULT_AREA } from '@/lib/domain/areas';
+
+type Opt = { code: string; label: string };
+type BulkResult = { done: number; skipped: { email: string; reason: string }[]; notFound: number };
+
+const ACTIONS: { key: string; label: string; superOnly?: boolean; needs?: 'role' | 'cohort' | 'area'; danger?: boolean }[] = [
+  { key: 'reset_link', label: 'Email a password reset link' },
+  { key: 'force_change', label: 'Force password change at next sign-in', superOnly: true },
+  { key: 'suspend', label: 'Suspend (disable sign-in here)', danger: true },
+  { key: 'activate', label: 'Reactivate' },
+  { key: 'set_role', label: 'Change role…', needs: 'role' },
+  { key: 'set_cohort', label: 'Move to cohort…', needs: 'cohort' },
+  { key: 'set_area', label: 'Set area…', needs: 'area' },
+  { key: 'remove', label: 'Remove from institution', danger: true },
+];
+
+export function BulkBar({ selected, clear, isSuper, roles, cohorts }: { selected: string[]; clear: () => void; isSuper: boolean; roles: Opt[]; cohorts: { id: string; name: string }[] }) {
+  const r = useRun();
+  const [action, setAction] = useState('reset_link'); const [role, setRole] = useState('learner'); const [cohort, setCohort] = useState(''); const [area, setArea] = useState(DEFAULT_AREA);
+  const [result, setResult] = useState<BulkResult | null>(null); const [confirming, setConfirming] = useState(false);
+  const a = ACTIONS.find(x => x.key === action)!;
+  if (!selected.length && !result) return null;
+  const value = a.needs === 'role' ? role : a.needs === 'cohort' ? cohort : a.needs === 'area' ? area : undefined;
+  const apply = async () => {
+    setConfirming(false);
+    await r.run(async () => { const out = await api<BulkResult>('/api/v1/admin/people/bulk', { method: 'POST', body: { userIds: selected, action, value } }); setResult(out); clear(); }, 'Done.');
+  };
+  return (
+    <section className="card card-pad stack gap-8" aria-label="Bulk actions" style={{ position: 'sticky', top: 8, zIndex: 5, border: '1px solid var(--accent, #3878F6)' }}>
+      {selected.length > 0 && <div className="row gap-8 wrap" style={{ alignItems: 'flex-end' }}>
+        <b>{selected.length} selected</b>
+        <select className="select" aria-label="Bulk action" value={action} onChange={e => setAction(e.target.value)}>{ACTIONS.filter(x => isSuper || !x.superOnly).map(x => <option key={x.key} value={x.key}>{x.label}</option>)}</select>
+        {a.needs === 'role' && <select className="select" aria-label="New role" value={role} onChange={e => setRole(e.target.value)}>{roles.filter(o => isSuper || o.code !== 'tenant_admin').map(o => <option key={o.code} value={o.code}>{o.label}</option>)}</select>}
+        {a.needs === 'cohort' && <select className="select" aria-label="Cohort" value={cohort} onChange={e => setCohort(e.target.value)}><option value="">No cohort</option>{cohorts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>}
+        {a.needs === 'area' && <AreaPicker value={area} label="Area" onChange={setArea} />}
+        {confirming ? <><span className="small">Apply to {selected.length}?</span><button className={`btn btn-sm ${a.danger ? 'btn-danger' : 'btn-primary'}`} type="button" disabled={r.busy} onClick={apply}>Yes, apply</button><button className="btn btn-text btn-sm" type="button" onClick={() => setConfirming(false)}>Cancel</button></>
+          : <button className="btn btn-primary btn-sm" type="button" disabled={r.busy} onClick={() => setConfirming(true)}>Apply</button>}
+        <button className="btn btn-text btn-sm" type="button" onClick={clear}>Clear selection</button>
+      </div>}
+      {r.err && <p className="callout warn small" role="alert">{r.err}</p>}
+      {result && <div className="callout ok small" role="status">
+        {result.done} updated{result.skipped.length ? `, ${result.skipped.length} skipped` : ''}{result.notFound ? `, ${result.notFound} not found` : ''}.
+        {result.skipped.length > 0 && <ul style={{ margin: '6px 0 0 18px' }}>{result.skipped.slice(0, 20).map(s => <li key={s.email}>{s.email}: {s.reason}</li>)}</ul>}
+        <button className="btn btn-text btn-sm" type="button" onClick={() => setResult(null)}>Dismiss</button>
+      </div>}
+    </section>
+  );
+}
+
+type ImportOut = { dryRun: boolean; valid: number; errors: { line: number; message: string }[]; created: number; updated: number; emailed: number };
+
+export function ImportCsvButton() {
+  const r = useRun();
+  const [open, setOpen] = useState(false); const [csv, setCsv] = useState(''); const [file, setFile] = useState(''); const [out, setOut] = useState<ImportOut | null>(null);
+  const run = (dryRun: boolean) => r.run(async () => setOut(await api<ImportOut>('/api/v1/admin/people/import', { method: 'POST', body: { csv, dryRun } })), dryRun ? 'Checked.' : 'Imported.');
+  const sample = 'name,email,role,cohort,area\nAsha Rao,asha@example.com,learner,Batch 1,Warangal\nRavi Kumar,ravi@example.com,mentor,,Bhagyanagar\n';
+  return (<>
+    <button className="btn btn-soft btn-sm" type="button" onClick={() => { setOpen(true); setOut(null); setCsv(''); setFile(''); }}><Upload size={15} />Import CSV</button>
+    {open && <Modal title="Import people from a CSV file" wide onClose={() => setOpen(false)}>
+      <div className="stack gap-12">
+        <p className="small">Columns: <code>name,email,role,cohort,area</code>. Role, cohort and area are optional (default learner, no cohort, Bhagyanagar). Each new person gets an email to choose their password (link valid 7 days). Up to 2,000 rows.</p>
+        <a className="link small" href={`data:text/csv;charset=utf-8,${encodeURIComponent(sample)}`} download="people-template.csv">Download a template</a>
+        <Field label="CSV file"><input className="input" type="file" accept=".csv,text/csv" onChange={async e => { const f = e.target.files?.[0]; if (!f) return; if (f.size > 1_000_000) { r.setErr('The file is larger than 1 MB.'); return; } setFile(f.name); setCsv(await f.text()); setOut(null); }} /></Field>
+        {r.err && <p className="callout warn small" role="alert">{r.err}</p>}
+        {out && <div className={`callout ${out.errors.length ? 'warn' : 'ok'} small`} role="status">
+          {out.dryRun ? <>{out.valid} row{out.valid === 1 ? '' : 's'} ready to import{out.errors.length ? `, ${out.errors.length} with problems (fix them or import the good rows)` : ''}.</>
+            : <>{out.created} added, {out.updated} updated, {out.emailed} invite emails sent.</>}
+          {out.errors.length > 0 && <ul style={{ margin: '6px 0 0 18px', maxHeight: 220, overflow: 'auto' }}>{out.errors.map((e, i) => <li key={i}>Line {e.line}: {e.message}</li>)}</ul>}
+        </div>}
+        <div className="actions">
+          <button className="btn btn-text" type="button" onClick={() => setOpen(false)}>Close</button>
+          <button className="btn btn-soft" type="button" disabled={!csv || r.busy} onClick={() => run(true)}>Check {file || 'file'}</button>
+          <button className="btn btn-primary" type="button" disabled={!out?.dryRun || !out.valid || r.busy} onClick={() => run(false)}>Import {out?.dryRun ? out.valid : ''} people</button>
+        </div>
+      </div>
+    </Modal>}
+  </>);
+}
+
+export function PasswordButton({ userId, name, isSuper }: { userId: string; name: string; isSuper: boolean }) {
+  const r = useRun();
+  const [open, setOpen] = useState(false); const [pw, setPw] = useState(''); const [must, setMust] = useState(true);
+  const call = (body: unknown, ok: string) => r.run(() => api(`/api/v1/admin/people/${userId}/password`, { method: 'POST', body }), ok);
+  return (<>
+    <button className="btn btn-soft btn-sm" type="button" title="Password" aria-label={`Password options for ${name}`} onClick={() => { setOpen(true); setPw(''); }}><KeyRound size={14} /></button>
+    {open && <Modal title={`Password: ${name}`} onClose={() => setOpen(false)}>
+      <div className="stack gap-12">
+        <p className="muted small">Passwords are stored encrypted one-way, so nobody (including Super Admins) can see them. You can send a reset link{isSuper ? ', set a new password, or require a new one at next sign-in' : ''}. Every action is recorded in the audit log.</p>
+        <r.Status />
+        <button className="btn btn-soft" type="button" disabled={r.busy} onClick={() => call({ action: 'reset_link' }, `Reset link emailed to ${name}.`)}>Email a reset link</button>
+        {isSuper && <>
+          <form className="stack gap-8" onSubmit={e => { e.preventDefault(); call({ action: 'set', password: pw, mustChange: must }, `New password set for ${name}.${must ? ' They must change it at next sign-in.' : ''}`); }}>
+            <Field label="Set a new password" hint="10+ characters with a letter and a number. Tell the person through a safe channel."><input className="input" type="text" autoComplete="off" minLength={10} maxLength={200} value={pw} onChange={e => setPw(e.target.value)} style={{ fontFamily: 'var(--font-mono)' }} /></Field>
+            <label className="row gap-8 small"><input type="checkbox" checked={must} onChange={e => setMust(e.target.checked)} />Must change it at next sign-in</label>
+            <button className="btn btn-primary" type="submit" disabled={r.busy || pw.length < 10}>Set password</button>
+          </form>
+          <div className="row gap-8 wrap">
+            <button className="btn btn-outline btn-sm" type="button" disabled={r.busy} onClick={() => call({ action: 'force', on: true }, `${name} must choose a new password at next sign-in.`)}>Force change at next sign-in</button>
+            <button className="btn btn-text btn-sm" type="button" disabled={r.busy} onClick={() => call({ action: 'force', on: false }, 'Forced change cleared.')}>Clear forced change</button>
+          </div>
+        </>}
+      </div>
+    </Modal>}
+  </>);
+}

@@ -34,6 +34,7 @@ async function People({ searchParams }: { searchParams: Promise<{ filter?: strin
         cohorts={cohorts}
         meId={ctx.userId}
         canManage={canManage}
+        isSuper={ctx.superAdmin}
         journeys={journeys ? journeys.filter(j => j.published).map(j => ({ id: j.id, title: j.title })) : null}
         initialFilter={filter === 'attention' ? 'attention' : 'all'}
       />

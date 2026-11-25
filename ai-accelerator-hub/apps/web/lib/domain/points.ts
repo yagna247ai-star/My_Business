@@ -50,7 +50,7 @@ export function topByArea(entries: Entry[], n = 3): Record<string, Entry[]> {
   for (const area of Object.keys(byArea).sort()) {
     out[area] = byArea[area]
       .slice()
-      .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name))
+      .sort((a, b) => b.points - a.points )  // ties keep the caller's order (pointsRule.compareRanked)
       .slice(0, n);
   }
   return out;
@@ -58,7 +58,7 @@ export function topByArea(entries: Entry[], n = 3): Record<string, Entry[]> {
 
 /** Hackathon ranking: split by area, each area ordered, plus one global order. Spec §4. */
 export function hackathonRanking(entries: Entry[]) {
-  const global = entries.slice().sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
+  const global = entries.slice().sort((a, b) => b.points - a.points );  // ties keep the caller's order (pointsRule.compareRanked)
   return { global, byArea: topByArea(entries, Number.MAX_SAFE_INTEGER) };
 }
 

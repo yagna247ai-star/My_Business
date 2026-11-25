@@ -6,6 +6,7 @@
  *   and other learners' ids never leave the server.
  */
 import { areaState } from './areas';
+import { compareRanked } from './pointsRule';
 
 export const MIN_CITY_MEMBERS = 10;
 
@@ -35,20 +36,24 @@ export function cityScope(city: string, counts: Record<string, number>): Scope {
 export type RankRow = {
   userId: string; name: string | null; area: string | null; xp: number; prevXp: number;
   private: boolean; avatarUrl: string | null; finisher: boolean; level?: string;
+  /** When they reached their current points (tie-break: earlier wins). docs/RANKS_UNIFIED_SPEC.md */
+  reachedAt?: Date | null; prevReachedAt?: Date | null;
 };
 export type RankEntry = { rank: number; userId: string; name: string; area: string; points: number; move: number; me: boolean; avatarUrl: string | null; finisher: boolean; level: string };
 
-const order = <T extends { userId: string; name: string }>(rows: T[], pts: (r: T) => number) =>
-  rows.slice().sort((a, b) => pts(b) - pts(a) || a.name.localeCompare(b.name) || a.userId.localeCompare(b.userId));
+// One order everywhere (pointsRule.compareRanked): points, then who reached them first, then the real name.
+const order = <T extends { userId: string; realName: string }>(rows: T[], pts: (r: T) => number, at: (r: T) => Date | null | undefined) =>
+  rows.slice().sort((a, b) => compareRanked({ userId: a.userId, name: a.realName, points: pts(a), reachedAt: at(a) }, { userId: b.userId, name: b.realName, points: pts(b), reachedAt: at(b) }));
 
 export function rankBoard(rows: RankRow[], viewerId: string, take = 25) {
   const named = rows.filter(r => r.xp > 0).map(r => ({
     ...r,
+    realName: r.name || '',
     name: r.userId === viewerId ? (r.name || 'You') : r.private ? 'Anonymous learner' : (r.name || 'Learner'),
     avatarUrl: r.private && r.userId !== viewerId ? null : r.avatarUrl,
   }));
-  const now = order(named, r => r.xp);
-  const prevRank = new Map(order(named, r => r.prevXp).map((r, i) => [r.userId, i + 1]));
+  const now = order(named, r => r.xp, r => r.reachedAt);
+  const prevRank = new Map(order(named, r => r.prevXp, r => r.prevReachedAt).map((r, i) => [r.userId, i + 1]));
   const all: RankEntry[] = now.map((r, i) => ({
     rank: i + 1,
     userId: r.userId === viewerId ? r.userId : '',

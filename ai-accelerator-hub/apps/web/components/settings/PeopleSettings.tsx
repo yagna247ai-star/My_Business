@@ -10,6 +10,7 @@ import { Eye, KeyRound, Pencil, Send, UserPlus } from 'lucide-react';
 import { api } from '@/lib/client/api';
 import { ConfirmDelete, Field, Modal, useRun } from './ui';
 import { AreaPicker } from './AreaPicker';
+import { BulkBar, ImportCsvButton, PasswordButton } from './PeopleAdminTools';
 import { DEFAULT_AREA } from '@/lib/domain/areas';
 
 type Risk = { status: string; message: string; level: string; activitiesDone: number; lastActive: string | null; needsAttention: boolean };
@@ -25,8 +26,8 @@ function makePassword() {
   return `${pick(A, 1)}${pick(a, 6)}-${pick(d, 4)}`;
 }
 
-export function PeopleSettings({ rows, roles, cohorts, meId, canManage, journeys, initialFilter = 'all' }: {
-  rows: Row[]; roles: Opt[]; cohorts: { id: string; name: string }[]; meId: string; canManage: boolean;
+export function PeopleSettings({ rows, roles, cohorts, meId, canManage, journeys, initialFilter = 'all', isSuper = false }: {
+  rows: Row[]; roles: Opt[]; cohorts: { id: string; name: string }[]; meId: string; canManage: boolean; isSuper?: boolean;
   /** Published journeys; set only for a Super Admin, who may move people between journeys. */
   journeys: { id: string; title: string }[] | null; initialFilter?: 'all' | 'attention';
 }) {
@@ -37,6 +38,8 @@ export function PeopleSettings({ rows, roles, cohorts, meId, canManage, journeys
   const [nudging, setNudging] = useState<{ row: Row; text: string } | null>(null);
   const [consent, setConsent] = useState<{ row: Row; decision: 'granted' | 'revoked'; method: string; note: string } | null>(null);
   const [adult, setAdult] = useState<{ row: Row; method: string; note: string } | null>(null);
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const toggle = (id: string) => setSel(p => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const cohortName = useMemo(() => new Map(cohorts.map(c => [c.id, c.name])), [cohorts]);
   const attention = rows.filter(x => x.risk?.needsAttention);
   const list = (tab === 'attention' ? attention : rows).filter(x => (!q || `${x.name ?? ''} ${x.email}`.toLowerCase().includes(q.toLowerCase())) && (!role || x.role === role) && (!status || x.status === status));
@@ -54,13 +57,16 @@ export function PeopleSettings({ rows, roles, cohorts, meId, canManage, journeys
         <select className="select" aria-label="Filter by role" value={role} onChange={e => setRole(e.target.value)}><option value="">All roles</option>{[{ code: 'super_admin', label: 'Super Admin' }, ...roles].map(o => <option key={o.code} value={o.code}>{o.label}</option>)}</select>
         <select className="select" aria-label="Filter by status" value={status} onChange={e => setStatus(e.target.value)}><option value="">Any status</option><option value="active">Active</option><option value="suspended">Suspended</option></select>
       </div>
+      {canManage && <ImportCsvButton />}
       {canManage && <button className="btn btn-primary btn-sm" type="button" onClick={() => setAdd({ name: '', email: '', role: 'learner', password: makePassword(), cohortId: '' })}><UserPlus size={15} />Add person</button>}
     </div>
     <r.Status />
+    {canManage && <BulkBar selected={[...sel]} clear={() => setSel(new Set())} isSuper={isSuper} roles={roles} cohorts={cohorts} />}
 
     <div className="card table-wrap"><table className="tbl"><caption className="sr-only">People</caption>
-      <thead><tr><th>Person</th><th>Role</th><th>Cohort</th><th>Journey</th><th>Progress</th><th>Streak</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr></thead>
+      <thead><tr>{canManage && <th style={{ width: 32 }}><input type="checkbox" aria-label="Select everyone shown" checked={list.length > 0 && list.filter(x => !locked(x)).every(x => sel.has(x.userId))} onChange={e => setSel(e.target.checked ? new Set(list.filter(x => !locked(x)).map(x => x.userId)) : new Set())} /></th>}<th>Person</th><th>Role</th><th>Cohort</th><th>Journey</th><th>Progress</th><th>Streak</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr></thead>
       <tbody>{list.length ? list.map(x => (<tr key={x.userId}>
+        {canManage && <td>{!locked(x) && <input type="checkbox" aria-label={`Select ${who(x)}`} checked={sel.has(x.userId)} onChange={() => toggle(x.userId)} />}</td>}
         <td>
           <Link className="bold" href={`/settings/people/${x.userId}`} style={{ color: 'inherit' }}>{x.name || '—'}</Link>{x.userId === meId && <span className="muted xs"> (you)</span>}
           <div className="muted xs">{x.email}</div>
@@ -80,11 +86,12 @@ export function PeopleSettings({ rows, roles, cohorts, meId, canManage, journeys
           <Link className="btn btn-soft btn-sm" href={`/settings/people/${x.userId}`} title="View profile" aria-label={`View profile of ${who(x)}`}><Eye size={14} /></Link>
           {x.risk && <button className="btn btn-soft btn-sm" type="button" title="Send a nudge" aria-label={`Nudge ${who(x)}`} onClick={() => setNudging({ row: x, text: `Hi ${x.name?.split(' ')[0] || ''}, we miss you! Even 15 minutes on your next activity keeps your momentum. Need help? Ask your mentor or the coach.` })}><Send size={14} /></button>}
           {canManage && !locked(x) && <>
+            <PasswordButton userId={x.userId} name={who(x)} isSuper={isSuper} />
             <button className="btn btn-outline btn-sm" type="button" title="Edit" aria-label={`Edit ${who(x)}`} onClick={() => setEdit({ userId: x.userId, name: x.name ?? '', area: x.area ?? DEFAULT_AREA, role: x.role, status: x.status, cohortId: x.cohortId ?? '', journeyId: x.journey?.id ?? '', originalJourneyId: x.journey?.id ?? '' })}><Pencil size={14} /></button>
             <ConfirmDelete label={`Remove ${who(x)}`} confirmText="Remove" disabled={r.busy} onConfirm={() => r.run(() => api(`/api/v1/settings/people/${x.userId}`, { method: 'DELETE' }), `${who(x)} removed from the institute. Their account still exists.`)} />
           </>}
         </div></td>
-      </tr>)) : <tr><td colSpan={8} className="muted">{tab === 'attention' ? 'Nobody needs attention right now.' : 'No one matches these filters.'}</td></tr>}</tbody>
+      </tr>)) : <tr><td colSpan={canManage ? 9 : 8} className="muted">{tab === 'attention' ? 'Nobody needs attention right now.' : 'No one matches these filters.'}</td></tr>}</tbody>
     </table></div>
     <p className="muted xs">Showing {list.length} of {rows.length}. Click a name to see their full profile. Removing someone ends their membership here; their account and past progress are kept.</p>
 
