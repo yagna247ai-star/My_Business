@@ -4,6 +4,6 @@ import { z } from 'zod';
 import { route, body } from '@/lib/server/http';
 import { requireCtx } from '@/lib/server/context';
 import { getAccess, setAccess } from '@/lib/domain/adminControl';
-const schema = z.object({ modes: z.record(z.string().max(40), z.enum(['grant', 'revoke', 'role'])) });
+const schema = z.object({ levels: z.record(z.string().max(40), z.enum(['none', 'view', 'manage'])).optional(), modes: z.record(z.string().max(40), z.enum(['grant', 'revoke', 'role'])).optional() }).refine(b => b.levels || b.modes, 'Choose the access to save.');
 export const GET = route(async (_req: NextRequest, p) => getAccess(await requireCtx(), p.userId));
-export const PUT = route(async (req: NextRequest, p) => setAccess(await requireCtx(), p.userId, (await body(req, schema)).modes));
+export const PUT = route(async (req: NextRequest, p) => setAccess(await requireCtx(), p.userId, await body(req, schema)));

@@ -13,8 +13,8 @@ export function settingsCards(ctx: Ctx): SettingsCard[] {
   const out: SettingsCard[] = [c('/settings/profile', 'Profile & privacy', 'profile', 'Settings', 'Your photo, theme, language, area, leaderboard privacy and account deletion.', false)];
   if (s.institute || s.institutes) out.push(c('/settings/institute', s.institutes ? 'Institutes' : 'Institute', 'institute', 'Administration', s.institutes ? 'Your institute’s details, plus create, edit, deactivate and delete institutes.' : 'Your institute’s name and contact details.', true));
   if (s.people) out.push(c('/settings/people', 'People', 'people', 'Administration', 'Everyone, their progress and streaks; add, edit, nudge or remove people, and open any profile.', true));
-  if (ctx.superAdmin) out.push(c('/settings/access', 'Access', 'audit', 'Administration', 'Give any person extra permissions, or take some away, on top of their role.', true));
-  out.push(c('/settings/password', 'Password', 'profile', 'Settings', 'Change your password.', false));
+  if (ctx.superAdmin) out.push(c('/settings/access', 'Access', 'access', 'Administration', 'Give any person extra permissions, or take some away, on top of their role.', true));
+  out.push(c('/settings/password', 'Password', 'password', 'Settings', 'Change your password.', false));
   if (s.cohorts) out.push(c('/settings/cohorts', 'Cohorts', 'cohorts', 'Administration', 'Create cohorts, set dates and size, refresh invite codes, delete cohorts.', true));
   if (s.talent) out.push(c('/settings/talent', 'Talent', 'talent', 'Administration', 'Post and manage opportunities, and moderate learner talent profiles.', true));
   if (canEditTrackSettings(ctx)) out.push(c('/settings/tracks', 'Learning tracks', 'learn', 'Program', 'Choose which staff roles can move learners between Easy, Intermediate, Hard and Critical tracks.', true));

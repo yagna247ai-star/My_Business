@@ -14,6 +14,7 @@ import { passwordProblem, isAssignable } from './settingsRules';
 import { normaliseArea } from './areas';
 import { issueResetLink } from './passwordReset';
 import { RESET_TTL_MS } from './passwordResetCore';
+import { MODULES, levelsOf, moduleLevel, permsForLevels, type Level, type ModuleKey } from './accessModules';
 import { BULK_ACTIONS, bulkSkipReason, canUseBulkAction, parseMembersCsv, PERMISSION_INFO, type BulkAction } from './adminControlCore';
 
 const INVITE_TTL_MS = 7 * 24 * 3600_000;
@@ -182,16 +183,24 @@ export async function getAccess(ctx: Ctx, userId: string) {
   const g = parse(m.grants), r = parse(m.revokes);
   return {
     person: { id: m.userId, name: m.user.name || m.user.email, email: m.user.email, role, roleLabel: isRole(role) ? ROLE_LABEL[role] : role },
+    modules: MODULES.map(md => ({ key: md.key, label: md.label, info: md.info, hasView: md.view.length > 0, roleLevel: moduleLevel(isRole(role) ? MATRIX[role] : [], md.key), level: moduleLevel([...eff], md.key) })),
     permissions: ALL_PERMISSIONS.map(p => ({ key: p, info: PERMISSION_INFO[p], fromRole: roleSet.has(p), effective: eff.has(p), mode: g.has(p) ? 'grant' : r.has(p) ? 'revoke' : 'role' as 'grant' | 'revoke' | 'role' })),
   };
 }
 
-export async function setAccess(ctx: Ctx, userId: string, modes: Record<string, 'grant' | 'revoke' | 'role'>) {
+/** Save access as module levels (No access / View / Manage), or the advanced per-permission modes. */
+export async function setAccess(ctx: Ctx, userId: string, input: { levels?: Record<string, Level>; modes?: Record<string, 'grant' | 'revoke' | 'role'> }) {
   needSuper(ctx);
   const m = await memberOrThrow(ctx, userId);
   if (m.role.code === 'super_admin') throw badRequest('Super Admins always have every permission.');
-  const grants: Permission[] = [], revokes: Permission[] = [];
-  for (const p of ALL_PERMISSIONS) { const v = modes[p]; if (v === 'grant') grants.push(p); else if (v === 'revoke') revokes.push(p); }
+  let grants: Permission[] = [], revokes: Permission[] = [];
+  if (input.levels) {
+    const keys = new Set(MODULES.map(x => x.key));
+    const levels = Object.fromEntries(Object.entries(input.levels).filter(([k]) => keys.has(k as ModuleKey))) as Record<ModuleKey, Level>;
+    ({ grants, revokes } = permsForLevels(m.role.code, { ...levelsOf(isRole(m.role.code) ? MATRIX[m.role.code] : []), ...levels }));
+  } else {
+    for (const p of ALL_PERMISSIONS) { const v = input.modes?.[p]; if (v === 'grant') grants.push(p); else if (v === 'revoke') revokes.push(p); }
+  }
   await prisma.$transaction(async tx => {
     await tx.membership.update({ where: { id: m.id }, data: { grants: JSON.stringify(grants), revokes: JSON.stringify(revokes) } });
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'admin.access_changed', resourceType: 'Membership', resourceId: m.id, before: { grants: m.grants, revokes: m.revokes }, after: { grants, revokes } });

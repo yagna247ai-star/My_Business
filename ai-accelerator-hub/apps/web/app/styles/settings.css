@@ -35,3 +35,26 @@
 @media (max-width:640px){.set-form{grid-template-columns:minmax(0,1fr)}}
 .set-actions .btn-sm{padding:0 10px}
 .tbl td .set-actions{min-width:max-content}
+/* Collapsible Settings menu (docs/ACCESS_MODULES_AND_NAV_SPEC.md) */
+.set-nav .set-nav-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.set-nav .set-nav-top>a{flex:1;min-width:0}
+.set-nav .rail-btn{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);cursor:pointer;flex-shrink:0}
+.set-nav .rail-btn:hover{background:var(--surface-3);color:var(--text)}
+@media (min-width:901px){
+  .set-wrap{transition:grid-template-columns .15s}
+  [data-setnav="rail"] .set-wrap{grid-template-columns:64px minmax(0,1fr);gap:18px}
+  [data-setnav="rail"] .set-nav{padding:10px 8px;align-items:center}
+  [data-setnav="rail"] .set-nav .lbl,[data-setnav="rail"] .set-nav .set-nav-group,[data-setnav="rail"] .set-nav .set-nav-head{display:none}
+  [data-setnav="rail"] .set-nav .set-nav-top{flex-direction:column}
+  [data-setnav="rail"] .set-nav a{justify-content:center;padding:9px;width:44px}
+}
+/* Access by module */
+.access-grid{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:18px;align-items:start}
+.access-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--border)}
+.access-row:first-child{border-top:0}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:7px 12px;font-weight:600;font-size:13px;color:var(--text-2);cursor:pointer;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button.on{background:var(--primary);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+@media (max-width:900px){.access-grid{grid-template-columns:minmax(0,1fr)}.access-row{grid-template-columns:minmax(0,1fr)}}

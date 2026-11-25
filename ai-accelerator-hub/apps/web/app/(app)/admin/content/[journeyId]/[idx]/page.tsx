@@ -5,6 +5,8 @@ import { reviewLevel, parseTarget, targetLabel } from '@/lib/domain/contentRevie
 import { guarded } from '@/lib/server/page';
 import { Markdown } from '@/components/learn/Markdown';
 import { ActivityPreview } from '@/components/admin/ActivityPreview';
+import { DayMaterialsAdmin } from '@/components/admin/DayMaterialsAdmin';
+import { hasPerm } from '@/lib/server/context';
 import { PublishToggle, SuggestionsPanel } from '@/components/admin/ContentReviewControls';
 
 export const metadata = { title: 'Content review · level' };
@@ -51,7 +53,7 @@ async function LevelReview({ params, searchParams }: { params: Promise<{ journey
             {r.activities.map(a => <li key={a.idx}><Link className="link" href={href(`activity:${a.idx}`)}>Activity {a.idx}: {a.title}</Link> · {a.xp} XP</li>)}
           </ul>
         </div>}
-        {day && <><p className="muted xs" style={{ marginTop: 0 }}>Exactly as learners see it.</p><Markdown md={day.body} /></>}
+        {day && <><p className="muted xs" style={{ marginTop: 0 }}>Exactly as learners see it.</p><Markdown md={day.body} />{hasPerm(ctx, 'content:manage') && <DayMaterialsAdmin contentId={day.contentId} day={day.day} />}</>}
         {act && <><h2 className="h3" style={{ marginTop: 0 }}>Activity {act.idx}: {act.title}</h2><p className="muted xs">Learner view plus what learners never see (answers, right moves), highlighted in green.</p><ActivityPreview a={act} /></>}
         {!day && !act && t.kind !== 'level' && <p className="muted">Not found in this level.</p>}
         <nav className="row between" aria-label="Previous and next" style={{ marginTop: 18 }}>

@@ -1270,6 +1270,42 @@ model ProjectContributor {
   @@map("project_contributors")
 }
 
+// docs/DAY_MATERIALS_SPEC.md: study links (Drive, Docs, videos) attached to one day lesson (a Content row).
+model DayMaterial {
+  id            String    @id @default(cuid())
+  tenantId      String
+  contentId     String
+  title         String
+  url           String
+  kind          String    @default("other") // slides | doc | sheet | video | folder | notebook | other
+  note          String    @default("")
+  sortOrder     Int       @default(0)
+  linkStatus    String    @default("unknown") // open | private | broken | unknown
+  linkCheckedAt DateTime?
+  createdById   String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  progress      MaterialProgress[]
+
+  @@index([contentId, sortOrder])
+  @@index([tenantId])
+  @@map("day_materials")
+}
+
+model MaterialProgress {
+  id          String      @id @default(cuid())
+  materialId  String
+  userId      String
+  openedAt    DateTime?
+  studiedAt   DateTime?
+  practisedAt DateTime?
+  material    DayMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@unique([materialId, userId])
+  @@index([userId])
+  @@map("material_progress")
+}
+
 // ── Audit & Idempotency ──
 
 model AuditLog {

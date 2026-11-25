@@ -66,7 +66,7 @@ export async function reviewLevel(ctx: Ctx, journeyId: string, idx: number) {
   const parse = (s: string | null) => { try { return s ? JSON.parse(s) : {}; } catch { return {}; } };
   return {
     level: { id: level.id, idx: level.idx, code: level.code, title: level.title, summary: level.summary, isPublished: level.isPublished, xpReward: level.xpReward, stage: level.stage?.title ?? null, journey: level.journey, levelCount },
-    days: level.contents.map(c => ({ day: c.position, title: c.title ?? `Day ${c.position}`, body: String(parse(c.payload).body ?? '') })),
+    days: level.contents.map(c => ({ contentId: c.id, day: c.position, title: c.title ?? `Day ${c.position}`, body: String(parse(c.payload).body ?? '') })),
     activities: level.activities.map(a => ({ idx: a.idx, code: a.code, title: a.title, xp: a.xpReward, config: parse(a.config) })),
     suggestions: suggestions.map(s => ({ id: s.id, target: s.target, body: s.body, state: s.state as SuggestionState, author: who.get(s.authorId) ?? 'Unknown', createdAt: s.createdAt.toISOString(), resolvedBy: s.resolvedById ? who.get(s.resolvedById) ?? null : null, resolvedNote: s.resolvedNote, resolvedAt: s.resolvedAt?.toISOString() ?? null })),
     canPublish: ctx.superAdmin,

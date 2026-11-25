@@ -37,18 +37,22 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     const helpOpen = await prisma.helpRequest.count({ where: { tenantId: ctx.tenantId, state: 'open', learnerId: { not: ctx.userId } } });
     nav.push({ href: '/review/help', label: 'Help Requests', icon: 'lifebuoy', group: 'Review', count: helpOpen });
   }
-  if (hasPerm(ctx, 'analytics:read')) nav.push({ href: '/admin', label: 'Cohort Analytics', icon: 'chart', group: 'Program' });
-  if (hasPerm(ctx, 'members:read')) nav.push({ href: '/settings/people', label: 'People', icon: 'users', group: 'Program' });
-  if (hasPerm(ctx, 'cohort:read')) nav.push({ href: '/admin/cohorts', label: 'Cohorts & Sessions', icon: 'layers', group: 'Program' });
-  if (hasPerm(ctx, 'content:manage')) nav.push({ href: '/admin/content', label: 'Content review', icon: 'book', group: 'Program' });
-  if (hasPerm(ctx, 'content:manage')) nav.push({ href: '/admin/journeys', label: 'Journey Builder', icon: 'map', group: 'Program' });
-  if (hasPerm(ctx, 'cohort:manage')) nav.push({ href: '/admin/hackathons', label: 'Hackathon Builder', icon: 'users', group: 'Program' });
-  if (hasPerm(ctx, 'audit:read')) nav.push({ href: '/admin/audit', label: 'Audit Log', icon: 'shield', group: 'Program' });
-  if (hasPerm(ctx, 'community:moderate')) nav.push({ href: '/admin/moderation', label: 'Moderation', icon: 'shield', group: 'Program' });
-  if (hasPerm(ctx, 'community:moderate')) nav.push({ href: '/admin/showcase', label: 'Showcase', icon: 'star', group: 'Program' });
+  // Staff menu grouped by what an admin does (docs/ACCESS_MODULES_AND_NAV_SPEC.md).
+  if (hasPerm(ctx, 'analytics:read')) nav.push({ href: '/admin', label: 'Analytics', icon: 'chart', group: 'Overview' });
+  if (hasPerm(ctx, 'members:read')) nav.push({ href: '/settings/people', label: 'People', icon: 'users', group: 'People' });
+  if (ctx.superAdmin) nav.push({ href: '/settings/access', label: 'Access', icon: 'shield', group: 'People' });
+  if (hasPerm(ctx, 'cohort:read')) nav.push({ href: '/admin/cohorts', label: 'Cohorts & Sessions', icon: 'layers', group: 'People' });
+  if (hasPerm(ctx, 'content:manage')) nav.push({ href: '/admin/content', label: 'Content & Day materials', icon: 'book', group: 'Content' });
+  if (hasPerm(ctx, 'content:manage')) nav.push({ href: '/admin/journeys', label: 'Journey Builder', icon: 'map', group: 'Content' });
+  if (!learner) nav.push({ href: '/ranks', label: 'Ranks', icon: 'ranks', group: 'Community' });
+  if (!learner && hasPerm(ctx, 'community:moderate')) nav.push({ href: '/admin/showcase', label: 'Showcase', icon: 'star', group: 'Community' });
+  else if (!learner) nav.push({ href: '/showcase', label: 'Showcase', icon: 'star', group: 'Community' });
+  if (hasPerm(ctx, 'community:moderate')) nav.push({ href: '/admin/moderation', label: 'Moderation', icon: 'shield', group: 'Community' });
+  if (hasPerm(ctx, 'cohort:manage')) nav.push({ href: '/admin/hackathons', label: 'Hackathon Builder', icon: 'users', group: 'Community' });
+  if (hasPerm(ctx, 'audit:read')) nav.push({ href: '/admin/audit', label: 'Audit Log', icon: 'shield', group: 'Governance' });
   if (!learner) nav.push({ href: '/library', label: 'Open-source Library', icon: 'book', group: 'Resources' });
   if (learner) nav.push({ href: '/career', label: 'Career', icon: 'award', group: 'Grow' });
-  if (hasPerm(ctx, 'talent:discover')) nav.push({ href: '/talent', label: 'Talent', icon: 'users', group: 'Program' });
+  if (hasPerm(ctx, 'talent:discover')) nav.push({ href: '/talent', label: 'Talent', icon: 'users', group: 'Governance' });
   if (hasPerm(ctx, 'billing:self')) nav.push({ href: '/billing', label: 'Plans & Billing', icon: 'card', group: 'Account' });
   nav.push({ href: '/settings', label: 'Settings', icon: 'settings', group: 'Account' });
 
