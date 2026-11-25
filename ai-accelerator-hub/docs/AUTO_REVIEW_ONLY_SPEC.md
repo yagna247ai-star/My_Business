@@ -18,7 +18,7 @@ Every proof notifies reviewers, mentors and instructors as if a person had to de
 - When a proof is saved, the automated reviewer runs at once. If the Boss result is missing, it waits for the Boss and decides the moment the Boss is saved, exactly as today.
 - No reviewer notifications on submit.
 - If no rubric is found, the built-in `GENERIC_RUBRIC` weights are used, so a missing rubric never blocks a decision.
-- A sweep every 10 minutes (`/api/cron/auto-review`) re-runs the reviewer on pending submissions whose Boss is done. That catches errors and the existing backlog.
+- A daily sweep (`/api/cron/auto-review`, 02:15 IST; the Vercel Hobby plan allows daily cron jobs only) re-runs the reviewer on pending submissions whose Boss is done. That catches errors and the existing backlog.
 - Escalation to a person only on appeal, or when the sweep has failed on a submission for 15 minutes or more. Reviewers are notified only then.
 
 ## 3. Behaviour

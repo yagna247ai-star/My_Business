@@ -11,7 +11,7 @@
     },
     {
       "path": "/api/cron/auto-review",
-      "schedule": "*/10 * * * *"
+      "schedule": "45 20 * * *"
     },
     {
       "path": "/api/cron/link-health",
