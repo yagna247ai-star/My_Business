@@ -53,3 +53,31 @@ export function ribbonNodes(levels: (LevelRef & { state: string })[]) {
   const lastDone = nodes.reduce((n, x, i) => (x.status === 'done' ? i + 1 : n), 0);
   return { total, nodes, doneUpTo: lastDone, fillPct: lastDone > 1 && total > 1 ? ((lastDone - 1) / (total - 1)) * 100 : 0 };
 }
+
+/* ---------- finished levels on the profile (docs/PROFILE_LEVELS_SPEC.md) ---------- */
+/** One course's record: finished levels with their titles, the earned title and what comes next. */
+export function levelRecord(course: string, levels: LevelRef[], approved: { idx: number; at: Date | string | null }[]) {
+  const sorted = [...levels].sort((a, b) => a.idx - b.idx);
+  const total = sorted.length;
+  const at = new Map(approved.map(a => [a.idx, a.at ? new Date(a.at).toISOString() : null]));
+  const finished = sorted.filter(l => at.has(l.idx)).map(l => ({ idx: l.idx, code: l.code, label: `Level ${l.idx}`, title: titleFor(l, total).title, at: at.get(l.idx) ?? null }));
+  const earned = learnerTitle(sorted, finished.map(f => f.idx));
+  const next = sorted.find(l => !at.has(l.idx)) ?? null;
+  return {
+    course, done: finished.length, total, finished,
+    title: earned.current, stars: earned.stars,
+    next: next ? { idx: next.idx, label: `Level ${next.idx}`, title: titleFor(next, total).title } : null,
+    complete: total > 0 && finished.length === total,
+    summary: finished.map(f => `${f.label} · ${f.title}`).join(', '),
+  };
+}
+export type LevelRecord = ReturnType<typeof levelRecord>;
+
+/** The badge next to the profile photo: the highest finished level of the course (docs/PROFILE_LEVELS_SPEC.md AC-6). */
+export function profileBadge(course: string, levels: (LevelRef & { state: string })[]) {
+  const rec = levelRecord(course, levels, levels.filter(l => l.state === 'approved').map(l => ({ idx: l.idx, at: null })));
+  const top = rec.finished[rec.finished.length - 1];
+  if (!top) return null;
+  return { short: `L${top.idx}`, text: `L${top.idx} · ${top.title}`, title: top.title, stars: rec.stars, course, done: rec.done, total: rec.total, aria: `${course}: Level ${top.idx} finished · ${top.title}` };
+}
+export type ProfileBadge = NonNullable<ReturnType<typeof profileBadge>>;

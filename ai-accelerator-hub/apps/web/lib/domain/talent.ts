@@ -6,6 +6,7 @@
  * No opaque AI ranking: results are skill/track matches with reasons shown.
  */
 import { prisma } from '@/lib/prisma';
+import { levelRecordsFor, recordKey } from './levelRecords';
 import type { Ctx } from '@/lib/server/context';
 import { hasPerm } from '@/lib/server/context';
 import { badRequest, conflict, forbidden, notFound } from '@/lib/server/errors';
@@ -68,12 +69,14 @@ export async function discoverTalent(ctx: Ctx, opts: { skills?: string[]; trackC
   const scored = [...same.filter(p => !minor.has(`${p.tenantId}:${p.userId}`)).map(p => ({ p, cross: false })), ...visible.map(p => ({ p, cross: true }))].map(({ p, cross }) => {
     const have = parseSkills(p.skills).map(s => s.toLowerCase());
     const match = skills.filter(s => have.some(h => h.includes(s) || s.includes(h)));
-    return { id: p.userId, name: p.user.name || 'Learner', headline: p.headline, skills: parseSkills(p.skills), openTo: parseSkills(p.openTo), tenant: p.tenant.slug, crossTenant: cross, matchedSkills: match, matchCount: match.length };
+    return { id: p.userId, tenantId: p.tenantId, name: p.user.name || 'Learner', headline: p.headline, skills: parseSkills(p.skills), openTo: parseSkills(p.openTo), tenant: p.tenant.slug, crossTenant: cross, matchedSkills: match, matchCount: match.length };
   }).filter(r => skills.length === 0 || r.matchCount > 0)
     .sort((a, b) => b.matchCount - a.matchCount || a.name.localeCompare(b.name))
     .slice(0, Math.min(Math.max(opts.take || 20, 1), 50));
+  // Finished levels, verified by reviewers, for the profiles that passed every visibility rule above (PROFILE_LEVELS_SPEC AC-4/5).
+  const records = await levelRecordsFor(scored.map(r => ({ tenantId: r.tenantId, userId: r.id })));
   await audit(prisma, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'talent.discovered', resourceType: 'TalentProfile', after: { skills, results: scored.length } });
-  return scored;
+  return scored.map(({ tenantId, ...r }) => ({ ...r, levels: (records.get(recordKey(tenantId, r.id)) ?? []).map(x => ({ course: x.course, done: x.done, total: x.total, finished: x.summary })) }));
 }
 
 export async function postOpportunity(ctx: Ctx, input: { orgName: string; title: string; kind: string; description: string; skillsWanted: string[] }) {
@@ -141,9 +144,11 @@ export async function postingApplications(ctx: Ctx, opportunityId: string) {
   const rows = await prisma.application.findMany({ where: { opportunityId }, orderBy: { createdAt: 'asc' }, include: { applicant: { select: { id: true, name: true } } } });
   const profiles = await prisma.talentProfile.findMany({ where: { tenantId: ctx.tenantId, userId: { in: rows.map(r => r.applicantId) } } });
   const byUser = new Map(profiles.map(p => [p.userId, p]));
+  const records = await levelRecordsFor(rows.map(r => ({ tenantId: ctx.tenantId, userId: r.applicantId })));
   return rows.map(a => {
     const p = byUser.get(a.applicantId);
-    return { id: a.id, state: a.state, coverNote: a.coverNote, createdAt: a.createdAt, applicant: a.applicant.name || 'Learner', headline: p?.headline || '', skills: p ? parseSkills(p.skills) : [] };
+    const levels = (records.get(recordKey(ctx.tenantId, a.applicantId)) ?? []).map(x => ({ course: x.course, done: x.done, total: x.total, finished: x.summary }));
+    return { id: a.id, state: a.state, coverNote: a.coverNote, createdAt: a.createdAt, applicant: a.applicant.name || 'Learner', headline: p?.headline || '', skills: p ? parseSkills(p.skills) : [], levels };
   });
 }
 

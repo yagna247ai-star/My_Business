@@ -1,4 +1,6 @@
 import { requireCtx } from '@/lib/server/context';
+import { levelRecordsFor, recordKey } from '@/lib/domain/levelRecords';
+import { LevelRecords } from '@/components/learn/LevelRecord';
 import { myProfile, listOpportunities, myApplications } from '@/lib/domain/talent';
 import { CareerPanels } from '@/components/talent/CareerPanels';
 import { childStatus } from '@/lib/domain/childSafety';
@@ -10,9 +12,10 @@ async function Career() {
   const ctx = await requireCtx();
   const { minor } = await childStatus(ctx.tenantId, ctx.userId);
   // Child safety policy §3: under-18s never see or apply to opportunities.
-  const [profile, opps, apps] = await Promise.all([myProfile(ctx), minor ? [] : listOpportunities(ctx), minor ? [] : myApplications(ctx)]);
+  const [profile, opps, apps, records] = await Promise.all([myProfile(ctx), minor ? [] : listOpportunities(ctx), minor ? [] : myApplications(ctx), levelRecordsFor([{ tenantId: ctx.tenantId, userId: ctx.userId }])]);
   return (<>
     <section className="ph ph-plain"><h1 id="pageTitle"><Tr>Career</Tr></h1><p className="desc"><Tr>Your skill profile, open opportunities, and your applications — you control exactly who sees what.</Tr></p></section>
+    <div style={{ marginTop: 18 }}><LevelRecords records={records.get(recordKey(ctx.tenantId, ctx.userId)) ?? []} /></div>
     <CareerPanels profile={profile} opportunities={opps} applications={apps} minor={minor} />
   </>);
 }

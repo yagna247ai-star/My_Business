@@ -25,7 +25,8 @@ import { Tr } from '@/components/i18n/Tr';
 import { InstitutionSwitcher } from './InstitutionSwitcher';
 
 export type NavItem = { href: string; label: string; icon: string; group: string; count?: number };
-type Props = { user: { name: string; roleLabel: string; tenant: string; avatarUrl?: string | null; crown?: string | null }; nav: NavItem[]; streak?: { status: string; current: number } | null; xp?: number | null; unread: number; children: React.ReactNode };
+type Badge = { short: string; text: string; title: string; stars: number; course: string; done: number; total: number; aria: string };
+type Props = { user: { name: string; roleLabel: string; tenant: string; avatarUrl?: string | null; crown?: string | null; badge?: Badge | null }; nav: NavItem[]; streak?: { status: string; current: number } | null; xp?: number | null; unread: number; children: React.ReactNode };
 type Notif = { id: string; title: string; body?: string; href?: string; tone?: string; read: boolean; at: string };
 
 const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -136,7 +137,7 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children, instit
             </div>
             <div className="user-wrap" ref={menuRef}>
               <button className="user-chip" type="button" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => { setMenuOpen(!menuOpen); setNotifOpen(false); }}>
-                <span className={`avatar avatar-sm me${user.crown ? " crowned" : ""}`} aria-hidden="true">{user.avatarUrl ? <img src={user.avatarUrl} alt="" width={32} height={32} style={{ borderRadius: "50%", objectFit: "cover", width: "100%", height: "100%" }} /> : initials(user.name)}{user.crown && <span className="crown-mini" aria-hidden="true"><Crown size={18} /></span>}</span><span className="uname">{user.name}</span><span className="role-chip">{t(user.roleLabel)}</span>
+                <span className={`avatar avatar-sm me${user.crown ? " crowned" : ""}`} aria-hidden="true">{user.avatarUrl ? <img src={user.avatarUrl} alt="" width={32} height={32} style={{ borderRadius: "50%", objectFit: "cover", width: "100%", height: "100%" }} /> : initials(user.name)}{user.crown && <span className="crown-mini" aria-hidden="true"><Crown size={18} /></span>}</span><span className="uname">{user.name}</span>{/* Same tag as before: "Learner" until a level is approved, then the highest finished level (docs/PROFILE_LEVELS_SPEC.md AC-6). */}<span className="role-chip" title={user.badge?.aria}>{user.badge ? `✓ ${user.badge.text}` : t(user.roleLabel)}</span>
               </button>
               {menuOpen && (
                 <div className="menu" role="menu">

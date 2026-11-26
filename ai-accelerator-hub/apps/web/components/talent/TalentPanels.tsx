@@ -3,9 +3,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/client/api';
 
-type Cand = { id: string; name: string; headline: string; skills: string[]; openTo: string[]; tenant: string; crossTenant: boolean; matchedSkills: string[] };
+type Levels = { course: string; done: number; total: number; finished: string }[];
+type Cand = { id: string; name: string; headline: string; skills: string[]; openTo: string[]; tenant: string; crossTenant: boolean; matchedSkills: string[]; levels?: Levels };
+/** Finished levels, approved by reviewers (docs/PROFILE_LEVELS_SPEC.md AC-4). */
+const Verified = ({ levels }: { levels?: Levels }) => <>{(levels ?? []).map(l => <p key={l.course} className="small"><b>{l.course}: {l.done} of {l.total} levels finished</b>{l.finished && <> · Verified: {l.finished}</>}</p>)}</>;
 type Opp = { id: string; orgName: string; title: string; kind: string; description: string; skillsWanted: string[]; status: string; applications?: number; mine: boolean };
-type Applicant = { id: string; state: string; coverNote: string; applicant: string; headline: string; skills: string[] };
+type Applicant = { id: string; state: string; coverNote: string; applicant: string; headline: string; skills: string[]; levels?: Levels };
 
 export function TalentPanels({ mine, canPost }: { mine: Opp[]; canPost: boolean }) {
   const router = useRouter();
@@ -32,7 +35,7 @@ export function TalentPanels({ mine, canPost }: { mine: Opp[]; canPost: boolean 
         <button className="btn btn-gold btn-sm" type="submit">Search</button>
       </form>
       {cands && (cands.length === 0 ? <p className="desc" style={{ marginTop: 10 }}>No opted-in profiles match. Try fewer skills.</p> : <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0 0', display: 'grid', gap: 8 }}>
-        {cands.map(c => <li key={c.id} className="set-row"><div><b>{c.name}</b>{c.crossTenant && <span className="muted small"> · {c.tenant} (cross-org, consented)</span>}<p>{c.headline || 'No headline yet'}</p><p className="small">Skills: {c.skills.join(', ') || '—'} · Open to: {c.openTo.join(', ') || '—'}</p>{c.matchedSkills.length > 0 && <p className="small">Matched: {c.matchedSkills.join(', ')}</p>}</div></li>)}
+        {cands.map(c => <li key={c.id} className="set-row"><div><b>{c.name}</b>{c.crossTenant && <span className="muted small"> · {c.tenant} (cross-org, consented)</span>}<p>{c.headline || 'No headline yet'}</p><p className="small">Skills: {c.skills.join(', ') || '—'} · Open to: {c.openTo.join(', ') || '—'}</p>{c.matchedSkills.length > 0 && <p className="small">Matched: {c.matchedSkills.join(', ')}</p>}<Verified levels={c.levels} /></div></li>)}
       </ul>)}
     </section>
     {canPost && <section className="card card-pad" aria-labelledby="post"><h2 className="h3" id="post">Post an opportunity</h2>
@@ -54,7 +57,7 @@ export function TalentPanels({ mine, canPost }: { mine: Opp[]; canPost: boolean 
           <button type="button" className="btn btn-outline btn-sm" onClick={() => call(async () => { const d = await api<Applicant[]>(`/api/v1/opportunities/${o.id}/applications`); setApps(a => ({ ...a, [o.id]: d })); }, 'Applicants loaded.')}>View applicants</button>
           {o.status === 'open' && <button type="button" className="btn btn-outline btn-sm" onClick={() => call(() => api(`/api/v1/opportunities/${o.id}/applications`, { method: 'POST' }), 'Opportunity closed.')}>Close</button>}
         </div>
-        {(apps[o.id] || []).map(a => <div key={a.id} className="set-row"><div><b>{a.applicant}</b><p>{a.headline}</p><p className="small">Skills: {a.skills.join(', ') || '—'}</p><p className="desc">“{a.coverNote}”</p><p className="small">State: {a.state}</p></div>
+        {(apps[o.id] || []).map(a => <div key={a.id} className="set-row"><div><b>{a.applicant}</b><p>{a.headline}</p><p className="small">Skills: {a.skills.join(', ') || '—'}</p><Verified levels={a.levels} /><p className="desc">“{a.coverNote}”</p><p className="small">State: {a.state}</p></div>
           {(a.state === 'applied' || a.state === 'shortlisted') && <div style={{ display: 'flex', gap: 6 }}>{a.state === 'applied' && <button type="button" className="btn btn-outline btn-sm" onClick={() => call(() => api(`/api/v1/applications/${a.id}/state`, { body: { state: 'shortlisted' } }), 'Shortlisted.')}>Shortlist</button>}<button type="button" className="btn btn-outline btn-sm" onClick={() => call(() => api(`/api/v1/applications/${a.id}/state`, { body: { state: 'rejected' } }), 'Rejected.')}>Reject</button></div>}</div>)}
       </article>)}
     </section>}

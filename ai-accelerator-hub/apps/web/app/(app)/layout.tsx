@@ -6,7 +6,7 @@ import { totalXp } from '@/lib/domain/xp';
 import { streakView } from '@/lib/domain/streak';
 import { journeyOverview } from '@/lib/domain/journey';
 import { topApprovedLevel, crownLabel } from '@/lib/domain/gamify';
-import { learnerTitle, starsText } from '@/lib/domain/levelTitles';
+import { learnerTitle, starsText, profileBadge } from '@/lib/domain/levelTitles';
 import { Shell, type NavItem } from '@/components/app/Shell';
 
 export const dynamic = 'force-dynamic';
@@ -71,11 +71,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const topTitle = topIdx !== null ? overview!.levels.find(l => l.idx === topIdx)?.title : undefined;
   // Earned title for the crown (docs/LEVEL_TITLES_SPEC.md).
   const earned = overview ? learnerTitle(overview.levels, overview.levels.filter(l => l.state === 'approved').map(l => l.idx)) : null;
+  // The finished level shown next to the profile photo (docs/PROFILE_LEVELS_SPEC.md AC-6).
+  const badge = overview ? profileBadge(overview.enrollment.journey.title, overview.levels) : null;
   const [unread, xp, streak] = await Promise.all([
     prisma.notification.count({ where: { tenantId: ctx.tenantId, userId: ctx.userId, channel: 'in_app', state: { not: 'read' } } }),
     learner ? totalXp(ctx.tenantId, ctx.userId) : Promise.resolve(null),
     learner ? prisma.streak.findUnique({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.userId } } }) : Promise.resolve(null),
   ]);
   const sv = learner ? streakView(streak) : null;
-  return <Shell user={{ name: ctx.name, roleLabel: ROLE_LABEL[ctx.role], tenant: ctx.tenantName, avatarUrl: me?.avatarUrl ?? null, crown: earned && earned.levelIdx ? `${earned.current} ${starsText(earned.stars)} · Level ${earned.levelIdx}` : crownLabel(topIdx, topTitle) }} nav={nav} unread={unread} institution={{ name: tenantRow?.name ?? ctx.tenantName, logoUrl: tenantRow?.logoUrl ?? null, canSwitch: activeMemberships > 1 }} xp={xp} streak={sv ? { status: sv.status, current: sv.current } : null}>{children}</Shell>;
+  return <Shell user={{ name: ctx.name, roleLabel: ROLE_LABEL[ctx.role], tenant: ctx.tenantName, avatarUrl: me?.avatarUrl ?? null, badge, crown: earned && earned.levelIdx ? `${earned.current} ${starsText(earned.stars)} · Level ${earned.levelIdx}` : crownLabel(topIdx, topTitle) }} nav={nav} unread={unread} institution={{ name: tenantRow?.name ?? ctx.tenantName, logoUrl: tenantRow?.logoUrl ?? null, canSwitch: activeMemberships > 1 }} xp={xp} streak={sv ? { status: sv.status, current: sv.current } : null}>{children}</Shell>;
 }
