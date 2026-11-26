@@ -9,7 +9,7 @@ import { DEFAULT_AREA, normaliseArea } from './areas';
 
 export const MAX_IMPORT_ROWS = 2000;
 
-export type ImportRow = { line: number; name: string; email: string; role: Role; cohort: string | null; area: string };
+export type ImportRow = { line: number; name: string; email: string; role: Role; cohort: string | null; area: string; institution: string | null };
 export type ImportError = { line: number; message: string };
 
 /** RFC 4180-style: quoted fields, doubled quotes, commas and newlines inside quotes, CRLF, BOM. */
@@ -40,7 +40,7 @@ export function parseMembersCsv(text: string): { rows: ImportRow[]; errors: Impo
   if (!recs.length) return { rows: [], errors: [{ line: 1, message: 'The file is empty.' }] };
   const head = recs[0].map(h => h.trim().toLowerCase());
   const col = (n: string) => head.indexOf(n);
-  if (col('name') < 0 || col('email') < 0) return { rows: [], errors: [{ line: 1, message: 'The first row must name the columns, including name and email (optional: role, cohort, area).' }] };
+  if (col('name') < 0 || col('email') < 0) return { rows: [], errors: [{ line: 1, message: 'The first row must name the columns, including name and email (optional: role, cohort, area, institution).' }] };
   if (recs.length - 1 > MAX_IMPORT_ROWS) return { rows: [], errors: [{ line: 1, message: `Import at most 2,000 people at a time (this file has ${(recs.length - 1).toLocaleString('en-IN')}).` }] };
 
   const rows: ImportRow[] = []; const errors: ImportError[] = []; const seen = new Map<string, number>();
@@ -58,7 +58,7 @@ export function parseMembersCsv(text: string): { rows: ImportRow[]; errors: Impo
     const areaRaw = get('area');
     const area = areaRaw ? normaliseArea(areaRaw) : DEFAULT_AREA;
     if (!area) { errors.push({ line, message: `Unknown area “${areaRaw}”. Use a district or city in Telangana or Andhra Pradesh.` }); return; }
-    rows.push({ line, name: name.slice(0, 100), email: e.data, role, cohort: get('cohort') || null, area });
+    rows.push({ line, name: name.slice(0, 100), email: e.data, role, cohort: get('cohort') || null, area, institution: get('institution') ? get('institution').toUpperCase() : null });
   });
   return { rows, errors };
 }

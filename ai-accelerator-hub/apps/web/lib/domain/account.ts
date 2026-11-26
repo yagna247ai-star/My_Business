@@ -17,7 +17,7 @@ export const registerSchema = z.object({
   password: z.string({ error: 'Choose a password.' }).min(10, 'Use at least 10 characters.').max(200, 'Use at most 200 characters.').regex(/[A-Za-z]/, 'Include at least one letter.').regex(/[0-9]/, 'Include at least one number.'),
   // Read the current year per request (a module-level value would go stale across New Year on a long-running server).
   birthYear: z.coerce.number({ error: 'Enter your year of birth.' }).int('Enter a whole year, e.g. 2001.').refine(y => y >= 1920 && y <= new Date().getFullYear(), { error: 'Enter a valid year of birth.' }),
-  inviteCode: z.string().trim().max(40, 'That invite code is too long.').optional().or(z.literal('')),
+  inviteCode: z.string().trim().max(40, 'That code is too long.').optional().or(z.literal('')), // institution code or cohort invite code
   journeySlug: z.string().trim().max(60).regex(/^[a-z0-9-]*$/, 'Choose a journey from the list.').optional().or(z.literal('')),
   guardianEmail: z.string().trim().toLowerCase().email('Enter a valid parent or guardian email.').optional().or(z.literal('')),
   acceptTerms: z.literal(true, { error: 'Accept the terms and privacy notice to continue.' }),
@@ -25,16 +25,11 @@ export const registerSchema = z.object({
   trackAck: z.boolean().optional(),
 }).refine(v => !v.guardianEmail || v.guardianEmail !== v.email, { path: ['guardianEmail'], error: 'Use your parent or guardian’s email, not your own.' });
 
-/** Which institution a sign-up joins: the invite code's, or the public default. */
+/** Which institution a sign-up joins: an institution code, a cohort invite code, or AIHUB (docs/INSTITUTIONS_SPEC.md). */
 export async function registrationTenant(inviteCode?: string): Promise<{ tenantId: string; cohortId: string | null }> {
-  if (inviteCode) {
-    const cohort = await prisma.cohort.findUnique({ where: { inviteCode: inviteCode.toUpperCase() } });
-    if (!cohort) throw badRequest('That invite code is not valid.', { inviteCode: 'Check the code with your institution.' });
-    return { tenantId: cohort.tenantId, cohortId: cohort.id };
-  }
-  const t = await prisma.tenant.findUnique({ where: { slug: process.env.DEFAULT_TENANT_SLUG || 'demo' } });
-  if (!t) throw badRequest('Public registration is not open. Ask your institution for an invite code.');
-  return { tenantId: t.id, cohortId: null };
+  const { institutionForCode } = await import('./institutions');
+  const r = await institutionForCode(inviteCode);
+  return { tenantId: r.tenantId, cohortId: r.cohortId };
 }
 
 /** Journeys a new learner may pick on the sign-up form (published only, default first). */

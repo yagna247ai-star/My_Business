@@ -11,8 +11,8 @@ describe('CSV import', () => {
     const r = parseMembersCsv(csv);
     expect(r.errors).toEqual([]);
     expect(r.rows).toEqual([
-      { line: 2, name: 'Rao, Asha', email: 'asha@example.com', role: 'learner', cohort: 'Batch 1', area: 'Warangal' },
-      { line: 3, name: 'Ravi Kumar', email: 'ravi@example.com', role: 'learner', cohort: null, area: 'Bhagyanagar' },
+      { line: 2, name: 'Rao, Asha', email: 'asha@example.com', role: 'learner', cohort: 'Batch 1', area: 'Warangal', institution: null },
+      { line: 3, name: 'Ravi Kumar', email: 'ravi@example.com', role: 'learner', cohort: null, area: 'Bhagyanagar', institution: null },
     ]);
   });
   it('AC-1: reports bad email, unknown role, unknown area and duplicates by line', () => {
@@ -23,6 +23,9 @@ describe('CSV import', () => {
     expect(r.errors[2].message).toMatch(/area/i);
     expect(r.errors[3].message).toMatch(/twice|duplicate/i);
     expect(r.errors[4].message).toMatch(/role/i);
+  });
+  it('reads an optional institution code column (docs/INSTITUTIONS_SPEC.md)', () => {
+    expect(parseMembersCsv('name,email,institution\nAsha Rao,a@x.com,skill01').rows[0].institution).toBe('SKILL01');
   });
   it('needs name and email columns, and caps the size', () => {
     expect(parseMembersCsv('foo,bar\n1,2').errors[0].message).toMatch(/name.*email/i);

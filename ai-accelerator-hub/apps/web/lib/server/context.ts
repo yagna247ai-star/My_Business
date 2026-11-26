@@ -18,15 +18,36 @@ export async function getCtx(): Promise<Ctx | null> {
   const session = await auth();
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId) return null;
-  const wantedTenant = (session as unknown as { tenantId?: string })?.tenantId || undefined;
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, name: true, globalRole: true, mustChangePassword: true } });
   if (!user) return null;
-  const membership = await prisma.membership.findFirst({
-    where: { userId, status: 'active', ...(wantedTenant ? { tenantId: wantedTenant } : {}), tenant: { status: 'active' } },
-    include: { role: true, tenant: true }, orderBy: { createdAt: 'asc' },
-  });
-  if (!membership || !isRole(membership.role.code)) return null;
-  return { userId: user.id, email: user.email, name: user.name || user.email, tenantId: membership.tenantId, tenantSlug: membership.tenant.slug, tenantName: membership.tenant.name, role: membership.role.code, cohortId: membership.cohortId, superAdmin: user.globalRole === 'super_admin', perms: effectivePerms(membership.role.code, membership.grants, membership.revokes), mustChangePassword: user.mustChangePassword };
+  const superAdmin = user.globalRole === 'super_admin';
+  // The institution chosen in the switcher (signed cookie), else the one in the session, else the first active one.
+  const switched = await switchedTenant();
+  const sessionTenant = (session as unknown as { tenantId?: string })?.tenantId || undefined;
+  const find = (tenantId?: string) => prisma.membership.findFirst({ where: { userId, status: 'active', ...(tenantId ? { tenantId } : {}), tenant: { status: 'active' } }, include: { role: true, tenant: true }, orderBy: { createdAt: 'asc' } });
+  let membership = (switched ? await find(switched) : null) ?? (sessionTenant ? await find(sessionTenant) : null) ?? await find();
+  // A Super Admin may open any active institution without being a member of it (docs/INSTITUTIONS_SPEC.md §2 #15).
+  if (superAdmin && switched && membership?.tenantId !== switched) {
+    const t = await prisma.tenant.findFirst({ where: { id: switched, status: 'active' } });
+    if (t) return { userId: user.id, email: user.email, name: user.name || user.email, tenantId: t.id, tenantSlug: t.slug, tenantName: t.name, role: 'super_admin', cohortId: null, superAdmin: true, perms: effectivePerms('super_admin', '[]', '[]'), mustChangePassword: user.mustChangePassword };
+  }
+  if (!membership || !isRole(membership.role.code)) {
+    if (!superAdmin) return null;
+    const t = await prisma.tenant.findFirst({ where: { status: 'active' }, orderBy: { createdAt: 'asc' } });
+    if (!t) return null;
+    return { userId: user.id, email: user.email, name: user.name || user.email, tenantId: t.id, tenantSlug: t.slug, tenantName: t.name, role: 'super_admin', cohortId: null, superAdmin: true, perms: effectivePerms('super_admin', '[]', '[]'), mustChangePassword: user.mustChangePassword };
+  }
+  membership = membership!;
+  return { userId: user.id, email: user.email, name: user.name || user.email, tenantId: membership.tenantId, tenantSlug: membership.tenant.slug, tenantName: membership.tenant.name, role: membership.role.code as Role, cohortId: membership.cohortId, superAdmin, perms: effectivePerms(membership.role.code, membership.grants, membership.revokes), mustChangePassword: user.mustChangePassword };
+}
+
+/** The signed institution-switch cookie, if valid. */
+async function switchedTenant(): Promise<string | null> {
+  try {
+    const { cookies } = await import('next/headers');
+    const { readTenant } = await import('@/lib/domain/institutionsCore');
+    return readTenant((await cookies()).get('aih_tenant')?.value, process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || 'dev-only-insecure-secret-not-for-production-use');
+  } catch { return null; } // outside a request (scripts, tests)
 }
 
 export async function requireCtx(): Promise<Ctx> {

@@ -13,7 +13,7 @@ import { DEFAULT_AREA } from '@/lib/domain/areas';
 type Opt = { code: string; label: string };
 type BulkResult = { done: number; skipped: { email: string; reason: string }[]; notFound: number };
 
-const ACTIONS: { key: string; label: string; superOnly?: boolean; needs?: 'role' | 'cohort' | 'area'; danger?: boolean }[] = [
+const ACTIONS: { key: string; label: string; superOnly?: boolean; needs?: 'role' | 'cohort' | 'area' | 'institution'; danger?: boolean }[] = [
   { key: 'reset_link', label: 'Email a password reset link' },
   { key: 'force_change', label: 'Force password change at next sign-in', superOnly: true },
   { key: 'suspend', label: 'Suspend (disable sign-in here)', danger: true },
@@ -22,27 +22,34 @@ const ACTIONS: { key: string; label: string; superOnly?: boolean; needs?: 'role'
   { key: 'set_cohort', label: 'Move to cohort…', needs: 'cohort' },
   { key: 'set_area', label: 'Set area…', needs: 'area' },
   { key: 'remove', label: 'Remove from institution', danger: true },
+  { key: 'move_to', label: 'Move to institution… (with their progress)', superOnly: true, needs: 'institution', danger: true },
+  { key: 'add_to', label: 'Also add to institution…', superOnly: true, needs: 'institution' },
 ];
 
-export function BulkBar({ selected, clear, isSuper, roles, cohorts }: { selected: string[]; clear: () => void; isSuper: boolean; roles: Opt[]; cohorts: { id: string; name: string }[] }) {
+export function BulkBar({ selected, clear, isSuper, roles, cohorts, institutions = [] }: { selected: string[]; clear: () => void; isSuper: boolean; roles: Opt[]; cohorts: { id: string; name: string }[]; institutions?: { id: string; name: string; code: string | null }[] }) {
   const r = useRun();
-  const [action, setAction] = useState('reset_link'); const [role, setRole] = useState('learner'); const [cohort, setCohort] = useState(''); const [area, setArea] = useState(DEFAULT_AREA);
+  const [action, setAction] = useState('reset_link'); const [inst, setInst] = useState(institutions[0]?.id ?? ''); const [role, setRole] = useState('learner'); const [cohort, setCohort] = useState(''); const [area, setArea] = useState(DEFAULT_AREA);
   const [result, setResult] = useState<BulkResult | null>(null); const [confirming, setConfirming] = useState(false);
   const a = ACTIONS.find(x => x.key === action)!;
   if (!selected.length && !result) return null;
   const value = a.needs === 'role' ? role : a.needs === 'cohort' ? cohort : a.needs === 'area' ? area : undefined;
   const apply = async () => {
     setConfirming(false);
+    if (a.needs === 'institution') {
+      await r.run(async () => { const out = await api<{ done: number; skipped: { email: string; reason: string }[] }>('/api/v1/admin/people/transfer', { method: 'POST', body: { userIds: selected, toTenantId: inst, mode: action === 'move_to' ? 'move' : 'add' } }); setResult({ done: out.done, skipped: out.skipped, notFound: 0 }); clear(); }, action === 'move_to' ? 'Moved. Their progress now shows in the new institution.' : 'Added.');
+      return;
+    }
     await r.run(async () => { const out = await api<BulkResult>('/api/v1/admin/people/bulk', { method: 'POST', body: { userIds: selected, action, value } }); setResult(out); clear(); }, 'Done.');
   };
   return (
     <section className="card card-pad stack gap-8" aria-label="Bulk actions" style={{ position: 'sticky', top: 8, zIndex: 5, border: '1px solid var(--accent, #3878F6)' }}>
       {selected.length > 0 && <div className="row gap-8 wrap" style={{ alignItems: 'flex-end' }}>
         <b>{selected.length} selected</b>
-        <select className="select" aria-label="Bulk action" value={action} onChange={e => setAction(e.target.value)}>{ACTIONS.filter(x => isSuper || !x.superOnly).map(x => <option key={x.key} value={x.key}>{x.label}</option>)}</select>
+        <select className="select" aria-label="Bulk action" value={action} onChange={e => setAction(e.target.value)}>{ACTIONS.filter(x => (isSuper || !x.superOnly) && (x.needs !== 'institution' || institutions.length > 0)).map(x => <option key={x.key} value={x.key}>{x.label}</option>)}</select>
         {a.needs === 'role' && <select className="select" aria-label="New role" value={role} onChange={e => setRole(e.target.value)}>{roles.filter(o => isSuper || o.code !== 'tenant_admin').map(o => <option key={o.code} value={o.code}>{o.label}</option>)}</select>}
         {a.needs === 'cohort' && <select className="select" aria-label="Cohort" value={cohort} onChange={e => setCohort(e.target.value)}><option value="">No cohort</option>{cohorts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>}
         {a.needs === 'area' && <AreaPicker value={area} label="Area" onChange={setArea} />}
+        {a.needs === 'institution' && <select className="select" aria-label="Institution" value={inst} onChange={e => setInst(e.target.value)}>{institutions.map(i => <option key={i.id} value={i.id}>{i.name}{i.code ? ` (${i.code})` : ''}</option>)}</select>}
         {confirming ? <><span className="small">Apply to {selected.length}?</span><button className={`btn btn-sm ${a.danger ? 'btn-danger' : 'btn-primary'}`} type="button" disabled={r.busy} onClick={apply}>Yes, apply</button><button className="btn btn-text btn-sm" type="button" onClick={() => setConfirming(false)}>Cancel</button></>
           : <button className="btn btn-primary btn-sm" type="button" disabled={r.busy} onClick={() => setConfirming(true)}>Apply</button>}
         <button className="btn btn-text btn-sm" type="button" onClick={clear}>Clear selection</button>
@@ -68,7 +75,7 @@ export function ImportCsvButton() {
     <button className="btn btn-soft btn-sm" type="button" onClick={() => { setOpen(true); setOut(null); setCsv(''); setFile(''); }}><Upload size={15} />Import CSV</button>
     {open && <Modal title="Import people from a CSV file" wide onClose={() => setOpen(false)}>
       <div className="stack gap-12">
-        <p className="small">Columns: <code>name,email,role,cohort,area</code>. Role, cohort and area are optional (default learner, no cohort, Bhagyanagar). Each new person gets an email to choose their password (link valid 7 days). Up to 2,000 rows.</p>
+        <p className="small">Columns: <code>name,email,role,cohort,area,institution</code>. Role, cohort, area and institution are optional (default learner, no cohort, Bhagyanagar, this institution). Super Admins can put an institution code in the last column to add people there. Each new person gets an email to choose their password (link valid 7 days). Up to 2,000 rows.</p>
         <a className="link small" href={`data:text/csv;charset=utf-8,${encodeURIComponent(sample)}`} download="people-template.csv">Download a template</a>
         <Field label="CSV file"><input className="input" type="file" accept=".csv,text/csv" onChange={async e => { const f = e.target.files?.[0]; if (!f) return; if (f.size > 1_000_000) { r.setErr('The file is larger than 1 MB.'); return; } setFile(f.name); setCsv(await f.text()); setOut(null); }} /></Field>
         {r.err && <p className="callout warn small" role="alert">{r.err}</p>}

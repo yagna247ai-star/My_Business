@@ -40,6 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // Staff menu grouped by what an admin does (docs/ACCESS_MODULES_AND_NAV_SPEC.md).
   if (hasPerm(ctx, 'analytics:read')) nav.push({ href: '/admin', label: 'Analytics', icon: 'chart', group: 'Overview' });
   if (hasPerm(ctx, 'members:read')) nav.push({ href: '/settings/people', label: 'People', icon: 'users', group: 'People' });
+  if (ctx.superAdmin) nav.push({ href: '/settings/institute', label: 'Institutions', icon: 'layers', group: 'Overview' });
   if (ctx.superAdmin) nav.push({ href: '/settings/access', label: 'Access', icon: 'shield', group: 'People' });
   if (hasPerm(ctx, 'cohort:read')) nav.push({ href: '/admin/cohorts', label: 'Cohorts & Sessions', icon: 'layers', group: 'People' });
   if (hasPerm(ctx, 'content:manage')) nav.push({ href: '/admin/content', label: 'Content & Day materials', icon: 'book', group: 'Content' });
@@ -57,6 +58,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   nav.push({ href: '/settings', label: 'Settings', icon: 'settings', group: 'Account' });
 
   const me = await prisma.user.findUnique({ where: { id: ctx.userId }, select: { avatarUrl: true } });
+  // Institution switcher (docs/INSTITUTIONS_SPEC.md): Super Admin → any institution; others → when they belong to more than one.
+  const [tenantRow, activeMemberships] = await Promise.all([
+    prisma.tenant.findUnique({ where: { id: ctx.tenantId }, select: { name: true, logoUrl: true } }),
+    ctx.superAdmin ? Promise.resolve(2) : prisma.membership.count({ where: { userId: ctx.userId, status: 'active', tenant: { status: 'active' } } }),
+  ]);
   const overview = learner ? await journeyOverview(ctx).catch(() => null) : null;
   const topIdx = overview ? topApprovedLevel(overview.levels) : null;
   const topTitle = topIdx !== null ? overview!.levels.find(l => l.idx === topIdx)?.title : undefined;
@@ -66,5 +72,5 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     learner ? prisma.streak.findUnique({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.userId } } }) : Promise.resolve(null),
   ]);
   const sv = learner ? streakView(streak) : null;
-  return <Shell user={{ name: ctx.name, roleLabel: ROLE_LABEL[ctx.role], tenant: ctx.tenantName, avatarUrl: me?.avatarUrl ?? null, crown: crownLabel(topIdx, topTitle) }} nav={nav} unread={unread} xp={xp} streak={sv ? { status: sv.status, current: sv.current } : null}>{children}</Shell>;
+  return <Shell user={{ name: ctx.name, roleLabel: ROLE_LABEL[ctx.role], tenant: ctx.tenantName, avatarUrl: me?.avatarUrl ?? null, crown: crownLabel(topIdx, topTitle) }} nav={nav} unread={unread} institution={{ name: tenantRow?.name ?? ctx.tenantName, logoUrl: tenantRow?.logoUrl ?? null, canSwitch: activeMemberships > 1 }} xp={xp} streak={sv ? { status: sv.status, current: sv.current } : null}>{children}</Shell>;
 }

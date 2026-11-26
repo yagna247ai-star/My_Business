@@ -22,6 +22,7 @@ import { NavIcon } from './icons';
 import { useT } from '@/components/i18n/I18nProvider';
 import type { T } from '@/lib/i18n/core';
 import { Tr } from '@/components/i18n/Tr';
+import { InstitutionSwitcher } from './InstitutionSwitcher';
 
 export type NavItem = { href: string; label: string; icon: string; group: string; count?: number };
 type Props = { user: { name: string; roleLabel: string; tenant: string; avatarUrl?: string | null; crown?: string | null }; nav: NavItem[]; streak?: { status: string; current: number } | null; xp?: number | null; unread: number; children: React.ReactNode };
@@ -30,7 +31,7 @@ type Notif = { id: string; title: string; body?: string; href?: string; tone?: s
 const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 const ago = (t: T, iso: string) => { const s = (Date.now() - Date.parse(iso)) / 1000; if (s < 60) return t('just now'); if (s < 3600) return t('{n} min ago', { n: Math.round(s / 60) }); if (s < 86400) return t('{n} h ago', { n: Math.round(s / 3600) }); return t('{n} d ago', { n: Math.round(s / 86400) }); };
 
-export function Shell({ user, nav, streak, xp, unread: unread0, children }: Props) {
+export function Shell({ user, nav, streak, xp, unread: unread0, children, institution }: Props & { institution?: { name: string; logoUrl: string | null; canSwitch: boolean } }) {
   const path = usePathname(); const router = useRouter(); const t = useT();
   const [open, setOpen] = useState(false); const [notifOpen, setNotifOpen] = useState(false); const [menuOpen, setMenuOpen] = useState(false);
   const [notes, setNotes] = useState<Notif[] | null>(null); const [unread, setUnread] = useState(unread0);
@@ -113,6 +114,7 @@ export function Shell({ user, nav, streak, xp, unread: unread0, children }: Prop
           <button className="icon-btn only-mobile" type="button" aria-label={t('Open menu')} aria-expanded={open} aria-controls="sidebar" onClick={() => setOpen(true)}><Menu size={18} /></button>
           <nav className="crumb" aria-label={t('Breadcrumb')}><span className="crumb-pre">{t('You are here')}</span><span className="crumb-cur" aria-current="page">{t(current?.label || 'Home')}</span><ChevronRight size={14} aria-hidden="true" /></nav>
           <div className="top-right">
+            {institution && <InstitutionSwitcher name={institution.name} logoUrl={institution.logoUrl} canSwitch={institution.canSwitch} />}
             {sv && streak && <Link href="/dashboard#streak" className={`pill pill-streak ${sv.cls}`} title={`Streak: ${streak.current} (${streak.status})`}><sv.I size={15} aria-hidden="true" /><span><b>{streak.current}</b><span className="days-word"> {sv.w}</span></span></Link>}
             {typeof xp === 'number' && <Link href="/achievements" className="pill pill-rank" title={t('Total XP')}>{xp.toLocaleString('en-IN')} XP</Link>}
             <HelpButton />

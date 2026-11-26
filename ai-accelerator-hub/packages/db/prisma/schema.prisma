@@ -22,6 +22,10 @@ model Tenant {
   id        String   @id @default(cuid())
   slug      String   @unique
   name      String
+  /// docs/INSTITUTIONS_SPEC.md: the code learners type at registration (3–12 A–Z/0–9), type, and logo
+  code      String?  @unique
+  type      String   @default("other") // platform | skill_centre | college | school | company | other
+  logoUrl   String?
   plan      String   @default("free") // free | pro | enterprise
   settings  String? // JSON string: { branding: {...}, feature_flags: {...} }
   isolation String   @default("shared") // shared | dedicated_db
@@ -133,6 +137,9 @@ model Membership {
   /// docs/SUPER_ADMIN_CONTROL_SPEC.md: per-person permissions on top of the role (JSON Permission[])
   grants    String   @default("[]")
   revokes   String   @default("[]")
+  /// docs/INSTITUTIONS_SPEC.md: status active | alumni | suspended; when they left, and where they moved
+  leftAt          DateTime?
+  movedToTenantId String?
   joinedAt  DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

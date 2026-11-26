@@ -26,8 +26,8 @@ function makePassword() {
   return `${pick(A, 1)}${pick(a, 6)}-${pick(d, 4)}`;
 }
 
-export function PeopleSettings({ rows, roles, cohorts, meId, canManage, journeys, initialFilter = 'all', isSuper = false }: {
-  rows: Row[]; roles: Opt[]; cohorts: { id: string; name: string }[]; meId: string; canManage: boolean; isSuper?: boolean;
+export function PeopleSettings({ rows, roles, cohorts, meId, canManage, journeys, initialFilter = 'all', isSuper = false, institutions = [] }: {
+  rows: Row[]; roles: Opt[]; cohorts: { id: string; name: string }[]; meId: string; canManage: boolean; isSuper?: boolean; institutions?: { id: string; name: string; code: string | null }[];
   /** Published journeys; set only for a Super Admin, who may move people between journeys. */
   journeys: { id: string; title: string }[] | null; initialFilter?: 'all' | 'attention';
 }) {
@@ -55,13 +55,13 @@ export function PeopleSettings({ rows, roles, cohorts, meId, canManage, journeys
       <div className="row gap-8 wrap" style={{ flex: 1 }}>
         <input className="input set-search" type="search" aria-label="Search people" placeholder="Search name or email…" value={q} onChange={e => setQ(e.target.value)} />
         <select className="select" aria-label="Filter by role" value={role} onChange={e => setRole(e.target.value)}><option value="">All roles</option>{[{ code: 'super_admin', label: 'Super Admin' }, ...roles].map(o => <option key={o.code} value={o.code}>{o.label}</option>)}</select>
-        <select className="select" aria-label="Filter by status" value={status} onChange={e => setStatus(e.target.value)}><option value="">Any status</option><option value="active">Active</option><option value="suspended">Suspended</option></select>
+        <select className="select" aria-label="Filter by status" value={status} onChange={e => setStatus(e.target.value)}><option value="">Any status</option><option value="active">Active</option><option value="suspended">Suspended</option><option value="alumni">Alumni (moved on)</option></select>
       </div>
       {canManage && <ImportCsvButton />}
       {canManage && <button className="btn btn-primary btn-sm" type="button" onClick={() => setAdd({ name: '', email: '', role: 'learner', password: makePassword(), cohortId: '' })}><UserPlus size={15} />Add person</button>}
     </div>
     <r.Status />
-    {canManage && <BulkBar selected={[...sel]} clear={() => setSel(new Set())} isSuper={isSuper} roles={roles} cohorts={cohorts} />}
+    {canManage && <BulkBar selected={[...sel]} clear={() => setSel(new Set())} isSuper={isSuper} roles={roles} cohorts={cohorts} institutions={institutions} />}
 
     <div className="card table-wrap"><table className="tbl"><caption className="sr-only">People</caption>
       <thead><tr>{canManage && <th style={{ width: 32 }}><input type="checkbox" aria-label="Select everyone shown" checked={list.length > 0 && list.filter(x => !locked(x)).every(x => sel.has(x.userId))} onChange={e => setSel(e.target.checked ? new Set(list.filter(x => !locked(x)).map(x => x.userId)) : new Set())} /></th>}<th>Person</th><th>Role</th><th>Cohort</th><th>Journey</th><th>Progress</th><th>Streak</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr></thead>

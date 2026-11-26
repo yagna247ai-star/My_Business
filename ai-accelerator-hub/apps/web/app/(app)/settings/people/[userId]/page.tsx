@@ -5,6 +5,7 @@ import { guarded } from '@/lib/server/page';
 import { personProfile } from '@/lib/domain/personProfile';
 import { learnerTrack } from '@/lib/domain/journeyTracks';
 import { StaffTrackCard } from '@/components/settings/StaffTrackCard';
+import { institutionHistory } from '@/lib/domain/institutions';
 
 export const metadata = { title: 'Person profile' };
 
@@ -16,7 +17,7 @@ const Badge = ({ s }: { s: string }) => <span className={`badge ${STATE_BADGE[s]
 async function PersonProfile({ params }: { params: Promise<{ userId: string }> }) {
   const ctx = await requirePerm('members:read');
   const { userId } = await params;
-  const [p, track] = await Promise.all([personProfile(ctx, userId), learnerTrack(ctx, userId).catch(() => null)]);
+  const [p, track, history] = await Promise.all([personProfile(ctx, userId), learnerTrack(ctx, userId).catch(() => null), institutionHistory(userId)]);
   const active = p.journeys.find(j => j.state === 'active') ?? p.journeys[0];
   const initials = p.name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const backHref = '/settings/people';
@@ -92,6 +93,9 @@ async function PersonProfile({ params }: { params: Promise<{ userId: string }> }
         <p className="small">Leaderboard: {p.safety.leaderboard === 'private' ? 'hidden (shows as Anonymous learner)' : 'visible to cohort'}</p>
         <p className="small">Age group: {p.safety.minor ? `under 18 · guardian consent ${label(p.safety.guardianConsent)}` : 'adult'}</p>
         <p className="muted xs">Account created {fmt(p.accountCreatedAt)}. Your view of this profile is recorded in the audit log.</p>
+      </section>
+      <section className="card card-pad stack gap-8" aria-labelledby="hT"><h2 className="h3" id="hT">Institution history</h2>
+        <ul className="stack gap-4" style={{ margin: 0, paddingLeft: 18 }}>{history.map((h, i) => <li key={i} className="small"><b>{h.institution}</b>{h.code ? ` (${h.code})` : ''} · {label(h.role)} · {h.status}{` · joined ${fmt(h.joinedAt)}`}{h.leftAt ? ` · left ${fmt(h.leftAt)}` : ''}{h.movedTo ? ` → ${h.movedTo}` : ''}</li>)}</ul>
       </section>
     </div>
   </>);

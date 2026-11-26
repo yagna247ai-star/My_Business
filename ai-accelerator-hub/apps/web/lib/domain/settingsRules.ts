@@ -26,8 +26,9 @@ export function passwordProblem(pw: string): string | null {
 }
 
 /** Contact details kept in Tenant.settings next to other keys (e.g. defaultJourneySlug), which must survive an edit. */
-export type InstituteProfile = { contactEmail?: string; phone?: string; website?: string; city?: string; about?: string };
-export const PROFILE_KEYS = ['contactEmail', 'phone', 'website', 'city', 'about'] as const;
+// docs/INSTITUTIONS_SPEC.md: the full institution profile (stored in tenant settings).
+export type InstituteProfile = { contactEmail?: string; phone?: string; website?: string; city?: string; about?: string; legalName?: string; address?: string; state?: string; pincode?: string; contactName?: string; registrationNo?: string; established?: string };
+export const PROFILE_KEYS = ['contactEmail', 'phone', 'website', 'city', 'about', 'legalName', 'address', 'state', 'pincode', 'contactName', 'registrationNo', 'established'] as const;
 
 export function mergeInstituteProfile(existing: Record<string, unknown>, profile: InstituteProfile): Record<string, unknown> {
   const next: Record<string, unknown> = { ...existing };

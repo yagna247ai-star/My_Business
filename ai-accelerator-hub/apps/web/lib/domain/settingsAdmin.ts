@@ -18,6 +18,7 @@ import type { Ctx } from '@/lib/server/context';
 import { hasPerm } from '@/lib/server/context';
 import { ROLE_LABEL, type Role } from '@/lib/server/rbac';
 import { badRequest, conflict, forbidden, notFound } from '@/lib/server/errors';
+import { DEFAULT_CODE, INSTITUTION_TYPES, codeProblem, normaliseCode, suggestCode } from './institutionsCore';
 import { audit, notify } from '@/lib/server/audit';
 import { defaultJourney, enrollInJourney, parseSettings } from './journeyAccess';
 import {
@@ -31,10 +32,18 @@ const parseList = (raw: string): string[] => { try { const v = JSON.parse(raw); 
 
 /* ─────────────────────────── Institute ─────────────────────────── */
 
+/** Institution logo: a small inline image (PNG, JPEG, WebP or SVG-free), so it shows in every institution's switcher. */
+function checkLogo(dataUrl: string): string {
+  const m = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
+  if (!m) throw badRequest('The logo must be a PNG, JPEG or WebP image.', { logo: 'PNG, JPEG or WebP.' });
+  if (m[2].length > 270_000) throw badRequest('The logo must be under 200 KB. Use a smaller image (e.g. 256 × 256).', { logo: 'Under 200 KB.' });
+  return dataUrl;
+}
+
 async function instituteRow(id: string) {
   const t = await prisma.tenant.findUnique({ where: { id }, include: { _count: { select: { memberships: true, cohorts: true, journeys: true, orders: true } } } });
   if (!t) throw notFound('Institution not found.');
-  return { id: t.id, name: t.name, slug: t.slug, plan: t.plan, status: t.status, createdAt: t.createdAt, profile: pickInstituteProfile(parseSettings(t.settings)), counts: { members: t._count.memberships, cohorts: t._count.cohorts, journeys: t._count.journeys, orders: t._count.orders } };
+  return { id: t.id, name: t.name, slug: t.slug, code: t.code, type: t.type, logoUrl: t.logoUrl, plan: t.plan, status: t.status, createdAt: t.createdAt, profile: pickInstituteProfile(parseSettings(t.settings)), counts: { members: t._count.memberships, cohorts: t._count.cohorts, journeys: t._count.journeys, orders: t._count.orders } };
 }
 
 export async function getInstitute(ctx: Ctx) {
@@ -45,10 +54,10 @@ export async function getInstitute(ctx: Ctx) {
 export async function listInstitutes(ctx: Ctx) {
   need(ctx.superAdmin);
   const ts = await prisma.tenant.findMany({ orderBy: { createdAt: 'asc' }, include: { _count: { select: { memberships: true, cohorts: true, journeys: true, orders: true } } } });
-  return ts.map(t => ({ id: t.id, name: t.name, slug: t.slug, plan: t.plan, status: t.status, createdAt: t.createdAt, current: t.id === ctx.tenantId, counts: { members: t._count.memberships, cohorts: t._count.cohorts, journeys: t._count.journeys, orders: t._count.orders } }));
+  return ts.map(t => ({ id: t.id, name: t.name, slug: t.slug, code: t.code, type: t.type, logoUrl: t.logoUrl, city: (pickInstituteProfile(parseSettings(t.settings)).city ?? null), profile: pickInstituteProfile(parseSettings(t.settings)), plan: t.plan, status: t.status, createdAt: t.createdAt, current: t.id === ctx.tenantId, counts: { members: t._count.memberships, cohorts: t._count.cohorts, journeys: t._count.journeys, orders: t._count.orders } }));
 }
 
-export async function createInstitute(ctx: Ctx, input: { name: string; slug?: string; plan?: string; adminEmail?: string } & InstituteProfile) {
+export async function createInstitute(ctx: Ctx, input: { name: string; slug?: string; plan?: string; adminEmail?: string; code?: string; type?: string; logoUrl?: string | null } & InstituteProfile) {
   need(ctx.superAdmin);
   const name = input.name.trim();
   if (name.length < 3) throw badRequest('Institution name needs at least 3 characters.', { name: 'At least 3 characters.' });
@@ -57,29 +66,43 @@ export async function createInstitute(ctx: Ctx, input: { name: string; slug?: st
   const plan = input.plan || 'free';
   if (!(PLANS as readonly string[]).includes(plan)) throw badRequest('Plan is free, pro or enterprise.');
   if (await prisma.tenant.findUnique({ where: { slug } })) throw conflict('An institution with that short name already exists.');
+  const codes = new Set((await prisma.tenant.findMany({ select: { code: true } })).map(x => x.code).filter((x): x is string => !!x));
+  const code = input.code?.trim() ? normaliseCode(input.code) : suggestCode(name, codes);
+  const codeWhy = codeProblem(code); if (codeWhy) throw badRequest(codeWhy, { code: codeWhy });
+  if (codes.has(code)) throw conflict(`The code ${code} is already used by another institution.`);
+  const type = (INSTITUTION_TYPES as readonly string[]).includes(input.type ?? '') ? input.type! : 'other';
+  const logoUrl = input.logoUrl ? checkLogo(input.logoUrl) : null;
   const adminEmail = input.adminEmail?.trim().toLowerCase();
   const admin = adminEmail ? await prisma.user.findUnique({ where: { email: adminEmail } }) : null;
   if (adminEmail && !admin) throw badRequest('No account uses that admin email yet. Leave it empty and add the admin later in People.', { adminEmail: 'No account with this email.' });
   const adminRole = admin ? await prisma.role.findUniqueOrThrow({ where: { code: 'tenant_admin' } }) : null;
   return prisma.$transaction(async tx => {
-    const t = await tx.tenant.create({ data: { name, slug, plan, status: 'active', settings: JSON.stringify(mergeInstituteProfile({}, input)) } });
+    const t = await tx.tenant.create({ data: { name, slug, code, type, logoUrl, plan, status: 'active', settings: JSON.stringify(mergeInstituteProfile({}, input)) } });
     if (admin && adminRole) {
       await tx.membership.create({ data: { tenantId: t.id, userId: admin.id, roleId: adminRole.id, status: 'active' } });
       await tx.userSetting.create({ data: { tenantId: t.id, userId: admin.id } });
       await notify(tx, t.id, admin.id, 'role_changed', { title: `You are now an Institution Admin of ${name}`, tone: 'info' });
     }
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'tenant.created', resourceType: 'Tenant', resourceId: t.id, after: { name, slug, plan, admin: adminEmail ?? null } });
-    return { id: t.id, slug };
+    return { id: t.id, slug, code };
   });
 }
 
-export async function updateInstitute(ctx: Ctx, id: string, input: { name?: string; slug?: string; plan?: string; status?: string } & InstituteProfile) {
+export async function updateInstitute(ctx: Ctx, id: string, input: { name?: string; slug?: string; plan?: string; status?: string; code?: string; type?: string; logoUrl?: string | null } & InstituteProfile) {
   const own = id === ctx.tenantId;
   need(ctx.superAdmin || (own && hasPerm(ctx, 'institute:manage')));
-  if (!ctx.superAdmin && (input.slug !== undefined || input.plan !== undefined || input.status !== undefined)) throw forbidden('Only a Super Admin can change the short name, plan or status.');
+  if (!ctx.superAdmin && (input.slug !== undefined || input.plan !== undefined || input.status !== undefined || input.code !== undefined)) throw forbidden('Only a Super Admin can change the code, short name, plan or status.');
   const t = await prisma.tenant.findUnique({ where: { id } });
   if (!t) throw notFound('Institution not found.');
-  const data: { name?: string; slug?: string; plan?: string; status?: string; settings?: string } = {};
+  const data: { name?: string; slug?: string; plan?: string; status?: string; settings?: string; code?: string; type?: string; logoUrl?: string | null } = {};
+  if (input.code !== undefined && normaliseCode(input.code) !== t.code) {
+    const c = normaliseCode(input.code); const why = codeProblem(c); if (why) throw badRequest(why, { code: why });
+    if (t.code === DEFAULT_CODE) throw badRequest('AIHUB is the default code for learners without one; it cannot be changed.');
+    if (await prisma.tenant.findFirst({ where: { code: c, id: { not: id } } })) throw conflict(`The code ${c} is already used by another institution.`);
+    data.code = c;
+  }
+  if (input.type !== undefined) { if (!(INSTITUTION_TYPES as readonly string[]).includes(input.type)) throw badRequest('Choose the type of institution.'); data.type = input.type; }
+  if (input.logoUrl !== undefined) data.logoUrl = input.logoUrl ? checkLogo(input.logoUrl) : null;
   if (input.name !== undefined) { const n = input.name.trim(); if (n.length < 3) throw badRequest('Institution name needs at least 3 characters.', { name: 'At least 3 characters.' }); data.name = n.slice(0, 120); }
   if (input.slug !== undefined && input.slug !== t.slug) {
     const s = input.slug.trim().toLowerCase();
@@ -91,19 +114,22 @@ export async function updateInstitute(ctx: Ctx, id: string, input: { name?: stri
   if (input.status !== undefined) {
     if (!(INSTITUTE_STATUSES as readonly string[]).includes(input.status)) throw badRequest('Status is active or suspended.');
     if (own && input.status !== 'active') throw badRequest('You cannot deactivate the institution you are signed in to.');
+    if (t.code === DEFAULT_CODE && input.status !== 'active') throw badRequest('AI Accelerator Hub (AIHUB) is the home for learners without a code; it cannot be suspended.');
     data.status = input.status;
   }
   if (input.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.contactEmail.trim())) throw badRequest('Enter a valid contact email.', { contactEmail: 'Not a valid email.' });
   if (input.website && !/^https?:\/\/\S+$/i.test(input.website.trim())) throw badRequest('Website must start with http:// or https://', { website: 'Start with https://' });
   for (const k of ['contactEmail', 'phone', 'website', 'city'] as const) if ((input[k]?.length ?? 0) > 200) throw badRequest('That value is too long.');
-  if ((input.about?.length ?? 0) > 1000) throw badRequest('Keep the description under 1000 characters.');
+  if ((input.about?.length ?? 0) > 1500) throw badRequest('Keep the description under 1,500 characters.');
+  if (input.pincode && !/^\d{6}$/.test(input.pincode.trim())) throw badRequest('PIN code has 6 digits.', { pincode: '6 digits.' });
+  if (input.established && !/^(18|19|20)\d{2}$/.test(input.established.trim())) throw badRequest('Enter the year it was established, e.g. 2009.', { established: 'A year, e.g. 2009.' });
   const before = parseSettings(t.settings);
   const after = mergeInstituteProfile(before, input);
   if (JSON.stringify(after) !== JSON.stringify(before)) data.settings = JSON.stringify(after);
   if (!Object.keys(data).length) return { ok: true as const };
   await prisma.$transaction(async tx => {
     await tx.tenant.update({ where: { id }, data });
-    await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'tenant.updated', resourceType: 'Tenant', resourceId: id, before: { name: t.name, slug: t.slug, plan: t.plan, status: t.status }, after: { ...data, settings: undefined } });
+    await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'tenant.updated', resourceType: 'Tenant', resourceId: id, before: { name: t.name, slug: t.slug, code: t.code, plan: t.plan, status: t.status }, after: { ...data, settings: undefined, logoUrl: data.logoUrl === undefined ? undefined : !!data.logoUrl } });
   });
   return { ok: true as const };
 }
@@ -111,6 +137,7 @@ export async function updateInstitute(ctx: Ctx, id: string, input: { name?: stri
 export async function deleteInstitute(ctx: Ctx, id: string) {
   need(ctx.superAdmin);
   const t = await instituteRow(id);
+  if (t.code === DEFAULT_CODE) throw conflict('AI Accelerator Hub (AIHUB) is the home for learners without a code; it cannot be deleted.');
   const problem = instituteDeleteProblem({ isCurrent: id === ctx.tenantId, ...t.counts });
   if (problem) throw conflict(problem);
   try {

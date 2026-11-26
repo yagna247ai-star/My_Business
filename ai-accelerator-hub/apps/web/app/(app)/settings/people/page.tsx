@@ -35,6 +35,7 @@ async function People({ searchParams }: { searchParams: Promise<{ filter?: strin
         meId={ctx.userId}
         canManage={canManage}
         isSuper={ctx.superAdmin}
+        institutions={ctx.superAdmin ? (await prisma.tenant.findMany({ where: { status: 'active', id: { not: ctx.tenantId } }, select: { id: true, name: true, code: true }, orderBy: { name: 'asc' } })) : []}
         journeys={journeys ? journeys.filter(j => j.published).map(j => ({ id: j.id, title: j.title })) : null}
         initialFilter={filter === 'attention' ? 'attention' : 'all'}
       />

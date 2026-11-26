@@ -138,6 +138,14 @@ export async function importPeople(ctx: Ctx, csv: string, dryRun: boolean) {
   const cohorts = await prisma.cohort.findMany({ where: { tenantId: ctx.tenantId }, select: { id: true, name: true, inviteCode: true } });
   const cohortOf = (c: string | null) => c ? cohorts.find(x => x.name.toLowerCase() === c.toLowerCase() || x.inviteCode?.toLowerCase() === c.toLowerCase())?.id ?? undefined : null;
   for (const r of rows) if (r.cohort && cohortOf(r.cohort) === undefined) errors.push({ line: r.line, message: `No cohort called “${r.cohort}” in this institution.` });
+  // An institution column (Super Admin only) imports each person into that institution (docs/INSTITUTIONS_SPEC.md).
+  const instCodes = [...new Set(rows.map(r => r.institution).filter((x): x is string => !!x))];
+  const instByCode = new Map((await prisma.tenant.findMany({ where: { code: { in: instCodes }, status: 'active' }, select: { id: true, code: true, name: true } })).map(t => [t.code!, t]));
+  for (const r of rows) if (r.institution) {
+    if (!ctx.superAdmin) errors.push({ line: r.line, message: 'Only a Super Admin can import people into another institution. Remove the institution column.' });
+    else if (!instByCode.has(r.institution)) errors.push({ line: r.line, message: `No active institution with code “${r.institution}”.` });
+    else if (r.cohort && instByCode.get(r.institution)!.id !== ctx.tenantId) errors.push({ line: r.line, message: 'Leave the cohort empty when importing into another institution; its admin assigns cohorts.' });
+  }
   const bad = new Set(errors.map(e => e.line));
   const good = rows.filter(r => !bad.has(r.line));
   if (dryRun || errors.length && !good.length) return { dryRun: true, valid: good.length, errors: errors.sort((a, b) => a.line - b.line), created: 0, updated: 0, emailed: 0 };
@@ -151,19 +159,20 @@ export async function importPeople(ctx: Ctx, csv: string, dryRun: boolean) {
       if (existing?.globalRole === 'super_admin' && !ctx.superAdmin) { failed.push({ line: r.line, message: 'That is a Super Admin account.' }); continue; }
       const user = existing ?? await prisma.user.create({ data: { email: r.email, name: r.name, area: r.area, emailVerified: false } });
       const cohortId = cohortOf(r.cohort) ?? null;
-      const had = await prisma.membership.findUnique({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: user.id } } });
+      const tid = r.institution ? instByCode.get(r.institution)!.id : ctx.tenantId;
+      const had = await prisma.membership.findUnique({ where: { tenantId_userId: { tenantId: tid, userId: user.id } } });
       await prisma.$transaction(async tx => {
         if (had) await tx.membership.update({ where: { id: had.id }, data: { roleId: roles.get(r.role)!, ...(r.cohort ? { cohortId } : {}), status: 'active' } });
         else {
-          await tx.membership.create({ data: { tenantId: ctx.tenantId, userId: user.id, roleId: roles.get(r.role)!, cohortId, status: 'active' } });
-          await tx.userSetting.upsert({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: user.id } }, update: {}, create: { tenantId: ctx.tenantId, userId: user.id, ageBand: 'adult', guardianConsent: 'not_required', leaderboardVisibility: 'cohort', globalOptIn: false } });
+          await tx.membership.create({ data: { tenantId: tid, userId: user.id, roleId: roles.get(r.role)!, cohortId, status: 'active' } });
+          await tx.userSetting.upsert({ where: { tenantId_userId: { tenantId: tid, userId: user.id } }, update: {}, create: { tenantId: tid, userId: user.id, ageBand: 'adult', guardianConsent: 'not_required', leaderboardVisibility: 'cohort', globalOptIn: false } });
         }
         if (existing && r.area) await tx.user.update({ where: { id: user.id }, data: { area: r.area } });
         await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: had ? 'admin.import.updated' : 'admin.import.created', resourceType: 'User', resourceId: user.id, after: { email: r.email, role: r.role } });
       });
       if (had) updated++; else created++;
       if (!existing || !had) {
-        try { await issueResetLink({ id: user.id, email: r.email, name: r.name }, { ttlMs: INVITE_TTL_MS, kind: 'invite', institution: tenant.name }); emailed++; }
+        try { await issueResetLink({ id: user.id, email: r.email, name: r.name }, { ttlMs: INVITE_TTL_MS, kind: 'invite', institution: r.institution ? instByCode.get(r.institution)!.name : tenant.name }); emailed++; }
         catch (e) { failed.push({ line: r.line, message: `Added, but the invite email failed: ${(e as Error).message.slice(0, 120)}` }); }
       }
     } catch (e) { failed.push({ line: r.line, message: (e as Error).message.slice(0, 160) }); }

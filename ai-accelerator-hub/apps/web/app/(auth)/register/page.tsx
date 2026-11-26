@@ -130,7 +130,7 @@ export default function RegisterPage() {
         {field('birthYear', 'Year of birth', { type: 'text', inputMode: 'numeric', ac: 'bday-year', hint: 'Used only to apply age-appropriate safety settings.' })}
         {minor && field('guardianEmail', 'Parent or guardian email', { type: 'email', ac: 'off', inputMode: 'email', hint: 'Required for learners under 18. Community features unlock after consent.' })}
         <div onBlur={() => { const c = f.inviteCode.trim(); if (c !== journeyCode && (c === '' || c.length >= 4)) setJourneyCode(c); }}>
-          {field('inviteCode', 'Institution invite code', { required: false, ac: 'off', hint: 'Optional. Joining through your college or company? Enter the code they gave you.' })}
+          {field('inviteCode', 'Institution code', { required: false, ac: 'off', hint: 'The code your skill centre, college or company gave you (e.g. SLNHRD), or a batch invite code. Don’t have one? Leave it empty: you join AI Accelerator Hub, and an admin can move you later.' })}
         </div>
         {journeys && journeys.length > 0 && (
           <fieldset style={{ border: 0, padding: 0, margin: 0 }} aria-describedby={errors.journeySlug ? 'journeySlug-h' : undefined}>
