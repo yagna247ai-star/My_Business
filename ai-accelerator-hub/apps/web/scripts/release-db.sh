@@ -9,6 +9,10 @@ if [ "${VERCEL_ENV:-}" != "production" ]; then
   exit 0
 fi
 echo "release-db: production — applying migrations"
+# One-off recovery (2026-11-26): the first release of 0019 named the table "Content" instead of "contents" and
+# failed before changing anything. Mark that failed attempt rolled back so the corrected 0019 applies.
+# Prisma refuses this for a migration that is applied or absent, so on later builds it is a no-op.
+npx prisma migrate resolve --rolled-back 0019_day5_customers_city --schema "$SCHEMA" 2>/dev/null || true
 npx prisma migrate deploy --schema "$SCHEMA"
 npm run seed:content
 npm run seed:domains   # 17 domain journeys; skips unchanged domains (content hash)

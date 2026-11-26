@@ -152,3 +152,14 @@ describe('migration 0020 fixes old copies of the Day 8, 10 and 11 lessons', () =
     for (const [a, , where] of updates) expect(where).toBe(a);
   });
 });
+
+describe('data migrations name real tables', () => {
+  it('every UPDATE / INSERT / DELETE in a migration targets a table some migration creates (Prisma @@map names, not model names)', () => {
+    const dir = join(ROOT, 'packages/db/prisma/migrations');
+    const all = readdirSync(dir).filter(d => /^\d{4}_/.test(d)).map(d => readFileSync(join(dir, d, 'migration.sql'), 'utf8')).join('\n');
+    const created = new Set([...all.matchAll(/CREATE TABLE (?:IF NOT EXISTS )?"(\w+)"/g)].map(m => m[1]));
+    const used = [...all.matchAll(/(?:UPDATE|INSERT INTO|DELETE FROM) "(\w+)"/g)].map(m => m[1]);
+    expect(used.length).toBeGreaterThan(0);
+    for (const t of used) expect(created.has(t), `migration writes to "${t}", which no migration creates`).toBe(true);
+  });
+});

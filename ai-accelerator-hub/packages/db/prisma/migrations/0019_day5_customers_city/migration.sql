@@ -3,7 +3,7 @@
 -- Content.payload is JSON text, so a newline inside the lesson is the two characters \n (standard strings).
 -- Only rows that still hold the old step script are touched; once fixed they no longer match, so this is
 -- safe to run twice. Other days that mention sales_orders are never matched.
-UPDATE "Content"
+UPDATE "contents"
 SET payload =
   replace(replace(replace(replace(replace(payload,
     'name TEXT NOT NULL, phone TEXT);', 'name TEXT NOT NULL, city TEXT);'),
