@@ -5,13 +5,13 @@ description: Build a feature or fix in this repo the house way — spec-driven d
 
 # build-it — SDD, then TDD
 
-Two phases, always in this order. Do not write application code before phase 1 is done and the failing tests from phase 2 exist.
+Three phases, always in this order: Spec, then Tests-first, then Verify. Do not write application code before phase 1 is done and the failing tests from phase 2 exist.
 
 ## Phase 1 — Spec (SDD)
 
 1. Follow the `spec-it` skill (`.claude/skills/spec-it/SKILL.md`) to write or update `docs/<TOPIC>_SPEC.md`. One spec per feature.
 2. Decisions only the user can make (provider, wording, who may see what, migrations that overwrite data) go to the user **once, batched**, before the spec is final. Record the answers in the spec header under "Decisions".
-3. Number every acceptance criterion (`AC-1`, `AC-2`, …). Tests will cite these numbers.
+3. Number every acceptance criterion (`AC-1`, `AC-2`, …) in `spec-it` Given/when/then checklist form. Tests cite these numbers in `it('AC-N: ...')` titles.
 4. Show the user the spec path and a short summary. If they have already answered the open decisions, carry on; otherwise wait.
 
 ## Phase 2 — Tests first (TDD)
@@ -33,6 +33,19 @@ Steps:
 5. Schema changes: edit `packages/db/prisma/schema.prisma` and add a hand-written SQL migration `packages/db/prisma/migrations/00NN_<name>/migration.sql` (Postgres). Data fixes belong in the migration and must be safe to run twice.
 6. New UI strings go through `<Tr>` / `t()`; run `npm run i18n:extract` afterwards so `i18n-coverage.test.ts` stays green.
 7. New env vars: document them in `docs/ENVIRONMENT_VARIABLES.md` and, if they are needed at build time, in `turbo.json`.
+
+## Repo guardrails — confirm before ticking ACs green
+
+From the production review. Confirm each, or record a waiver in the feature spec:
+
+- Postgres, not `file:`: `packages/db/prisma/schema.prisma` is `provider=postgresql`. Use a Postgres URL (compose/Neon) for local DB work. Never ship `file:./dev.db` unless the provider change is the spec.
+- RLS: `packages/db/pg/rls.sql` is reviewed-not-applied. Tenant data relies on `apps/web/lib/prisma.ts` `withTenant()` fail-closed helpers. State in the spec whether RLS is applied or the Prisma path is relied on.
+- API home: real routes live under `apps/web/app/api` with `route()` + `requireCtx`/`requirePerm`. `apps/api` Nest is an empty stub — justify touching it.
+- Vercel: `apps/web/vercel.json` has `git.deploymentEnabled=false`; `apps/web/scripts/release-db.sh` migrates only on `VERCEL_ENV=production`. Preview must never migrate prod DB.
+- CI: no `.github/workflows` exists in this checkout though `docs/DEPLOYMENT.md` cites one. Cite the real scripts (`scripts/ci/verify.sh`, `scripts/ci/smoke.sh`, `scripts/deploy-prod.sh`); do not claim an absent workflow ran.
+- Observability: no Sentry/PostHog/OTEL. Name logging/health evidence (`apps/web/app/api/health/route.ts`, request-id in `apps/web/lib/server/http.ts`) or file it as out-of-scope.
+- i18n: UI strings go through `<Tr>`/`t()` + `npm run i18n:extract`, or `test/i18n-coverage.test.ts` goes red.
+- Dead code: do not extend `_retired/api`, `_legacy_student`, `app-v3/`, unused `components/shell/Sidebar.tsx`, or unused zustand/react-query without a remove/reuse decision in the spec.
 
 ## Phase 3 — Verify
 
