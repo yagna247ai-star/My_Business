@@ -5,4 +5,4 @@ import { toggleReaction } from '@/lib/domain/feed';
 
 const schema = z.object({ kind: z.string().max(20) });
 
-export const POST = route(async (req, p) => toggleReaction(await requireCtx(), p.postId, (await body(req, schema)).kind));
+export const POST = route(async (req, p) => toggleReaction(await requireCtx(), p.postId, (await body(req, schema)).kind), { limit: { name: 'feed-react', max: 90, windowMs: 60_000 } });

@@ -3453,19 +3453,24 @@
     }
    }
   },
-  "/api/v1/feed/{postId}/comments": {
-   "get": {
+  "/api/v1/feed/{postId}/accept": {
+   "post": {
     "tags": [
      "feed"
     ],
-    "operationId": "get_v1_feed_postId_comments",
-    "summary": "GET feed/{postId}/comments",
-    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/feed/[postId]/comments/route.ts`",
+    "operationId": "post_v1_feed_postId_accept",
+    "summary": "POST feed/{postId}/accept",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/feed/[postId]/accept/route.ts`",
     "security": [
      {
       "session": []
      }
     ],
+    "x-rate-limit": {
+     "name": "feed-accept",
+     "max": 20,
+     "windowMs": 60000
+    },
     "parameters": [
      {
       "name": "postId",
@@ -3488,6 +3493,76 @@
      },
      "403": {
       "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "commentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+         }
+        },
+        "required": [
+         "commentId"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/feed/{postId}/comments": {
+   "get": {
+    "tags": [
+     "feed"
+    ],
+    "operationId": "get_v1_feed_postId_comments",
+    "summary": "GET feed/{postId}/comments",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/feed/[postId]/comments/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "feed-reply",
+     "max": 30,
+     "windowMs": 60000
+    },
+    "parameters": [
+     {
+      "name": "postId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
      }
     }
    },
@@ -3503,6 +3578,11 @@
       "session": []
      }
     ],
+    "x-rate-limit": {
+     "name": "feed-reply",
+     "max": 30,
+     "windowMs": 60000
+    },
     "parameters": [
      {
       "name": "postId",
@@ -3525,6 +3605,9 @@
      },
      "403": {
       "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
      }
     },
     "requestBody": {
@@ -3548,19 +3631,24 @@
     }
    }
   },
-  "/api/v1/feed/{postId}/react": {
+  "/api/v1/feed/{postId}/pin": {
    "post": {
     "tags": [
      "feed"
     ],
-    "operationId": "post_v1_feed_postId_react",
-    "summary": "POST feed/{postId}/react",
-    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/feed/[postId]/react/route.ts`",
+    "operationId": "post_v1_feed_postId_pin",
+    "summary": "POST feed/{postId}/pin",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/feed/[postId]/pin/route.ts`",
     "security": [
      {
       "session": []
      }
     ],
+    "x-rate-limit": {
+     "name": "feed-pin",
+     "max": 30,
+     "windowMs": 60000
+    },
     "parameters": [
      {
       "name": "postId",
@@ -3583,6 +3671,74 @@
      },
      "403": {
       "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "pinned": {
+          "type": "boolean"
+         }
+        },
+        "required": [
+         "pinned"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/feed/{postId}/react": {
+   "post": {
+    "tags": [
+     "feed"
+    ],
+    "operationId": "post_v1_feed_postId_react",
+    "summary": "POST feed/{postId}/react",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/feed/[postId]/react/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "feed-react",
+     "max": 90,
+     "windowMs": 60000
+    },
+    "parameters": [
+     {
+      "name": "postId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
      }
     },
     "requestBody": {
@@ -3619,6 +3775,11 @@
       "session": []
      }
     ],
+    "x-rate-limit": {
+     "name": "feed-report",
+     "max": 10,
+     "windowMs": 60
+    },
     "parameters": [
      {
       "name": "postId",
@@ -3641,6 +3802,9 @@
      },
      "403": {
       "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
      }
     },
     "requestBody": {
@@ -3674,6 +3838,228 @@
     }
    }
   },
+  "/api/v1/feed/{postId}": {
+   "patch": {
+    "tags": [
+     "feed"
+    ],
+    "operationId": "patch_v1_feed_postId",
+    "summary": "PATCH feed/{postId}",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/feed/[postId]/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "feed-edit",
+     "max": 20,
+     "windowMs": 60000
+    },
+    "parameters": [
+     {
+      "name": "postId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "body": {
+          "type": "string",
+          "maxLength": 2000
+         }
+        },
+        "required": [
+         "body"
+        ]
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "feed"
+    ],
+    "operationId": "delete_v1_feed_postId",
+    "summary": "DELETE feed/{postId}",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/feed/[postId]/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "feed-edit",
+     "max": 20,
+     "windowMs": 60000
+    },
+    "parameters": [
+     {
+      "name": "postId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    }
+   }
+  },
+  "/api/v1/feed/comments/{commentId}": {
+   "patch": {
+    "tags": [
+     "feed"
+    ],
+    "operationId": "patch_v1_feed_comments_commentId",
+    "summary": "PATCH feed/comments/{commentId}",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/feed/comments/[commentId]/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "feed-reply-edit",
+     "max": 30,
+     "windowMs": 60000
+    },
+    "parameters": [
+     {
+      "name": "commentId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "body": {
+          "type": "string",
+          "maxLength": 1000
+         }
+        },
+        "required": [
+         "body"
+        ]
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "feed"
+    ],
+    "operationId": "delete_v1_feed_comments_commentId",
+    "summary": "DELETE feed/comments/{commentId}",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/feed/comments/[commentId]/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "feed-reply-edit",
+     "max": 30,
+     "windowMs": 60000
+    },
+    "parameters": [
+     {
+      "name": "commentId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    }
+   }
+  },
   "/api/v1/feed": {
    "get": {
     "tags": [
@@ -3687,6 +4073,11 @@
       "session": []
      }
     ],
+    "x-rate-limit": {
+     "name": "feed-post",
+     "max": 8,
+     "windowMs": 10
+    },
     "parameters": [],
     "responses": {
      "200": {
@@ -3700,6 +4091,9 @@
      },
      "403": {
       "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
      }
     }
    },
@@ -3715,6 +4109,11 @@
       "session": []
      }
     ],
+    "x-rate-limit": {
+     "name": "feed-post",
+     "max": 8,
+     "windowMs": 10
+    },
     "parameters": [],
     "responses": {
      "200": {
@@ -3728,6 +4127,9 @@
      },
      "403": {
       "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
      }
     },
     "requestBody": {
@@ -3752,6 +4154,11 @@
          "linkUrl": {
           "type": "string",
           "maxLength": 500
+         },
+         "day": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 400
          }
         },
         "required": [

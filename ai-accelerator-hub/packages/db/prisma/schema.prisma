@@ -231,13 +231,22 @@ model Post {
   id        String   @id @default(cuid())
   tenantId  String
   authorId  String
-  kind      String   @default("post") // post | win | question
+  kind      String   @default("post") // post | win | question | announcement
   body      String
   levelCode String?
   linkUrl   String?
   state     String   @default("visible") // visible | hidden | removed
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  /// docs/FEED_ENGAGEMENT_SPEC.md: the author's course (null = whole institution), the course day it is about,
+  /// staff pins, the accepted answer of a question, and the last edit.
+  journeyId         String?
+  day               Int?
+  pinnedAt          DateTime?
+  pinnedById        String?
+  acceptedCommentId String?
+  answeredAt        DateTime?
+  editedAt          DateTime?
 
   tenant   Tenant     @relation(fields: [tenantId], references: [id])
   author   User       @relation(fields: [authorId], references: [id])
@@ -245,6 +254,7 @@ model Post {
   reacts   Reaction[]
 
   @@index([tenantId, state, createdAt])
+  @@index([tenantId, journeyId, state, createdAt])
   @@map("posts")
 }
 
@@ -256,6 +266,7 @@ model Comment {
   body      String
   state     String   @default("visible") // visible | hidden | removed
   createdAt DateTime @default(now())
+  editedAt  DateTime?
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
   post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)

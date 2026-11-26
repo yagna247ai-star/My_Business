@@ -531,3 +531,12 @@ details.err-row[open] > summary{margin-bottom:6px}
 .wk-mats{list-style:none;margin:6px 0 0;padding:6px 0 0;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:3px;font-size:12px}
 .wk-mats a{color:var(--link,var(--primary));font-weight:600;word-break:break-word}
 @media (max-width:760px){.week .day{min-width:150px}}
+/* Community feed (docs/FEED_ENGAGEMENT_SPEC.md) */
+.feed-prompt{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--surface-2,var(--surface));border:1px dashed var(--border);font-size:14px}
+.feed-prompt > span:first-of-type{flex:1;min-width:220px}
+.feed-win{border-color:#D4AC5E;background:color-mix(in srgb,#E8B94F 10%,var(--surface))}
+.feed-help{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface);font-weight:700;font-size:14px;cursor:pointer}
+.feed-pinned{border-color:var(--primary)}
+.feed-focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 22%,transparent)}
+.feed-accepted{border-left:3px solid var(--success);padding-left:10px}
+.feed-report{padding:10px;border-radius:12px;background:var(--surface-2,var(--surface));border:1px solid var(--border)}

@@ -5,4 +5,4 @@ import { reportContent } from '@/lib/domain/feed';
 
 const schema = z.object({ targetType: z.string().max(20), targetId: z.string().max(40), reason: z.string().max(1000) });
 
-export const POST = route(async req => reportContent(await requireCtx(), await body(req, schema)));
+export const POST = route(async req => reportContent(await requireCtx(), await body(req, schema)), { limit: { name: 'feed-report', max: 10, windowMs: 60 * 60_000 } });

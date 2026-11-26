@@ -6,4 +6,4 @@ import { listComments, createComment } from '@/lib/domain/feed';
 const schema = z.object({ body: z.string().max(1000) });
 
 export const GET = route(async (_r, p) => listComments(await requireCtx(), p.postId));
-export const POST = route(async (req, p) => createComment(await requireCtx(), p.postId, (await body(req, schema)).body));
+export const POST = route(async (req, p) => createComment(await requireCtx(), p.postId, (await body(req, schema)).body), { limit: { name: 'feed-reply', max: 30, windowMs: 60_000 } });
