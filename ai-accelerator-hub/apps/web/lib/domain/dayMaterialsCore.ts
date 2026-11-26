@@ -37,3 +37,7 @@ export function materialProblem(raw: string, existing: number): string | null {
   if (personalDriveView(normaliseShareUrl(raw))) return 'This is your own Drive view, which only you can open. Open the file or folder → Share → General access “Anyone with the link” → Copy link, and paste that.';
   return null;
 }
+
+/** The same day of the same course in other institutions (docs/DAY_MATERIALS_SPEC.md v1.1). */
+export type DayRef = { contentId: string; tenantId: string; journeySlug: string; levelCode: string; day: number };
+export const matchingDays = (src: DayRef, all: DayRef[]) => all.filter(d => d.contentId !== src.contentId && d.tenantId !== src.tenantId && d.journeySlug === src.journeySlug && d.levelCode === src.levelCode && d.day === src.day);

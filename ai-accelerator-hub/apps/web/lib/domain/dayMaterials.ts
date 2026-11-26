@@ -5,18 +5,36 @@
 import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { hasPerm } from '@/lib/server/context';
-import { audit, notify } from '@/lib/server/audit';
+import { audit, notify, notifyMany } from '@/lib/server/audit';
 import { badRequest, forbidden, notFound } from '@/lib/server/errors';
 import { normaliseShareUrl } from './linkHealthCore';
 import { probeLink, shareHelp } from './proofRelevance';
-import { copyUrl, detectKind, materialProblem, materialSchema, MAX_PER_DAY, type Kind } from './dayMaterialsCore';
+import { copyUrl, detectKind, matchingDays, materialProblem, materialSchema, MAX_PER_DAY, type Kind } from './dayMaterialsCore';
 
 const needContent = (ctx: Ctx) => { if (!hasPerm(ctx, 'content:manage')) throw forbidden('You need Content & journeys access to change day materials.'); };
 
 async function dayInTenant(ctx: Ctx, contentId: string) {
-  const c = await prisma.content.findFirst({ where: { id: contentId, kind: 'md', level: { tenantId: ctx.tenantId } }, select: { id: true, title: true, position: true, levelId: true, level: { select: { journeyId: true } } } });
+  const c = await prisma.content.findFirst({ where: { id: contentId, kind: 'md', level: { tenantId: ctx.tenantId } }, select: { id: true, title: true, position: true, levelId: true, level: { select: { journeyId: true, code: true, tenantId: true, journey: { select: { slug: true } } } } } });
   if (!c) throw notFound('Day lesson not found.');
   return c;
+}
+
+/**
+ * v1.1: the same day of the same course in the other institutions (each institution has its own copy of a course).
+ * A Super Admin's materials go to every copy; an Institution Admin's stay in their institution.
+ */
+async function otherCopies(ctx: Ctx, c: Awaited<ReturnType<typeof dayInTenant>>) {
+  if (!ctx.superAdmin) return [];
+  const rows = await prisma.content.findMany({ where: { kind: 'md', position: c.position, level: { code: c.level.code, journey: { slug: c.level.journey.slug } } }, select: { id: true, position: true, level: { select: { tenantId: true, code: true, journey: { select: { slug: true } } } } } });
+  const refs = rows.map(r => ({ contentId: r.id, tenantId: r.level.tenantId, journeySlug: r.level.journey.slug, levelCode: r.level.code, day: r.position }));
+  return matchingDays({ contentId: c.id, tenantId: c.level.tenantId, journeySlug: c.level.journey.slug, levelCode: c.level.code, day: c.position }, refs);
+}
+
+/** Tell the learners of a course that a day has new material (in-app, their institution). */
+async function tellLearners(tenantId: string, journeyId: string, day: number, levelCode: string, title: string) {
+  const learners = await prisma.enrollment.findMany({ where: { tenantId, journeyId, state: 'active' }, select: { userId: true }, take: 5000 });
+  if (!learners.length) return;
+  await notifyMany(prisma, tenantId, learners.map(l => l.userId), 'day_material_added', { title: `New material for Day ${day}`, body: `“${title}”: open it on the day page and practise.`, href: `/levels/${levelCode}/days/${day}`, tone: 'info' });
 }
 
 /** Staff can always open; a learner can when the day's level is open for them (same rule as the day page). */
@@ -56,11 +74,24 @@ export async function addMaterial(ctx: Ctx, contentId: string, raw: unknown) {
   const count = await prisma.dayMaterial.count({ where: { contentId } });
   if (count >= MAX_PER_DAY) throw badRequest('A day can have at most 12 materials.');
   const { url, status } = await checkedUrl(input.url, count);
+  const copies = await otherCopies(ctx, c);
   const m = await prisma.$transaction(async tx => {
     const m = await tx.dayMaterial.create({ data: { tenantId: ctx.tenantId, contentId, title: input.title, url, kind: input.kind ?? detectKind(url), note: input.note ?? '', sortOrder: count, linkStatus: status, linkCheckedAt: new Date(), createdById: ctx.userId } });
-    await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'content.material_added', resourceType: 'Content', resourceId: c.id, after: { title: input.title, url } });
+    await tx.dayMaterial.update({ where: { id: m.id }, data: { groupId: m.id } });
+    for (const d of copies) {
+      if (await tx.dayMaterial.findFirst({ where: { contentId: d.contentId, url }, select: { id: true } })) continue;
+      const n = await tx.dayMaterial.count({ where: { contentId: d.contentId } });
+      if (n >= MAX_PER_DAY) continue;
+      await tx.dayMaterial.create({ data: { tenantId: d.tenantId, contentId: d.contentId, title: input.title, url, kind: m.kind, note: m.note, sortOrder: n, linkStatus: status, linkCheckedAt: new Date(), createdById: ctx.userId, groupId: m.id } });
+    }
+    await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'content.material_added', resourceType: 'Content', resourceId: c.id, after: { title: input.title, url, copies: copies.length } });
     return m;
   });
+  await tellLearners(ctx.tenantId, c.level.journeyId, c.position, c.level.code, input.title).catch(() => {});
+  for (const d of copies) {
+    const j = await prisma.content.findUnique({ where: { id: d.contentId }, select: { level: { select: { journeyId: true } } } });
+    if (j) await tellLearners(d.tenantId, j.level.journeyId, d.day, d.levelCode, input.title).catch(() => {});
+  }
   return view(m);
 }
 
@@ -82,7 +113,9 @@ export async function updateMaterial(ctx: Ctx, id: string, raw: { title?: string
   const input = materialSchema.parse({ title: raw.title ?? m.title, url: raw.url ?? m.url, kind: raw.kind ?? m.kind, note: raw.note ?? m.note });
   const link = input.url !== m.url ? await checkedUrl(input.url, 0) : null;
   await prisma.$transaction(async tx => {
-    await tx.dayMaterial.update({ where: { id }, data: { title: input.title, note: input.note ?? '', kind: input.kind ?? m.kind, ...(link ? { url: link.url, linkStatus: link.status, linkCheckedAt: new Date(), kind: raw.kind ?? detectKind(link.url) } : {}) } });
+    const data = { title: input.title, note: input.note ?? '', kind: input.kind ?? m.kind, ...(link ? { url: link.url, linkStatus: link.status, linkCheckedAt: new Date(), kind: raw.kind ?? detectKind(link.url) } : {}) };
+    await tx.dayMaterial.update({ where: { id }, data });
+    if (ctx.superAdmin && m.groupId) await tx.dayMaterial.updateMany({ where: { groupId: m.groupId, id: { not: id } }, data }); // every institution's copy
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'content.material_updated', resourceType: 'DayMaterial', resourceId: id, before: { title: m.title, url: m.url }, after: { title: input.title, url: link?.url ?? m.url } });
   });
   return { ok: true as const };
@@ -93,6 +126,7 @@ export async function deleteMaterial(ctx: Ctx, id: string) {
   const m = await materialInTenant(ctx, id);
   await prisma.$transaction(async tx => {
     await tx.dayMaterial.delete({ where: { id } });
+    if (ctx.superAdmin && m.groupId) await tx.dayMaterial.deleteMany({ where: { groupId: m.groupId } }); // every institution's copy
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'content.material_removed', resourceType: 'DayMaterial', resourceId: id, before: { title: m.title, url: m.url } });
   });
   return { ok: true as const };

@@ -59,7 +59,7 @@ async function DayPage({ params, searchParams }: { params: Promise<{ code: strin
 
   return (<>
     <section className="ph ph-plain" style={{ marginBottom: 14 }}>
-      <span className="eyebrow"><Tv v={level.title} /> · {t('Day {n} of 45', { n: dayNo })}</span>
+      <span className="eyebrow"><Tv v={level.title} /> · {t('Day {n} of 45', { n: dayNo })}{materials.length > 0 && <> · <a className="link" href="#materials">📎 {t('{n} materials', { n: materials.length })}</a></>}</span>
       <h1 id="pageTitle" className="sr-only"><Tv v={content.title} /></h1>
       <div className="row between wrap gap-12" style={{ marginTop: 6 }}>
         <div className="bar" style={{ flex: 1, minWidth: 200 }} aria-label={`Day ${dayNo} of 45`}><i style={{ width: `${(dayNo / 45) * 100}%` }} /></div>
@@ -77,10 +77,10 @@ async function DayPage({ params, searchParams }: { params: Promise<{ code: strin
         {doneN < guided.length && <a className="btn btn-gold btn-sm" href="#steps">{doneN ? t('Continue at step {n}', { n: doneN + 1 }) : t('Start step 1')} ↓</a>}
       </section>;
     })()}
+    {materials.length > 0 && <div id="materials" style={{ maxWidth: 820 }}><DayMaterials items={materials} /></div>}
     <article className="card card-pad" style={{ maxWidth: 820 }} aria-label={content.title || `Day ${dayNo}`}>
       {blocks.map((b, i) => <Render key={i} block={b} />)}
     </article>
-    <div style={{ maxWidth: 820, marginTop: 16 }}><DayMaterials items={materials} /></div>
     {guided ? <GuidedDay code={code} day={dayNo} steps={guided} states={stepStates} /> : <DayWork code={code} day={dayNo} steps={steps} state={(mine?.state as 'done' | 'skipped' | undefined) ?? 'open'} xp={mine?.xpEarned ?? 0} dayXp={DAY_XP} next={next ? { code: next.level.code, day: next.position } : null} levelHref={`/levels/${code}`} />}
     <nav className="row between wrap gap-12" aria-label={t('Day navigation')} style={{ marginTop: 18, maxWidth: 820 }}>
       {prev ? <Link className="btn btn-outline" href={`/levels/${prev.level.code}/days/${prev.position}`}><ChevronLeft size={16} /> {t('Day {n}', { n: prev.position })}</Link> : <span />}

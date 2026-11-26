@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { hasPerm } from '@/lib/server/context';
 import { badRequest, conflict, forbidden, notFound } from '@/lib/server/errors';
+import { learnerTitle, starsText } from './levelTitles';
 import { audit, notify, notifyMany } from '@/lib/server/audit';
 import { awardXp } from './xp';
 import { evaluateBadges } from './badges';
@@ -95,6 +96,13 @@ export async function decide(ctx: Ctx, id: string, scores: Record<string, number
     const bonusAmt = best === total ? split.bossBonus : best >= total - 2 ? Math.round(split.bossBonus / 2) : 0;
     const bonus = bonusAmt > 0 ? await awardXp(tx, { tenantId: ctx.tenantId, userId: s.userId, amount: bonusAmt, source: 'boss_bonus', idempotencyKey: `boss:${s.progressId}`, levelId: level.id, metadata: { best, total } }) : { amount: 0 };
     await tx.progress.update({ where: { id: s.progressId }, data: { state: 'approved', completedAt: new Date(), xpEarned: { increment: base.amount + bonus.amount } } });
+    // Title unlocked (docs/LEVEL_TITLES_SPEC.md): celebrate the skill this level proves, and show what is next.
+    {
+      const courseLevels = await tx.level.findMany({ where: { tenantId: ctx.tenantId, journeyId: level.journeyId }, select: { idx: true, code: true, title: true } });
+      const approvedIdx = (await tx.progress.findMany({ where: { enrollmentId: s.progress.enrollmentId, state: 'approved' }, select: { level: { select: { idx: true } } } })).map(p => p.level.idx);
+      const t = learnerTitle(courseLevels, approvedIdx);
+      if (t.levelIdx === level.idx) await notify(tx, ctx.tenantId, s.userId, 'title_unlocked', { title: `Title unlocked: ${t.current} ${starsText(t.stars)}`, body: t.next ? `Next: ${t.next}, ${t.levelsToNext} level${t.levelsToNext === 1 ? '' : 's'} to go.` : 'You reached the top title of this course. Brilliant work.', href: '/dashboard', tone: 'gold' });
+    }
     const next = await tx.level.findFirst({ where: { tenantId: ctx.tenantId, journeyId: level.journeyId, idx: level.idx + 1 } });
     if (next) {
       // With free progression the learner may already be working on the next level: never reset it.

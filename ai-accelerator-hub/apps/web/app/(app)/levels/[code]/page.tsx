@@ -1,3 +1,4 @@
+import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ArrowRight, CalendarDays, Check, CheckCircle2, Info, ListChecks, Lock, SkipForward } from 'lucide-react';
@@ -61,6 +62,10 @@ async function LevelPage({ params, searchParams }: { params: Promise<{ code: str
   const level = st.level;
   const acts = d.activities as { id: string; idx: number; title: string; xp: number; state: string; config: Record<string, unknown> }[];
   const days = st.days;
+  // Day materials per day (docs/DAY_MATERIALS_SPEC.md v1.1), so learners see where the study links are.
+  const dayContents = await prisma.content.findMany({ where: { levelId: level.id, kind: 'md' }, select: { id: true, position: true } });
+  const matCounts = await prisma.dayMaterial.groupBy({ by: ['contentId'], where: { tenantId: ctx.tenantId, contentId: { in: dayContents.map(c => c.id) } }, _count: { _all: true } });
+  const materialsOn = new Map(dayContents.map(c => [c.position, matCounts.find(m => m.contentId === c.id)?._count._all ?? 0]));
   const actDone = acts.filter(x => ['completed', 'in_review', 'skipped'].includes(x.state)).length;
   const words = levelWords(acts);
   const next = tabs.find(x => x.idx === level.idx + 1);
@@ -99,7 +104,7 @@ async function LevelPage({ params, searchParams }: { params: Promise<{ code: str
         {days.length > 0 && <section aria-labelledby="daysT">
           <h2 className="h3 row gap-8" id="daysT" style={{ alignItems: 'center', marginBottom: 4 }}><CalendarDays size={18} aria-hidden="true" /><Tr>Your days</Tr></h2>
           <p className="small text-2" style={{ margin: '0 0 12px' }}><Tr>Each day teaches one step of the project. Follow its steps; each step explains the idea, tells you what to do, and checks your work.</Tr></p>
-          <Timeline items={days.map(x => ({ key: `d${x.day}`, href: `/levels/${code}/days/${x.day}`, label: `${t('Day {n}', { n: x.day })} · ${x.state === 'in_progress' ? t('In progress') : label(x.state === 'done' ? 'done' : x.state)}`, title: x.title.replace(/^Day \d+\s+—\s+/, ''), get: x.state === 'done' ? t('Done · +{xp} points', { xp: x.xp }) : x.stepCount ? t('{n} guided steps · up to {xp} points', { n: x.stepCount, xp: x.points }) : t('You get: up to {xp} points', { xp: x.points }), state: stateOf(x.state) }))} />
+          <Timeline items={days.map(x => ({ key: `d${x.day}`, href: `/levels/${code}/days/${x.day}`, label: `${t('Day {n}', { n: x.day })} · ${x.state === 'in_progress' ? t('In progress') : label(x.state === 'done' ? 'done' : x.state)}`, title: x.title.replace(/^Day \d+\s+—\s+/, ''), get: `${x.state === 'done' ? t('Done · +{xp} points', { xp: x.xp }) : x.stepCount ? t('{n} guided steps · up to {xp} points', { n: x.stepCount, xp: x.points }) : t('You get: up to {xp} points', { xp: x.points })}${materialsOn.get(x.day) ? ` · 📎 ${t('{n} materials', { n: materialsOn.get(x.day)! })}` : ''}`, state: stateOf(x.state) }))} />
         </section>}
         {level.isPublished && <section aria-labelledby="actsT">
           <h2 className="h3 row gap-8" id="actsT" style={{ alignItems: 'center', marginBottom: 4 }}><ListChecks size={18} aria-hidden="true" /><Tr>Your activities</Tr></h2>

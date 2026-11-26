@@ -1290,11 +1290,14 @@ model DayMaterial {
   linkStatus    String    @default("unknown") // open | private | broken | unknown
   linkCheckedAt DateTime?
   createdById   String
+  /// v1.1: the same material on the same day of the same course in every institution shares one groupId
+  groupId       String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   progress      MaterialProgress[]
 
   @@index([contentId, sortOrder])
+  @@index([groupId])
   @@index([tenantId])
   @@map("day_materials")
 }

@@ -4,6 +4,7 @@ import { ArrowRight, LifeBuoy, Flame, Snowflake, Clock, Pause, Award } from 'luc
 import { requireCtx, hasPerm, isLearner } from '@/lib/server/context';
 import { learnerSummary, leaderboard } from '@/lib/domain/insights';
 import { journeyOverview, levelState } from '@/lib/domain/journey';
+import { learnerTitle, starsText } from '@/lib/domain/levelTitles';
 import { RECOVERY_QUIZ } from '@/lib/domain/streak';
 import { StreakRecovery } from '@/components/learn/StreakRecovery';
 import { getProfile } from '@/lib/domain/profile';
@@ -63,6 +64,12 @@ async function Dashboard() {
             <div className="ag-card ag-c3"><div className="k">{t('Cohort standing')}{lb.course ? <> · <Tv v={lb.course.title} /></> : null}</div><div className="v">#{lb.me?.pos ?? '—'}<small><Tr>of</Tr> {lb.total}</small></div><div className="mbar blue"><i style={{ width: `${lb.me ? Math.max(3, ((lb.total - lb.me.pos + 1) / lb.total) * 100) : 3}%` }} /></div><Link href={lb.course ? `/ranks?tab=cohort&course=${lb.course.id}` : '/ranks?tab=cohort'}>{t('View standings')} <ArrowRight size={13} /></Link></div>
           </div>
         </section>
+        {(() => { const tt = learnerTitle(journey.levels, journey.levels.filter(l => l.state === 'approved').map(l => l.idx)); return (
+          <section className="card card-pad span-12 row gap-12 wrap" aria-label={t('Your title')} style={{ marginTop: 12, alignItems: 'center' }}>
+            <span style={{ fontSize: 26 }} aria-hidden="true">🏅</span>
+            <div style={{ flex: 1, minWidth: 200 }}><div className="muted xs bold">{t('Your title')}</div><div className="h3" style={{ margin: 0 }}><Tv v={tt.current} /> {tt.stars > 0 && <span style={{ color: 'var(--gold, #E8B94F)' }} aria-label={t('{n} of 5 stars', { n: tt.stars })}>{starsText(tt.stars)}</span>}</div></div>
+            <div className="small">{tt.isMax ? <Tr>Top title of this course. Brilliant work!</Tr> : <><Tr>Next:</Tr> <b><Tv v={tt.next ?? ''} /></b> · {t('{n} level(s) to go', { n: tt.levelsToNext })}</>}</div>
+          </section>); })()}
 
         <section className="card card-pad span-12" aria-labelledby="weekT">
           <div className="row between wrap gap-8" style={{ marginBottom: 14 }}><h2 className="h3" id="weekT">{t('This week')}</h2><span className="muted small"><Tr>Mon–Fri prep · Saturday workshop · Sunday 4-hour hackathon · attendance alone never passes a level</Tr></span></div>

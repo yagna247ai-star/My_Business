@@ -1,7 +1,7 @@
 /** Ranks page data: City / State / Everyone boards from real XP, with movement since yesterday. */
 import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
-import { pick, RANKS } from './insights';
+import { learnerTitle, starsText } from './levelTitles';
 import { courseMembers, loadRankPoints } from './rankPointsDb';
 import { rankBoard, cityScope, stateOf, type RankRow, type Scope } from './ranksCore';
 
@@ -11,7 +11,7 @@ export type Tab = 'city' | 'state' | 'all' | 'cohort';
 export async function ranks(ctx: Ctx, tab: Tab = 'city', levelIds?: string[] | null, journeyId?: string | null) {
   const since = new Date(Date.now() - 24 * 3600e3);
   // v1.1: one course in one institution. Only learners enrolled in this course; only this course's level XP.
-  const course = journeyId ? await prisma.journey.findFirst({ where: { id: journeyId, tenantId: ctx.tenantId }, select: { id: true, levels: { select: { id: true } } } }) : null;
+  const course = journeyId ? await prisma.journey.findFirst({ where: { id: journeyId, tenantId: ctx.tenantId }, select: { id: true, levels: { select: { id: true, idx: true, code: true, title: true } } } }) : null;
   const enrolled = course ? await courseMembers(ctx.tenantId, course.id) : null;
   if (course && !levelIds?.length) levelIds = course.levels.map(l => l.id);
   const all = await prisma.membership.findMany({
@@ -34,10 +34,15 @@ export async function ranks(ctx: Ctx, tab: Tab = 'city', levelIds?: string[] | n
   // Journey Finisher: every level of one of their journeys approved.
   const finished = new Set(approved.filter(a => (levelsIn.get(a.enrollmentId) ?? 0) > 0 && a._count._all >= levelsIn.get(a.enrollmentId)!).map(a => a.userId));
 
+  // Earned title per learner (docs/LEVEL_TITLES_SPEC.md): the highest approved level of this course.
+  const approvedLevels = course ? await prisma.progress.findMany({ where: { tenantId: ctx.tenantId, userId: { in: ids }, state: 'approved', enrollment: { journeyId: course.id } }, select: { userId: true, level: { select: { idx: true } } } }) : [];
+  const approvedBy = new Map<string, number[]>();
+  for (const a of approvedLevels) approvedBy.set(a.userId, [...(approvedBy.get(a.userId) ?? []), a.level.idx]);
+  const titleOf = (userId: string) => { if (!course) return ''; const t = learnerTitle(course.levels, approvedBy.get(userId) ?? []); return `${t.current}${t.stars ? ` ${starsText(t.stars)}` : ''}`; };
   const rows: RankRow[] = members.map(m => {
     const points = now.get(m.userId)?.points || 0;
     return { userId: m.userId, name: m.user.name, area: m.user.area, xp: points, prevXp: before.get(m.userId)?.points || 0, reachedAt: now.get(m.userId)?.reachedAt, prevReachedAt: before.get(m.userId)?.reachedAt, private: priv.has(m.userId),
-      avatarUrl: m.user.avatarUrl, finisher: finished.has(m.userId), level: pick(RANKS, points).name };
+      avatarUrl: m.user.avatarUrl, finisher: finished.has(m.userId), level: titleOf(m.userId) };
   });
 
   const myCity = members.find(m => m.userId === ctx.userId)?.user.area?.trim() || null;

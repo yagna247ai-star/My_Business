@@ -87,7 +87,7 @@ async function cloneJourney(tx: Tx, sourceJourneyId: string, toTenantId: string,
     for (const c of l.contents) {
       const nc = await tx.content.create({ data: { levelId: nl.id, kind: c.kind, title: c.title, payload: c.payload, position: c.position, durationMin: c.durationMin } });
       const mats = await tx.dayMaterial.findMany({ where: { contentId: c.id } });
-      if (mats.length) await tx.dayMaterial.createMany({ data: mats.map(m => ({ tenantId: toTenantId, contentId: nc.id, title: m.title, url: m.url, kind: m.kind, note: m.note, sortOrder: m.sortOrder, linkStatus: m.linkStatus, linkCheckedAt: m.linkCheckedAt, createdById: actorId })) });
+      if (mats.length) await tx.dayMaterial.createMany({ data: mats.map(m => ({ tenantId: toTenantId, contentId: nc.id, title: m.title, url: m.url, kind: m.kind, note: m.note, sortOrder: m.sortOrder, linkStatus: m.linkStatus, linkCheckedAt: m.linkCheckedAt, createdById: actorId, groupId: m.groupId ?? m.id })) });
     }
   }
   for (const l of j.levels) for (const p of l.prerequisites) if (levelMap.has(p.prerequisiteLevelId)) await tx.levelPrerequisite.create({ data: { levelId: levelMap.get(l.id)!, prerequisiteLevelId: levelMap.get(p.prerequisiteLevelId)! } });
