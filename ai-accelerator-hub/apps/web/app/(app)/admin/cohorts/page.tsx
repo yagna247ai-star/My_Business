@@ -8,7 +8,7 @@ async function Cohorts() {
   const ctx = await requirePerm('cohort:read'); const cohorts = await listCohorts(ctx);
   return (<>
     <section className="ph ph-plain"><h1 id="pageTitle">Cohorts &amp; sessions</h1><p className="desc">Weekly rhythm: Monday–Friday preparation, Saturday live workshop, Sunday 4-hour hackathon, then a submission window. Learners join with the cohort invite code.</p></section>
-    <div style={{ marginTop: 18 }}><CohortManager cohorts={JSON.parse(JSON.stringify(cohorts))} canManage={hasPerm(ctx, 'cohort:manage')} /></div>
+    <div style={{ marginTop: 18 }}><CohortManager cohorts={JSON.parse(JSON.stringify(cohorts))} canManage={hasPerm(ctx, 'cohort:manage')} superAdmin={ctx.superAdmin} /></div>
   </>);
 }
 

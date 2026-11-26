@@ -9,6 +9,8 @@ import { audit } from '@/lib/server/audit';
 import { zodFieldErrors } from '@/lib/server/http';
 import { calendarSchema, checkInOpen, classIndex, cohortWeek, dayKind, weekDates, type Calendar, type CourseDay, type Mark, type Material } from './cohortCalendar';
 import { thisWeek } from './weekPlan';
+import { applyLocal, localChanges, type Local } from './sharingCore';
+import { copiesOf } from './sharing';
 
 const parseSchedule = (raw: string | null) => { try { return raw ? JSON.parse(raw) as Record<string, unknown> : {}; } catch { return {}; } };
 export function calendarOf(raw: string | null): Calendar | null {
@@ -29,18 +31,37 @@ export async function courseDaysFor(tenantId: string, journeyId: string, enrollm
 }
 
 /* ---------- admin ---------- */
-export async function saveCalendar(ctx: Ctx, cohortId: string, raw: unknown) {
+export async function saveCalendar(ctx: Ctx, cohortId: string, raw: unknown, scope: 'all' | 'mine' = 'all') {
   if (!hasPerm(ctx, 'cohort:manage')) throw forbidden();
   const c = await prisma.cohort.findFirst({ where: { id: cohortId, tenantId: ctx.tenantId } });
   if (!c) throw notFound('Cohort not found.');
   const r = calendarSchema.safeParse(raw);
   if (!r.success) throw badRequest('The calendar needs a few fixes.', zodFieldErrors(r.error));
-  const sched = { ...parseSchedule(c.schedule), calendar: { ...r.data, holidays: [...new Set(r.data.holidays)].sort(), classDays: [...new Set(r.data.classDays)].sort() } };
+  const cal: Calendar = { ...r.data, holidays: [...new Set(r.data.holidays)].sort(), classDays: [...new Set(r.data.classDays)].sort() };
+  const sched = parseSchedule(c.schedule);
+  const base = calendarSchema.safeParse(sched.base).success ? calendarSchema.parse(sched.base) : null;
+  const startOf = (k: Calendar) => new Date(`${k.startDate}T00:00:00+05:30`);
+  // docs/INSTITUTION_SHARING_SPEC.md AC-5: a Super Admin's save is the shared plan for every copy; each keeps its own changes.
+  if (c.groupId && ctx.superAdmin && scope === 'all') {
+    const copies = await copiesOf(prisma, c.groupId);
+    await prisma.$transaction(async tx => {
+      for (const k of copies) {
+        const s = parseSchedule(k.schedule);
+        const local = (k.id === c.id ? {} : (s.local as Local | undefined) ?? {});
+        const calendar = applyLocal(cal, local);
+        await tx.cohort.update({ where: { id: k.id }, data: { schedule: JSON.stringify({ ...s, base: cal, local, calendar }), startDate: startOf(calendar) } });
+        await audit(tx, { tenantId: k.tenantId, actorUserId: ctx.userId, action: 'cohort.calendar_saved', resourceType: 'Cohort', resourceId: k.id, after: { shared: true, calendar } });
+      }
+    }, { timeout: 30_000, maxWait: 10_000 });
+    return { ok: true as const, calendar: cal, copies: copies.length };
+  }
+  // An institution's own timings: only what differs from the shared plan is kept as theirs.
+  const next = c.groupId && base ? { ...sched, local: localChanges(base, cal), calendar: cal } : { ...sched, calendar: cal };
   await prisma.$transaction(async tx => {
-    await tx.cohort.update({ where: { id: c.id }, data: { schedule: JSON.stringify(sched), startDate: new Date(`${r.data.startDate}T00:00:00+05:30`) } });
-    await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'cohort.calendar_saved', resourceType: 'Cohort', resourceId: c.id, after: sched.calendar });
+    await tx.cohort.update({ where: { id: c.id }, data: { schedule: JSON.stringify(next), startDate: startOf(cal) } });
+    await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'cohort.calendar_saved', resourceType: 'Cohort', resourceId: c.id, after: cal });
   });
-  return { ok: true as const, calendar: sched.calendar };
+  return { ok: true as const, calendar: cal };
 }
 
 /** The course most learners of this cohort follow (a cohort has no course of its own). */

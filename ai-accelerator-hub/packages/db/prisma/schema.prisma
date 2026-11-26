@@ -182,6 +182,8 @@ model Cohort {
   mentorIds  String? // JSON array
   schedule   String? // JSON: { unlockDates: {...}, liveLinks: [...] }
   inviteCode String?   @unique // institution invitation code → cohort enrollment
+  /// docs/INSTITUTION_SHARING_SPEC.md: the same cohort in every institution shares one groupId
+  groupId    String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
@@ -192,6 +194,7 @@ model Cohort {
 
   @@unique([tenantId, slug])
   @@index([tenantId])
+  @@index([groupId])
   @@map("cohorts")
 }
 

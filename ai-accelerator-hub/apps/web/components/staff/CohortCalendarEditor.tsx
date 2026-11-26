@@ -19,17 +19,21 @@ export function calendarSummary(c: Calendar) {
   return `${days} · ${blocks}${c.halfDay ? ` · ${DAYS[c.halfDay - 1]} half day` : ''} · from ${c.startDate}`;
 }
 
-export function CohortCalendarEditor({ cohortId, initial, canManage }: { cohortId: string; initial: Calendar | null; canManage: boolean }) {
+/** docs/INSTITUTION_SHARING_SPEC.md: a shared cohort's plan, this institution's own timings, and where it runs. */
+export type Shared = { base: Calendar | null; own: string[]; places: string[] } | null;
+
+export function CohortCalendarEditor({ cohortId, initial, canManage, shared = null, superAdmin = false }: { cohortId: string; initial: Calendar | null; canManage: boolean; shared?: Shared; superAdmin?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [c, setC] = useState<Calendar>(initial ?? defaultCalendar(today()));
   const [holidays, setHolidays] = useState((initial?.holidays ?? []).join(', '));
+  const [scope, setScope] = useState<'all' | 'mine'>('all');
   const [err, setErr] = useState(''); const [fields, setFields] = useState<Record<string, string>>({}); const [busy, setBusy] = useState(false);
   const setBlock = (i: number, patch: Partial<Calendar['blocks'][number]>) => setC(v => ({ ...v, blocks: v.blocks.map((b, k) => k === i ? { ...b, ...patch } : b) }));
   const save = async () => {
     setErr(''); setFields({}); setBusy(true);
     try {
-      await api(`/api/v1/admin/cohorts/${cohortId}/calendar`, { method: 'PUT', body: { ...c, holidays: holidays.split(/[\s,]+/).filter(Boolean), blocks: c.blocks.map(b => ({ ...b, link: b.mode === 'online' ? b.link || null : null })) } });
+      await api(`/api/v1/admin/cohorts/${cohortId}/calendar`, { method: 'PUT', body: { ...c, scope: superAdmin && shared ? scope : 'mine', holidays: holidays.split(/[\s,]+/).filter(Boolean), blocks: c.blocks.map(b => ({ ...b, link: b.mode === 'online' ? b.link || null : null })) } });
       setOpen(false); router.refresh();
     } catch (e) { const a = e as ApiError; setErr(a.message); setFields(a.details ?? {}); }
     finally { setBusy(false); }
@@ -37,7 +41,7 @@ export function CohortCalendarEditor({ cohortId, initial, canManage }: { cohortI
   return (
     <div className="stack gap-8">
       <div className="row between wrap gap-8" style={{ alignItems: 'center' }}>
-        <span className="small"><CalendarDays size={14} aria-hidden="true" /> <b>Class calendar:</b> {initial ? calendarSummary(initial) : <span className="muted">not planned yet: learners see a suggested week until you plan it.</span>}</span>
+        <span className="small"><CalendarDays size={14} aria-hidden="true" /> <b>Class calendar:</b> {initial ? calendarSummary(initial) : <span className="muted">not planned yet: learners see a suggested week until you plan it.</span>}{shared && shared.own.length > 0 && <span className="muted"> · your own timings: {shared.own.join(', ')}</span>}{shared && shared.places.length > 1 && <span className="muted"> · in {shared.places.join(', ')}</span>}</span>
         <span className="row gap-8">
           <Link className="btn btn-outline btn-sm" href={`/admin/cohorts/${cohortId}/week`}>Week board →</Link>
           {canManage && !open && <button className="btn btn-soft btn-sm" type="button" onClick={() => setOpen(true)}>{initial ? 'Edit calendar' : 'Plan the calendar'}</button>}
@@ -74,6 +78,14 @@ export function CohortCalendarEditor({ cohortId, initial, canManage }: { cohortI
           </div>
           <label className="stack small" style={{ gap: 4 }}><b>Holidays (no class; later days move by one)</b><input className="input" placeholder="2026-12-25, 2027-01-26" value={holidays} onChange={e => setHolidays(e.target.value)} /></label>
           <p className="muted xs">Each class day teaches the next course day in order (Level 1 Day 1, Day 2, …). Materials added on the Day materials page appear on that date for learners automatically.</p>
+          {shared?.base && (
+            <div className="row gap-8 wrap small" style={{ alignItems: 'center' }}>
+              {superAdmin
+                ? <label className="row gap-4">Save for <select className="select" value={scope} onChange={e => setScope(e.target.value as 'all' | 'mine')}><option value="all">All institutions (each keeps its own timings)</option><option value="mine">Only this institution</option></select></label>
+                : <span className="muted">Changes here are your institution&apos;s own timings.</span>}
+              {shared.own.length > 0 && <button className="btn btn-text btn-sm" type="button" onClick={() => { setC(shared.base!); setHolidays(shared.base!.holidays.join(', ')); }}>Use the shared timings</button>}
+            </div>
+          )}
           <div className="row gap-8"><button className="btn btn-gold btn-sm" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save calendar'}</button><button className="btn btn-text btn-sm" type="button" onClick={() => setOpen(false)}>Cancel</button><Link className="link small" href="/admin/materials" style={{ marginLeft: 'auto' }}>Add day materials →</Link></div>
         </form>
       )}

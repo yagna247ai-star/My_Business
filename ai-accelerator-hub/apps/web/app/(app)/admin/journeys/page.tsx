@@ -5,11 +5,13 @@ import { guarded } from '@/lib/server/page';
 import { JourneyBuilder } from '@/components/admin/JourneyBuilder';
 import { JourneyAccess } from '@/components/admin/JourneyAccess';
 import { journeyAccessOverview } from '@/lib/domain/journeyAccess';
+import { coursePlaces } from '@/lib/domain/sharing';
+import { JourneyShare } from '@/components/admin/JourneyShare';
 
 export const metadata = { title: 'Journey builder' };
 async function Journeys() {
   const ctx = await requirePerm('content:manage');
-  const [journeys, access] = await Promise.all([listJourneys(ctx), journeyAccessOverview(ctx)]);
+  const [journeys, access, where] = await Promise.all([listJourneys(ctx), journeyAccessOverview(ctx), coursePlaces(ctx)]);
   return (<>
     <section className="ph ph-plain"><h1 id="pageTitle">Journey builder</h1><p className="desc">Create a journey for {ctx.tenantName}: stages, levels and their order. New journeys stay unpublished until you publish them.</p></section>
     <div className="stack gap-16" style={{ marginTop: 18, maxWidth: 860 }}>
@@ -17,7 +19,7 @@ async function Journeys() {
       <section className="card card-pad stack gap-8" aria-labelledby="jl">
         <h2 className="h3" id="jl">Your journeys ({journeys.length})</h2>
         {journeys.length === 0 && <p className="muted small">None yet. Create one below.</p>}
-        <ul className="checklist">{journeys.map(j => <li key={j.id}><span className="bold">{j.title}</span> <span className="muted xs">· /{j.slug} · {j._count.levels} levels · {j.isPublished ? 'published' : 'unpublished'}</span></li>)}</ul>
+        <ul className="checklist">{journeys.map(j => <li key={j.id}><span className="bold">{j.title}</span> <span className="muted xs">· /{j.slug} · {j._count.levels} levels · {j.isPublished ? 'published' : 'unpublished'}</span>{ctx.superAdmin && <JourneyShare journeyId={j.id} places={where.places[j.slug] ?? []} total={where.total} />}</li>)}</ul>
         <Link className="link small" href="/admin/content">Review levels, read the content and leave suggestions →</Link> <Link className="link small" href="/levels">See the learner view →</Link>
       </section>
       <JourneyBuilder />

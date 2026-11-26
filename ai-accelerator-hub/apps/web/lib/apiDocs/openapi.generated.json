@@ -821,6 +821,13 @@
             "type": "null"
            }
           ]
+         },
+         "scope": {
+          "type": "string",
+          "enum": [
+           "all",
+           "mine"
+          ]
          }
         },
         "required": [
@@ -920,6 +927,53 @@
         ]
        }
       }
+     }
+    }
+   }
+  },
+  "/api/v1/admin/cohorts/{id}/share": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "operationId": "post_v1_admin_cohorts_id_share",
+    "summary": "POST admin/cohorts/{id}/share",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/admin/cohorts/[id]/share/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "cohort-share",
+     "max": 10,
+     "windowMs": 60000
+    },
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
      }
     }
    }
@@ -1400,6 +1454,53 @@
         }
        }
       }
+     }
+    }
+   }
+  },
+  "/api/v1/admin/journeys/{id}/share": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "operationId": "post_v1_admin_journeys_id_share",
+    "summary": "POST admin/journeys/{id}/share",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/admin/journeys/[id]/share/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "journey-share",
+     "max": 5,
+     "windowMs": 60000
+    },
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
      }
     }
    }

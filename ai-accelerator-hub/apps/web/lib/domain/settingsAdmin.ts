@@ -14,6 +14,7 @@
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { shareCohortTx } from './sharing';
 import type { Ctx } from '@/lib/server/context';
 import { hasPerm } from '@/lib/server/context';
 import { ROLE_LABEL, type Role } from '@/lib/server/rbac';
@@ -263,8 +264,9 @@ export async function createCohortAdmin(ctx: Ctx, input: { name: string; startDa
   return prisma.$transaction(async tx => {
     const c = await tx.cohort.create({ data: { tenantId: ctx.tenantId, name: name.slice(0, 120), slug, inviteCode: newInviteCode(ctx.tenantSlug), startDate: input.startDate ? new Date(input.startDate) : null, endDate: input.endDate ? new Date(input.endDate) : null, maxSize: maxSize ?? null, schedule: JSON.stringify(schedule) } });
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'cohort.created', resourceType: 'Cohort', resourceId: c.id, after: { name } });
+    if (ctx.superAdmin) await shareCohortTx(tx, ctx, c.id); // docs/INSTITUTION_SHARING_SPEC.md AC-4
     return { id: c.id, inviteCode: c.inviteCode };
-  });
+  }, { timeout: 30_000, maxWait: 10_000 });
 }
 
 export async function updateCohortAdmin(ctx: Ctx, id: string, input: { name?: string; startDate?: string | null; endDate?: string | null; maxSize?: number | null; regenerateInvite?: boolean }) {

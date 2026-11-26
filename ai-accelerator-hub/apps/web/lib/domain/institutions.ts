@@ -72,7 +72,7 @@ export async function joinWithCode(ctx: Ctx, code: string) {
 
 /* ---------- copying a journey into another institution ---------- */
 
-async function cloneJourney(tx: Tx, sourceJourneyId: string, toTenantId: string, actorId: string) {
+export async function cloneJourney(tx: Tx, sourceJourneyId: string, toTenantId: string, actorId: string) {
   const j = await tx.journey.findUniqueOrThrow({ where: { id: sourceJourneyId }, include: { stages: true, levels: { include: { contents: true, activities: true, prerequisites: true } } } });
   const clash = await tx.level.findFirst({ where: { tenantId: toTenantId, code: { in: j.levels.map(l => l.code) } }, select: { code: true } });
   if (clash) throw conflict(`The institution already has a level with code ${clash.code} in another journey, so “${j.title}” cannot be copied. Rename that level first.`);

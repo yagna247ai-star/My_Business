@@ -6,11 +6,19 @@ import { hasPerm } from '@/lib/server/context';
 import { ASSIGNABLE, ROLE_LABEL, type Role } from '@/lib/server/rbac';
 import { badRequest, conflict, forbidden, notFound } from '@/lib/server/errors';
 import { audit, notify } from '@/lib/server/audit';
+import { cohortPlaces, copiesOf, parseSched, shareCohortTx, calOf } from './sharing';
+import { describeLocal, type Local } from './sharingCore';
 
 export async function listCohorts(ctx: Ctx) {
   if (!hasPerm(ctx, 'cohort:read')) throw forbidden();
   const cs = await prisma.cohort.findMany({ where: { tenantId: ctx.tenantId }, orderBy: { createdAt: 'desc' }, include: { _count: { select: { enrollments: true } } } });
-  return cs.map(c => ({ id: c.id, name: c.name, slug: c.slug, inviteCode: hasPerm(ctx, 'cohort:manage') ? c.inviteCode : null, startDate: c.startDate, learners: c._count.enrollments, schedule: c.schedule ? JSON.parse(c.schedule) : null }));
+  const places = await cohortPlaces(ctx, cs.map(c => c.groupId).filter((g): g is string => !!g));
+  return cs.map(c => {
+    const sched = parseSched(c.schedule); const base = calOf(sched.base);
+    return { id: c.id, name: c.name, slug: c.slug, inviteCode: hasPerm(ctx, 'cohort:manage') ? c.inviteCode : null, startDate: c.startDate, learners: c._count.enrollments, schedule: c.schedule ? sched : null,
+      // docs/INSTITUTION_SHARING_SPEC.md: shared plan, this institution's own timings, and where the cohort runs
+      shared: c.groupId ? { base, own: base ? describeLocal(base, sched.local as Local | undefined) : [], places: places.get(c.groupId) ?? [] } : null };
+  });
 }
 
 export async function createCohort(ctx: Ctx, input: { name: string; startDate?: string | null }) {
@@ -23,8 +31,9 @@ export async function createCohort(ctx: Ctx, input: { name: string; startDate?: 
   return prisma.$transaction(async tx => {
     const c = await tx.cohort.create({ data: { tenantId: ctx.tenantId, name, slug, inviteCode, startDate: input.startDate ? new Date(input.startDate) : null, schedule: JSON.stringify(schedule) } });
     await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'cohort.created', resourceType: 'Cohort', resourceId: c.id, after: { name } });
-    return { id: c.id, inviteCode };
-  });
+    const shared = ctx.superAdmin ? await shareCohortTx(tx, ctx, c.id) : null; // AC-4: a Super Admin's cohort runs in every institution
+    return { id: c.id, inviteCode, shared };
+  }, { timeout: 30_000, maxWait: 10_000 });
 }
 
 export async function addSession(ctx: Ctx, cohortId: string, s: { title: string; kind: 'workshop' | 'hackathon' | 'office_hours'; startsAt: string; durationMin: number; liveLink?: string | null }) {
@@ -34,8 +43,17 @@ export async function addSession(ctx: Ctx, cohortId: string, s: { title: string;
   if (s.liveLink && !/^https:\/\/[^\s]+$/.test(s.liveLink)) throw badRequest('Live link must be an https URL.');
   const sched = c.schedule ? JSON.parse(c.schedule) : { sessions: [] };
   sched.sessions = [...(sched.sessions || []), { levelIdx: 1, kind: s.kind, title: s.title.trim(), startsAt: new Date(s.startsAt).toISOString(), durationMin: s.durationMin, liveLink: s.liveLink || null, recordingUrl: null }].sort((a: { startsAt: string }, b: { startsAt: string }) => a.startsAt.localeCompare(b.startsAt));
-  await prisma.$transaction(async tx => { await tx.cohort.update({ where: { id: c.id }, data: { schedule: JSON.stringify(sched) } }); await audit(tx, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: 'session.scheduled', resourceType: 'Cohort', resourceId: c.id, after: s }); });
-  return { ok: true };
+  const one = { levelIdx: 1, kind: s.kind, title: s.title.trim(), startsAt: new Date(s.startsAt).toISOString(), durationMin: s.durationMin, liveLink: s.liveLink || null, recordingUrl: null };
+  // AC-7: a Super Admin's session goes to every copy of a shared cohort
+  const targets = c.groupId && ctx.superAdmin ? await copiesOf(prisma, c.groupId) : [{ id: c.id, tenantId: c.tenantId, schedule: c.schedule }];
+  await prisma.$transaction(async tx => {
+    for (const k of targets) {
+      const ks = k.id === c.id ? sched : (() => { const x = parseSched(k.schedule) as { sessions?: typeof one[] }; x.sessions = [...(x.sessions || []), one].sort((a, b) => a.startsAt.localeCompare(b.startsAt)); return x; })();
+      await tx.cohort.update({ where: { id: k.id }, data: { schedule: JSON.stringify(ks) } });
+      await audit(tx, { tenantId: k.tenantId, actorUserId: ctx.userId, action: 'session.scheduled', resourceType: 'Cohort', resourceId: k.id, after: s });
+    }
+  }, { timeout: 30_000, maxWait: 10_000 });
+  return { ok: true, copies: targets.length };
 }
 
 export async function listMembers(ctx: Ctx) {
