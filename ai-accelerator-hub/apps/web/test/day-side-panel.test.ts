@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { REPOS, reposFor, topicOf } from '@/lib/domain/dayResources';
+import { CATALOG, reposFor, reposForDay, topicOf } from '@/lib/domain/dayResources';
 import { JOURNEY_SPECS } from '@/lib/domain/daDomains/tracks';
 import { buildDomainJourney } from '@/lib/domain/daDomains/curriculum';
 
@@ -33,7 +33,8 @@ describe('day page side panel', () => {
     expect(read('components/learn/DaySide.tsx')).toMatch(/kind: 'question', body: `Day \$\{day\}/);
   });
   it('AC-5: every module gets 3 curated GitHub repos; every level of every journey maps to a module', () => {
-    for (const list of Object.values(REPOS)) { expect(list.length).toBeGreaterThanOrEqual(3); for (const r of list) { expect(r.repo).toMatch(/^[\w.-]+\/[\w.-]+$/); expect(r.why.length).toBeGreaterThan(20); } }
+    expect(new Set(CATALOG.map(r => r.repo)).size).toBe(CATALOG.length); // no duplicates
+    for (const r of CATALOG) { expect(r.repo).toMatch(/^[\w.-]+\/[\w.-]+$/); expect(r.why.length).toBeGreaterThan(20); expect(r.tags.length).toBeGreaterThan(0); }
     expect(topicOf('DA02_SQL', 'SQL')).toBe('sql');
     expect(topicOf('DA03_PYTHON_FUNDAMENTALS')).toBe('python');
     expect(topicOf('DA04_PYTHON_ANALYTICS')).toBe('analytics');
@@ -51,5 +52,30 @@ describe('day page side panel', () => {
     const seen = new Set<string>();
     for (const spec of JOURNEY_SPECS) for (const l of buildDomainJourney(spec).levels) seen.add(topicOf(l.code, l.title));
     expect(seen.size).toBeGreaterThanOrEqual(7); // domain journeys spread across modules, not all "fundamentals"
+  });
+  it('AC-6: every day gets repos for its own topic: 2 to learn from, 2 real projects with good first issues', () => {
+    const d = (day: number, code = 'DA02_SQL', title = 'SQL') => reposForDay(code, title, day);
+    expect(d(11).topic).toBe('window functions');
+    expect(d(11).projects.map(r => r.repo)).toContain('duckdb/duckdb');
+    expect(d(11).learn.map(r => r.repo)).toContain('datacharmer/test_db');
+    expect(d(9).topic).toBe('joins');
+    expect(d(40, 'DA08_ETL_DATA_QUALITY', 'ETL').projects.map(r => r.repo)).toContain('dbt-labs/dbt');
+    expect(d(30, 'DA06_AI_FOR_ANALYTICS', 'AI').projects.map(r => r.repo)).toContain('data-privacy-stack/presidio');
+    expect(d(35, 'DA07_MACHINE_LEARNING', 'ML').projects.map(r => r.repo)).toContain('shap/shap');
+    expect(d(11).projects[0].contribute).toBe(`https://github.com/${d(11).projects[0].repo}/contribute`);
+    // all 45 Data Analytics days and every day of every domain course get 2 + 2, and days differ
+    const da = ['DA01_FUNDAMENTALS', 'DA02_SQL', 'DA03_PYTHON_FUNDAMENTALS', 'DA04_PYTHON_ANALYTICS', 'DA05_POWER_BI', 'DA06_AI_FOR_ANALYTICS', 'DA07_MACHINE_LEARNING', 'DA08_ETL_DATA_QUALITY', 'DA09_CAPSTONE_READINESS'];
+    const sets = new Set<string>();
+    for (let day = 1; day <= 45; day++) {
+      const code = da[Math.min(8, [5, 11, 17, 22, 27, 31, 36, 41, 45].findIndex(x => day <= x))];
+      const r = reposForDay(code, '', day);
+      expect(r.learn.length, `day ${day}`).toBe(2); expect(r.projects.length, `day ${day}`).toBe(2);
+      sets.add([...r.learn, ...r.projects].map(x => x.repo).join(','));
+    }
+    expect(sets.size).toBeGreaterThan(25);
+    for (const spec of JOURNEY_SPECS) for (const l of buildDomainJourney(spec).levels) for (const day of l.days) {
+      const r = reposForDay(l.code, l.title, day.day, day.title);
+      expect(r.learn.length + r.projects.length, `${spec.slug} ${l.code} day ${day.day}`).toBeGreaterThanOrEqual(3);
+    }
   });
 });

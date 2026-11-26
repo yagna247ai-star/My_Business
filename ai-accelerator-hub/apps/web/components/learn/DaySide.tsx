@@ -11,6 +11,7 @@ import { api, ApiError } from '@/lib/client/api';
 import { CoachChat } from '@/components/learn/CoachChat';
 import { useT } from '@/components/i18n/I18nProvider';
 import { Tv } from '@/components/i18n/Tv';
+import type { DayRepo } from '@/lib/domain/dayResources';
 
 type Post = { id: string; kind: string; body: string; author: string; mine: boolean; answered: boolean; replies: number; at: string };
 type Props = {
@@ -18,7 +19,7 @@ type Props = {
   coach: { assistants: { code: string; name: string }[]; configured: boolean; creditsLeft: number } | null;
   materials: { id: string; title: string }[];
   feed: { items: Post[]; total: number } | null;
-  repos: { repo: string; title: string; why: string; url: string }[];
+  repos: { topic: string; learn: DayRepo[]; projects: DayRepo[] };
 };
 
 const ago = (iso: string) => { const m = Math.max(1, Math.round((Date.now() - Date.parse(iso)) / 60_000)); return m < 60 ? `${m} min` : m < 1440 ? `${Math.round(m / 60)} h` : `${Math.round(m / 1440)} d`; };
@@ -77,19 +78,32 @@ export function DaySide({ code, day, dayTitle, coach, materials, feed: initialFe
         </section>
       )}
 
-      {repos.length > 0 && (
-        <section className="card card-pad stack gap-6" aria-labelledby="dsRepos">
-          <h2 className="h4 row gap-8" id="dsRepos" style={{ alignItems: 'center', margin: 0 }}><GitFork size={16} aria-hidden="true" />{t('Go deeper: open-source practice')}</h2>
-          <ul className="ds-list">{repos.map(r => (
-            <li key={r.repo}><a className="ds-post" href={r.url} target="_blank" rel="noopener noreferrer">
-              <span className="small bold"><Tv v={r.title} /> <ExternalLink size={10} aria-hidden="true" /></span>
-              <span className="muted xs"><Tv v={r.why} /></span>
-              <span className="xs" style={{ fontFamily: 'var(--font-mono)', opacity: .7 }}>{`github.com/${r.repo}`}</span>
-            </a></li>))}
-          </ul>
+      {(repos.learn.length > 0 || repos.projects.length > 0) && (
+        <section className="card card-pad stack gap-8" aria-labelledby="dsRepos">
+          <h2 className="h4 row gap-8" id="dsRepos" style={{ alignItems: 'center', margin: 0 }}><GitFork size={16} aria-hidden="true" />{t('Go deeper on GitHub')}</h2>
+          <p className="muted xs" style={{ margin: 0 }}>{t('For today')}: <b><Tv v={repos.topic} /></b></p>
+          {repos.learn.length > 0 && <>
+            <span className="section-label">{t('Learn and practise')}</span>
+            <ul className="ds-list">{repos.learn.map(r => <li key={r.repo}><RepoCard r={r} /></li>)}</ul>
+          </>}
+          {repos.projects.length > 0 && <>
+            <span className="section-label">{t('See it in real open-source projects')}</span>
+            <ul className="ds-list">{repos.projects.map(r => <li key={r.repo}><RepoCard r={r} contributeText={t('Good first issues')} /></li>)}</ul>
+          </>}
           <p className="muted xs" style={{ margin: 0 }}>{t('Free and open source. Optional: today’s steps are all you need for points.')}</p>
         </section>
       )}
+    </div>
+  );
+}
+
+function RepoCard({ r, contributeText }: { r: DayRepo; contributeText?: string }) {
+  return (
+    <div className="ds-post">
+      <a className="small bold link" href={r.url} target="_blank" rel="noopener noreferrer"><Tv v={r.title} /> <ExternalLink size={10} aria-hidden="true" /></a>
+      <span className="muted xs"><Tv v={r.why} /></span>
+      <span className="row between wrap gap-6 xs"><span style={{ fontFamily: 'var(--font-mono)', opacity: .7 }}>{`github.com/${r.repo}`}</span>
+        {r.contribute && contributeText && <a className="link" href={r.contribute} target="_blank" rel="noopener noreferrer">{contributeText} →</a>}</span>
     </div>
   );
 }

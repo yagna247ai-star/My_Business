@@ -25,7 +25,7 @@ import { Render } from '@/components/learn/Markdown';
 import { DaySide } from '@/components/learn/DaySide';
 import { coachStatus } from '@/lib/ai/coach';
 import { dayFeed } from '@/lib/domain/feed';
-import { reposFor } from '@/lib/domain/dayResources';
+import { reposForDay } from '@/lib/domain/dayResources';
 
 async function DayPage({ params, searchParams }: { params: Promise<{ code: string; day: string }>; searchParams: Promise<{ orig?: string }> }) {
   const { code, day } = await params; const { orig } = await searchParams;
@@ -65,7 +65,7 @@ async function DayPage({ params, searchParams }: { params: Promise<{ code: strin
   ]);
   const order = ['concept-explainer', 'code-mentor', 'career-coach'];
   const mentors = coach ? (coach.assistants.filter(a => order.includes(a.code)).sort((a, b) => order.indexOf(a.code) - order.indexOf(b.code))) : [];
-  const side = { coach: coach && coach.assistants.length ? { ...coach, assistants: mentors.length ? mentors : coach.assistants } : null, materials: materials.map(m => ({ id: m.id, title: m.title })), feed: classmates, repos: reposFor(level.code, level.title) };
+  const side = { coach: coach && coach.assistants.length ? { ...coach, assistants: mentors.length ? mentors : coach.assistants } : null, materials: materials.map(m => ({ id: m.id, title: m.title })), feed: classmates, repos: reposForDay(level.code, level.title, dayNo, content.title ?? '') };
   const stepStates = (() => { try { const v = JSON.parse(mine?.steps ?? '[]'); return Array.isArray(v) && v.every(x => x === null || typeof x === 'object') ? v : []; } catch { return []; } })();
   if (guided && mine?.state === 'skipped' && !stepStates.length) guided.forEach((_, i) => { stepStates[i] = { s: 'skipped', xp: 0, at: '' }; });
   // Finished before this day had steps: it stays done (its points were already given), shown as done steps.
