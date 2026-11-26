@@ -47,10 +47,12 @@ export default function RegisterPage() {
   const t = useT();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const [f, setF] = useState<Form>({ name: '', email: '', password: '', birthYear: '', inviteCode: '', guardianEmail: '', journeySlug: '', acceptTerms: false, trackAck: false });
+  const [f, setF] = useState<Form>({ name: '', email: '', password: '', birthYear: '', inviteCode: 'AIHUB', guardianEmail: '', journeySlug: '', acceptTerms: false, trackAck: false }); // docs/REGISTRATION_HOME_SPEC.md AC-3
   const [domainKey, setDomainKey] = useState(''); // chosen industry domain (several journeys when it has tracks)
   const [journeys, setJourneys] = useState<JourneyOption[] | null>(null);
-  const [journeyCode, setJourneyCode] = useState(''); // invite code the journey list was loaded for
+  const [journeyCode, setJourneyCode] = useState('AIHUB');
+  const [home, setHome] = useState<{ name: string; code: string | null } | null>(null); // where this code leads
+  const [codeErr, setCodeErr] = useState(''); // invite code the journey list was loaded for
   const [errors, setErrors] = useState<Partial<Record<Key, string>>>({});
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
@@ -59,9 +61,9 @@ export default function RegisterPage() {
   useEffect(() => {
     let live = true;
     const q = journeyCode ? `?inviteCode=${encodeURIComponent(journeyCode)}` : '';
-    api<{ journeys: JourneyOption[] }>(`/api/v1/register/journeys${q}`, { method: 'GET' })
-      .then(r => { if (!live) return; setJourneys(r.journeys); setF(p => ({ ...p, journeySlug: r.journeys.some(j => j.slug === p.journeySlug) ? p.journeySlug : (r.journeys.find(j => j.isDefault) ?? r.journeys[0])?.slug ?? '' })); })
-      .catch(() => { if (live) setJourneys([]); });
+    api<{ journeys: JourneyOption[]; institution?: { name: string; code: string | null } | null }>(`/api/v1/register/journeys${q}`, { method: 'GET' })
+      .then(r => { if (!live) return; setHome(r.institution ?? null); setCodeErr(''); setJourneys(r.journeys); setF(p => ({ ...p, journeySlug: r.journeys.some(j => j.slug === p.journeySlug) ? p.journeySlug : (r.journeys.find(j => j.isDefault) ?? r.journeys[0])?.slug ?? '' })); })
+      .catch((e: unknown) => { if (!live) return; setJourneys([]); setHome(null); setCodeErr(e instanceof ApiError && e.status === 400 ? e.message : ''); });
     return () => { live = false; };
   }, [journeyCode]);
   const age = youngestAge(f.birthYear);
@@ -130,7 +132,9 @@ export default function RegisterPage() {
         {field('birthYear', 'Year of birth', { type: 'text', inputMode: 'numeric', ac: 'bday-year', hint: 'Used only to apply age-appropriate safety settings.' })}
         {minor && field('guardianEmail', 'Parent or guardian email', { type: 'email', ac: 'off', inputMode: 'email', hint: 'Required for learners under 18. Community features unlock after consent.' })}
         <div onBlur={() => { const c = f.inviteCode.trim(); if (c !== journeyCode && (c === '' || c.length >= 4)) setJourneyCode(c); }}>
-          {field('inviteCode', 'Institution code', { required: false, ac: 'off', hint: 'The code your skill centre, college or company gave you (e.g. SLNHRD), or a batch invite code. Don’t have one? Leave it empty: you join AI Accelerator Hub, and an admin can move you later.' })}
+          {field('inviteCode', 'Institution code', { required: false, ac: 'off', hint: 'AIHUB joins AI Accelerator Hub. If your skill centre, college or company gave you a code (e.g. SLNHRD) or a batch invite code, type it instead. An admin can move you later.' })}
+          {codeErr ? <p className="small" role="alert" style={{ color: 'var(--danger, #b42318)', margin: '4px 0 0' }}><Tv v={codeErr} /></p>
+            : home ? <p className="small muted" role="status" style={{ margin: '4px 0 0' }}><Tr>You&apos;ll join</Tr>: <b><Tv v={home.name} /></b>{home.code ? <> · <span className="kbd-code">{home.code}</span></> : null}</p> : null}
         </div>
         {journeys && journeys.length > 0 && (
           <fieldset style={{ border: 0, padding: 0, margin: 0 }} aria-describedby={errors.journeySlug ? 'journeySlug-h' : undefined}>

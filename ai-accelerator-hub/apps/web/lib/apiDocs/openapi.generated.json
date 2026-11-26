@@ -8547,6 +8547,53 @@
     }
    }
   },
+  "/api/v1/settings/institutes/{id}/default": {
+   "post": {
+    "tags": [
+     "settings"
+    ],
+    "operationId": "post_v1_settings_institutes_id_default",
+    "summary": "POST settings/institutes/{id}/default",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/settings/institutes/[id]/default/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "institute-default",
+     "max": 10,
+     "windowMs": 60000
+    },
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    }
+   }
+  },
   "/api/v1/settings/institutes/{id}": {
    "patch": {
     "tags": [

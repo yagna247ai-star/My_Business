@@ -6,14 +6,39 @@ import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { audit, notify } from '@/lib/server/audit';
 import { badRequest, conflict, forbidden, notFound } from '@/lib/server/errors';
-import { DEFAULT_CODE, normaliseCode, planJourneyMap, resolveCode } from './institutionsCore';
+import { DEFAULT_CODE, normaliseCode, pickHome, planJourneyMap, resolveCode, suggestCode } from './institutionsCore';
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
-/** The institution for people without a code: AIHUB, else DEFAULT_TENANT_SLUG. */
+/** The institution for people without a code (docs/REGISTRATION_HOME_SPEC.md AC-1): AIHUB, else the platform's own, else DEFAULT_TENANT_SLUG. */
 export async function defaultInstitution() {
-  return (await prisma.tenant.findUnique({ where: { code: DEFAULT_CODE } }))
-    ?? (await prisma.tenant.findUnique({ where: { slug: process.env.DEFAULT_TENANT_SLUG || 'demo' } }));
+  const all = await prisma.tenant.findMany({ select: { id: true, name: true, code: true, type: true, slug: true, status: true }, orderBy: { createdAt: 'asc' } });
+  return pickHome(all, process.env.DEFAULT_TENANT_SLUG);
+}
+
+/** AC-3: for the registration form: the institution a code (or no code) leads to. Unknown codes throw a 400 with the message. */
+export async function institutionPreview(code?: string | null) {
+  const r = await institutionForCode(code);
+  const t = await prisma.tenant.findUnique({ where: { id: r.tenantId }, select: { name: true, code: true } });
+  return t ? { name: t.name, code: t.code, via: r.via } : null;
+}
+
+/** AC-4: Super Admin: make this institution the home for new learners without a code (it takes AIHUB). */
+export async function makeDefaultHome(ctx: Ctx, tenantId: string) {
+  if (!ctx.superAdmin) throw forbidden('Only a Super Admin can choose where new learners go.');
+  const t = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  if (!t || t.status !== 'active') throw notFound('That institution is not available.');
+  if (t.code === DEFAULT_CODE) return { ok: true as const, code: DEFAULT_CODE, previous: null };
+  const all = await prisma.tenant.findMany({ select: { id: true, name: true, code: true, type: true } });
+  const holder = all.find(x => x.code === DEFAULT_CODE) ?? null;
+  const taken = new Set(all.map(x => x.code).filter((x): x is string => !!x && x !== DEFAULT_CODE));
+  const newCode = holder ? suggestCode(holder.name, taken) : null;
+  await prisma.$transaction(async tx => {
+    if (holder) await tx.tenant.update({ where: { id: holder.id }, data: { code: newCode, ...(holder.type === 'platform' ? { type: 'other' } : {}) } });
+    await tx.tenant.update({ where: { id: t.id }, data: { code: DEFAULT_CODE, type: 'platform' } });
+    await audit(tx, { tenantId: t.id, actorUserId: ctx.userId, action: 'institution.default_home', resourceType: 'Tenant', resourceId: t.id, before: { code: t.code }, after: { code: DEFAULT_CODE, previousHolder: holder ? { id: holder.id, newCode } : null } });
+  });
+  return { ok: true as const, code: DEFAULT_CODE, previous: holder ? { name: holder.name, code: newCode } : null };
 }
 
 /** Registration and "Join an institution": what a typed code means. */

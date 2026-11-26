@@ -4,7 +4,7 @@
  * every institution as a card with Open (switch), Edit, Deactivate and Delete, and Create.
  */
 import { useState } from 'react';
-import { Building2, LogIn, Pencil, Plus, Power } from 'lucide-react';
+import { Building2, Home, LogIn, Pencil, Plus, Power } from 'lucide-react';
 import { api } from '@/lib/client/api';
 import { ConfirmDelete, Field, Modal, useRun } from './ui';
 
@@ -78,6 +78,9 @@ export function InstituteSettings({ mine, all, superAdmin }: { mine: Inst; all: 
   const [edit, setEdit] = useState<(Form & { id: string; original: string | null; current: boolean }) | null>(null);
   const [creating, setCreating] = useState<Form | null>(null);
   const [q, setQ] = useState('');
+  const [homeArm, setHomeArm] = useState<string | null>(null); // docs/REGISTRATION_HOME_SPEC.md AC-4: two taps
+  const home = (all ?? []).find(r => r.code === 'AIHUB' && r.status === 'active') ?? null;
+  const fallback = home ? null : (all ?? []).find(r => r.type === 'platform' && r.status === 'active') ?? null;
   const rows = (all ?? []).filter(r => !q || `${r.name} ${r.code ?? ''} ${r.city ?? ''}`.toLowerCase().includes(q.toLowerCase()));
   const open = (id: string) => list.run(async () => { await api('/api/v1/me/tenant', { method: 'POST', body: { tenantId: id } }); window.location.assign('/dashboard'); }, 'Opening…');
 
@@ -98,6 +101,9 @@ export function InstituteSettings({ mine, all, superAdmin }: { mine: Inst; all: 
         <h2 className="h3" id="allT">All institutions ({all.length})</h2>
         <div className="row gap-8"><input className="input" type="search" placeholder="Search name, code or city…" aria-label="Search institutions" value={q} onChange={e => setQ(e.target.value)} /><button className="btn btn-primary btn-sm" type="button" onClick={() => setCreating(formOf())}><Plus size={15} />New institution</button></div>
       </div>
+      {home
+        ? <p className="callout info small">New learners who register without a code, or with <b>AIHUB</b>, join <b>{home.name}</b>.</p>
+        : <p className="callout warn small" role="alert">No institution holds the code <b>AIHUB</b>, so new learners without a code join {fallback ? <b>{fallback.name}</b> : 'the server’s default institution'}. Press “Make default for new learners” on AI Accelerator Hub.</p>}
       <list.Status />
       <div className="set-grid">{rows.map(r => (
         <article key={r.id} className="card card-pad stack gap-8" aria-labelledby={`i-${r.id}`} style={{ borderColor: r.current ? 'var(--primary)' : undefined }}>
@@ -107,6 +113,9 @@ export function InstituteSettings({ mine, all, superAdmin }: { mine: Inst; all: 
           <div className="row gap-6 wrap">
             {!r.current && r.status === 'active' && <button className="btn btn-primary btn-sm" type="button" disabled={list.busy} onClick={() => open(r.id)}><LogIn size={14} />Open</button>}
             <button className="btn btn-outline btn-sm" type="button" onClick={() => setEdit({ ...formOf(r), id: r.id, original: r.code, current: !!r.current })}><Pencil size={14} />Edit profile</button>
+            {r.code !== 'AIHUB' && r.status === 'active' && (homeArm === r.id
+              ? <><button className="btn btn-gold btn-sm" type="button" disabled={list.busy} onClick={() => { setHomeArm(null); void list.run(() => api(`/api/v1/settings/institutes/${r.id}/default`, { method: 'POST' }), `${r.name} now holds AIHUB: new learners without a code join it.${home ? ` ${home.name} got a new code.` : ''}${r.code ? ` The old code ${r.code} stops working.` : ''}`); }}>Confirm: new learners join {r.name}</button><button className="btn btn-text btn-sm" type="button" onClick={() => setHomeArm(null)}>Cancel</button></>
+              : <button className="btn btn-soft btn-sm" type="button" disabled={list.busy} onClick={() => setHomeArm(r.id)}><Home size={14} />Make default for new learners</button>)}
             {!r.current && r.code !== 'AIHUB' && <button className="btn btn-soft btn-sm" type="button" aria-label={`${r.status === 'active' ? 'Deactivate' : 'Activate'} ${r.name}`} disabled={list.busy} onClick={() => list.run(() => api(`/api/v1/settings/institutes/${r.id}`, { method: 'PATCH', body: { status: r.status === 'active' ? 'suspended' : 'active' } }), r.status === 'active' ? `${r.name} deactivated.` : `${r.name} reactivated.`)}><Power size={14} /></button>}
             {!r.current && r.code !== 'AIHUB' && <ConfirmDelete label={`Delete ${r.name}`} confirmText="Delete permanently" disabled={list.busy} onConfirm={() => list.run(() => api(`/api/v1/settings/institutes/${r.id}`, { method: 'DELETE' }), `${r.name} deleted.`)} />}
           </div>

@@ -39,9 +39,22 @@ export function resolveCode(input: string | null | undefined, tenants: { id: str
   const up = c.toUpperCase();
   const t = tenants.find(x => x.code?.toUpperCase() === up);
   if (t) return t.status === 'active' ? { kind: 'institution', tenantId: t.id } : { kind: 'unknown' };
+  if (up === DEFAULT_CODE) return { kind: 'default' }; // docs/REGISTRATION_HOME_SPEC.md AC-2: AIHUB always means the platform's home
   const co = cohorts.find(x => x.inviteCode?.toUpperCase() === up);
   if (co && tenants.find(x => x.id === co.tenantId)?.status !== 'suspended') return { kind: 'cohort', tenantId: co.tenantId, cohortId: co.id };
   return { kind: 'unknown' };
+}
+
+/**
+ * docs/REGISTRATION_HOME_SPEC.md AC-1: where people without a code go. The institution holding AIHUB; else the
+ * platform's own institution (type "platform"); else DEFAULT_TENANT_SLUG. Never a deactivated one.
+ */
+export function pickHome<T extends { id: string; code: string | null; type: string; slug: string; status: string }>(tenants: T[], envSlug: string | null | undefined): T | null {
+  const live = tenants.filter(t => t.status === 'active');
+  return live.find(t => t.code?.toUpperCase() === DEFAULT_CODE)
+    ?? live.find(t => t.type === 'platform')
+    ?? live.find(t => t.slug === (envSlug || 'demo'))
+    ?? null;
 }
 
 /* ---------- signed switch cookie ---------- */
