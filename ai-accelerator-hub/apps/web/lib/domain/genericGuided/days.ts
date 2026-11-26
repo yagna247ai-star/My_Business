@@ -89,7 +89,7 @@ export const GENERIC_GUIDED: Record<number, GuidedStep[]> = {
       paste('Paste the message pane text after running the script', 'without errors|executed successfully|query executed', 'Execution finished without errors.', 'Run the whole script with Execute all, then paste the message under the editor.'),
       { minutes: 10, code: { lang: 'sql', text: `PRAGMA foreign_keys = ON;   -- SQLite checks foreign keys only when this is on
 DROP TABLE IF EXISTS orders; DROP TABLE IF EXISTS customers; DROP TABLE IF EXISTS products;
-CREATE TABLE customers (customer_id INTEGER PRIMARY KEY, name TEXT NOT NULL, phone TEXT);
+CREATE TABLE customers (customer_id INTEGER PRIMARY KEY, name TEXT NOT NULL, city TEXT);
 CREATE TABLE products  (product_id INTEGER PRIMARY KEY, name TEXT NOT NULL, price INTEGER NOT NULL);
 CREATE TABLE orders (
   order_id INTEGER PRIMARY KEY,
@@ -101,7 +101,7 @@ CREATE TABLE orders (
     S('Add rows', 'An INSERT adds rows. Notice the orders only hold numbers: the customer’s name and the product’s price are stored once, in their own tables, so a price change happens in one place.',
       [...RUN_SQL, 'Then run: SELECT COUNT(*) FROM orders;'],
       paste('Paste the result of SELECT COUNT(*) FROM orders;', '\\b5\\b', '5', 'The orders table should have 5 rows. Run the INSERT script once, then the count.'),
-      { minutes: 10, code: { lang: 'sql', text: `INSERT INTO customers VALUES (1,'Mrs. Rao','9800000001'),(2,'Imran','9800000002'),(3,'Lakshmi','9800000003');
+      { minutes: 10, code: { lang: 'sql', text: `INSERT INTO customers VALUES (1,'Mrs. Rao','Hyderabad'),(2,'Imran','Vijayawada'),(3,'Lakshmi','Warangal');
 INSERT INTO products VALUES (1,'Rice 5kg',420),(2,'Sunflower Oil 1L',165),(3,'Toor Dal 1kg',150),(4,'Tea 250g',130);
 INSERT INTO orders VALUES
  (1,1,1,2,'2026-10-01'),(2,1,3,1,'2026-10-01'),(3,2,2,3,'2026-10-02'),(4,3,4,1,'2026-10-02'),(5,2,1,1,'2026-10-03');` },

@@ -28,8 +28,12 @@ export function personalDriveView(raw: string): boolean {
   return /^\/drive\/(my-drive|recent|home|shared-with-me|starred|trash|computers|search|shared-drives|quota)(\/|$)/.test(p) || p === '/drive' || p === '';
 }
 
-const PRIVATE_TEXT = /You need access|Request access|ServiceLogin|Sign in to continue|You need permission|This item might not exist or is no longer available/i;
-const BLOCKED_TEXT = /unusual traffic|consent\.google\.com|Before you continue to Google|captcha/i;
+// Words a person sees on a "no access" page. Never "ServiceLogin": every public Google page links to it from the
+// header's Sign-in button, so matching it refused every correctly shared Drive link (spec v1.1, AC-5).
+// A real sign-in wall is a redirect to accounts.google.com, which classifyResponse handles below.
+const PRIVATE_TEXT = /You need access|Request access|Sign in to continue|You need permission|This item might not exist or is no longer available/i;
+// "captcha" as a word only: every public Slides page carries a "recaptcha_site_key" setting (spec v1.1, AC-7).
+const BLOCKED_TEXT = /unusual traffic|consent\.google\.com|Before you continue to Google|\bcaptcha\b/i;
 const LOGIN = /(^|\.)(accounts\.google\.com|login\.microsoftonline\.com|login\.live\.com|login\.windows\.net)$|\/ServiceLogin|\/signin|\/login\b/i;
 
 /** One HTTP answer → open / private / broken / unknown. "Could not tell" is unknown, never open. */

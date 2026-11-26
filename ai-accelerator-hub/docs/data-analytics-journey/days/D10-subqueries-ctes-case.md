@@ -32,9 +32,9 @@ Sort orders into bands, one step at a time:
 WITH order_bands AS (                    -- step 1: name each order's size
   SELECT order_id, amount,
          CASE WHEN amount < 5000  THEN 'Small'
-              WHEN amount <= 20000 THEN 'Medium'
+              WHEN amount < 15000 THEN 'Medium'
               ELSE 'Large' END AS band   -- ELSE catches everything else
-  FROM sales_orders
+  FROM orders
 )
 SELECT band, COUNT(*) AS orders          -- step 2: count each band
 FROM order_bands
@@ -43,13 +43,13 @@ GROUP BY band;
 
 Customers who spent more than average:
 ```sql
-SELECT c.name, a.total_spend
-FROM (SELECT customer_id, SUM(amount) AS total_spend
-      FROM sales_orders GROUP BY customer_id) a   -- each customer's total
-JOIN customers c ON c.customer_id = a.customer_id
+SELECT a.customer, a.total_spend
+FROM (SELECT customer, SUM(amount) AS total_spend
+      FROM orders GROUP BY customer) a             -- each customer's total
 WHERE a.total_spend > (SELECT AVG(total_spend)     -- the subquery: the average
                        FROM (SELECT SUM(amount) AS total_spend
-                             FROM sales_orders GROUP BY customer_id));
+                             FROM orders GROUP BY customer))
+ORDER BY a.total_spend DESC;
 ```
 
 ## Your turn

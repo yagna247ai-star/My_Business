@@ -39,15 +39,15 @@ CREATE TABLE customers (
 CREATE TABLE products (
   product_id  INTEGER PRIMARY KEY,
   name        TEXT NOT NULL,
-  unit_price  NUMERIC NOT NULL
+  price       INTEGER NOT NULL
 );
 
-CREATE TABLE sales_orders (
+CREATE TABLE orders (
   order_id     INTEGER PRIMARY KEY,
   customer_id  INTEGER REFERENCES customers(customer_id),  -- must be a real customer
   product_id   INTEGER REFERENCES products(product_id),    -- must be a real product
   qty          INTEGER,
-  order_date   DATE
+  ordered_on   TEXT
 );
 ```
 

@@ -32,12 +32,11 @@ Top product in each branch, each month:
 ```sql
 WITH monthly AS (                           -- step 1: revenue per product per month
   SELECT branch,
-         strftime('%Y-%m', order_date) AS ym,   -- turn the date into "2026-10"
-         TRIM(UPPER(p.name))           AS product, -- clean the name
-         SUM(o.amount)                 AS revenue
-  FROM sales_orders o
-  JOIN products p ON p.product_id = o.product_id
-  GROUP BY branch, ym, product
+         month            AS ym,                -- already "2026-10" in this table
+         TRIM(UPPER(product)) AS product,        -- clean the name: ' toor dal ' and 'TOOR DAL' become one
+         SUM(revenue)     AS revenue
+  FROM sales
+  GROUP BY branch, ym, TRIM(UPPER(product))
 ),
 ranked AS (                                 -- step 2: rank inside each branch-month
   SELECT *,

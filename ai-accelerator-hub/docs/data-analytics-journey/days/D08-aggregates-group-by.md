@@ -28,14 +28,14 @@ Once the piles exist, you can ask:
 
 ## Let's solve it
 ```sql
-SELECT d.dept_name,
+SELECT d.name        AS department,
        COUNT(*)      AS headcount,      -- how many people
        SUM(e.salary) AS total_salary,   -- add up all salaries
        AVG(e.salary) AS avg_salary      -- average salary
 FROM employees e
 JOIN departments d ON d.dept_id = e.dept_id   -- link to the department name
 WHERE e.status = 'active'                     -- count only current workers
-GROUP BY d.dept_name                          -- one pile per department
+GROUP BY d.name                               -- one pile per department
 HAVING COUNT(*) > 3                           -- keep only piles with more than 3 people
 ORDER BY total_salary DESC;                   -- biggest total first
 ```

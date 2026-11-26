@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.0, 2026-11-25 |
+| Version | 1.1, 2026-11-26 (v1.1: public Google pages were read as private) |
 | Trigger | "There are some Drive links in the showcase and those are not opening. Why? Do deep research and fix them." |
 | Builds on | `apps/web/lib/domain/proofRelevance.ts` (`proofLinkProblem`, `linkPrivateProblem`), `apps/web/lib/domain/showcase.ts`, `docs/SHOWCASE_MODERATION` commit d15ecba |
 | Code | `apps/web/lib/domain/linkHealthCore.ts` (new, pure) · `apps/web/lib/domain/proofRelevance.ts` · `apps/web/lib/domain/showcase.ts` · `apps/web/app/api/cron/link-health/route.ts` (new) · `apps/web/app/(app)/showcase/page.tsx` · `packages/db/prisma/migrations/0013_link_health` (new) |
@@ -42,6 +42,9 @@ Showcase card badge, author and moderator warning, and a Re-check button in Admi
 - [x] AC-2: `my-drive`, `recent`, `home`, `shared-with-me` and `search` Drive views are rejected.
 - [x] AC-3: 429 / 5xx / timeouts are `unknown`, not `open`; 403 and login redirects are `private`; 404 is `broken`.
 - [ ] AC-4: The cron route returns 401 without the secret.
+- [x] AC-5 (v1.1): Given a public Google Drive, Docs or Sheets page (200) whose header has the "Sign in" link to `accounts.google.com/ServiceLogin`, when it is classified, then it is `open`. Bug: "the learner has already posted the Google Drive link, but they are unable to proceed" (Level 1 proof). Every correctly shared Google link was refused as private, and so were mentors' day materials. Confirmed against Google's public sample sheet on 2026-11-26.
+- [x] AC-6 (v1.1): Given a 200 page that says "You need access" / "Request access" / "You need permission", when it is classified, then it is still `private`. A redirect to the sign-in page also stays `private` (AC-3).
+- [x] AC-7 (v1.1): Given a public Google Slides page (200) whose settings include `recaptcha_site_key`, when it is classified, then it is `open`, not `unknown`. A real captcha or "unusual traffic" page is still `unknown`. Found on 2026-11-26 against a public Slides deck: the old rule matched "captcha" inside the setting's name, while the pre-v1.1 rule had called the same deck private.
 
 ## 7. Out of scope
 Copying files into an institution Drive. That needs the Google Drive API and a service account.

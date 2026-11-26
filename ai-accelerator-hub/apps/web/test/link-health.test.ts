@@ -37,3 +37,22 @@ describe('classifyResponse', () => {
     expect(classifyResponse(200, null, '<form action="https://consent.google.com/save">')).toBe('unknown');
   });
 });
+
+// docs/SHOWCASE_LINK_HEALTH_SPEC.md v1.1 — a real public Drive page header (2026-11-26) carries a Sign-in link.
+const PUBLIC_DRIVE_HEADER = '<div class="gb_z" data-ogsr-up=""><a class="gb_A" aria-label="Sign in" href="https://accounts.google.com/ServiceLogin?service=wise&amp;passive=1209600&amp;osid=1&amp;continue=https://drive.google.com/file/d/1abc/view">Sign in</a></div><title>report.pdf - Google Drive</title>';
+describe('public Google pages (v1.1)', () => {
+  it('AC-5: a public Drive / Docs page with the header Sign-in link is open', () => {
+    expect(classifyResponse(200, null, PUBLIC_DRIVE_HEADER)).toBe('open');
+    expect(classifyResponse(200, null, '[null,"https://accounts.google.com/ServiceLogin?service\\u003dwise"]<title>Sheet1 - Google Sheets</title>')).toBe('open');
+  });
+  it('AC-6: a page asking for access is still private', () => {
+    expect(classifyResponse(200, null, `${PUBLIC_DRIVE_HEADER}<h1>You need access</h1><button>Request access</button>`)).toBe('private');
+    expect(classifyResponse(200, null, 'You need permission')).toBe('private');
+    expect(classifyResponse(302, 'https://accounts.google.com/ServiceLogin?continue=x', '')).toBe('private');
+  });
+  it('AC-7: a public Slides page carrying Google\'s recaptcha_site_key is open; a real captcha wall is unknown', () => {
+    expect(classifyResponse(200, null, `${PUBLIC_DRIVE_HEADER}{"recaptcha_site_key":"6Ld6E6wn"}<title>Deck - Google Slides</title>`)).toBe('open');
+    expect(classifyResponse(200, null, 'Our systems have detected unusual traffic from your computer network.')).toBe('unknown');
+    expect(classifyResponse(200, null, '<p>Please solve this CAPTCHA to continue</p>')).toBe('unknown');
+  });
+});
