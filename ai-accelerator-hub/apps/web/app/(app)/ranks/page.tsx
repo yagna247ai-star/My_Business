@@ -4,6 +4,7 @@ import { requireCtx } from '@/lib/server/context';
 import { ranks, type Tab } from '@/lib/domain/ranks';
 import { areaStandings } from '@/lib/domain/standings';
 import { AreaCrowns } from '@/components/ranks/AreaCrowns';
+import { courseFor } from '@/lib/domain/rankPointsDb';
 import { guarded } from '@/lib/server/page';
 import { Crown } from '@/components/app/Crown';
 import { Tr } from '@/components/i18n/Tr';
@@ -28,16 +29,23 @@ function Move({ n }: { n: number }) {
 
 type PageTab = Tab | 'areas';
 
-async function Ranks({ searchParams }: { searchParams: Promise<{ tab?: string; level?: string }> }) {
+async function Ranks({ searchParams }: { searchParams: Promise<{ tab?: string; level?: string; course?: string }> }) {
   const t = await getT();
   const ctx = await requireCtx();
   const sp = await searchParams;
   const tab: PageTab = sp.tab === 'state' || sp.tab === 'all' || sp.tab === 'cohort' || sp.tab === 'areas' ? sp.tab : 'city';
   // One page, one points rule (docs/RANKS_UNIFIED_SPEC.md). The level filter applies to every tab.
-  const s = await areaStandings(ctx, sp.level);
-  const href = (p: { tab?: PageTab; level?: string | null }) => { const q = new URLSearchParams(); const tb = p.tab ?? tab; if (tb !== 'city') q.set('tab', tb); const lv = p.level === undefined ? sp.level : p.level; if (lv) q.set('level', lv); const qs = q.toString(); return qs ? `/ranks?${qs}` : '/ranks'; };
+  // v1.1: ranks are per course (journey) in this institution; courses never mix (docs/RANKS_UNIFIED_SPEC.md).
+  const { course, options } = await courseFor(ctx, sp.course);
+  if (!course) return <div className="card empty"><h1 className="h3"><Tr>No ranks yet</Tr></h1><p className="text-2"><Tr>Ranks appear once you are enrolled in a course.</Tr></p></div>;
+  const s = await areaStandings(ctx, sp.level, course.id);
+  const href = (p: { tab?: PageTab; level?: string | null; course?: string }) => { const q = new URLSearchParams(); const cid = p.course ?? course.id; if (options.length > 1 || sp.course) q.set('course', cid); const tb = p.tab ?? tab; if (tb !== 'city') q.set('tab', tb); const lv = p.course && p.course !== course.id ? null : p.level === undefined ? sp.level : p.level; if (lv) q.set('level', lv); const qs = q.toString(); return qs ? `/ranks?${qs}` : '/ranks'; };
   const tabsAll: { key: PageTab; label: string }[] = [{ key: 'city', label: 'City' }, { key: 'state', label: 'State' }, { key: 'all', label: 'Everyone' }, { key: 'cohort', label: 'My cohort' }, { key: 'areas', label: 'Area crowns' }];
   const topBar = (<>
+    {options.length > 1 && <nav className="tabs-line" aria-label={t('Course')} style={{ marginTop: 12, flexWrap: 'wrap' }}>
+      <span className="muted small bold" style={{ alignSelf: 'center', marginRight: 6 }}><Tr>Course</Tr>:</span>
+      {options.map(o => <Link key={o.id} href={href({ course: o.id, level: null })} aria-current={o.id === course.id ? 'page' : undefined}><Tv v={o.title} /></Link>)}
+    </nav>}
     <nav className="tabs-line" aria-label={t('Rank scope')} style={{ marginTop: 12, flexWrap: 'wrap' }}>
       {tabsAll.map(x => <Link key={x.key} href={href({ tab: x.key })} aria-current={tab === x.key ? 'page' : undefined}><Tv v={x.label} /></Link>)}
     </nav>
@@ -45,14 +53,14 @@ async function Ranks({ searchParams }: { searchParams: Promise<{ tab?: string; l
       <Link href={href({ level: null })} aria-current={!s.level ? 'page' : undefined}><Tr>All levels</Tr></Link>
       {s.journey.levels.map(l => <Link key={l.code} href={href({ level: l.code })} aria-current={s.level?.code === l.code ? 'page' : undefined}>L{l.idx}</Link>)}
     </nav>}
-    <p className="muted xs" style={{ margin: '6px 0 12px' }}><Tr>Points are the XP earned on journey levels. The same rule is used on every tab.</Tr></p>
+    <p className="muted xs" style={{ margin: '6px 0 12px' }}><Tr>Ranks for</Tr> <b><Tv v={course.title} /></b> <Tr>in</Tr> <Tv v={ctx.tenantName} />. <Tr>Points are the XP earned on this course’s levels; other courses and institutions are never mixed in.</Tr></p>
   </>);
   if (tab === 'areas') return (<div className="rk">
     <section className="rk-head"><span className="rk-head-ic" aria-hidden="true"><Trophy size={20} /></span><div><span className="eyebrow"><Tr>Leaderboard</Tr></span><h1 id="pageTitle"><Tr>Ranks</Tr></h1><p className="muted small">{s ? <><Tv v={s.level ? `Level ${s.level.idx}: ${s.level.title}` : 'Whole journey'} />. <Tr>The top 3 in each area wear a crown.</Tr> {s.me ? `You are #${s.me} overall.` : ''}</> : <Tr>Area standings appear once a journey is set up.</Tr>}</p></div></section>
     {topBar}
     {s && <AreaCrowns s={s} />}
   </div>);
-  const r = await ranks(ctx, tab, s?.level ? [s.level.id] : null);
+  const r = await ranks(ctx, tab, s?.level ? [s.level.id] : null, course.id);
   if (!r) return <div className="card empty"><h1 className="h3"><Tr>No ranks yet</Tr></h1><p className="text-2"><Tr>Ranks appear once the journey is set up.</Tr></p></div>;
   const { board, scope } = r;
   const [first, second, third] = board.list;

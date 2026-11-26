@@ -2,27 +2,29 @@
 import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { runBracket } from './points';
-import { loadRankPoints } from './rankPointsDb';
+import { courseMembers, loadRankPoints } from './rankPointsDb';
 import { compareRanked } from './pointsRule';
 import { toEntries, areaBoard, type StandingRow } from './standingsCore';
 
 const JOURNEY = 'data-analytics-journey';
 // The final challenge (the journey's last level) decides each bracket match.
 
-export async function areaStandings(ctx: Ctx, levelCode?: string) {
-  const mine = await prisma.enrollment.findFirst({ where: { tenantId: ctx.tenantId, userId: ctx.userId, state: 'active' }, select: { journeyId: true } });
-  const journey = await prisma.journey.findFirst({ where: mine ? { id: mine.journeyId } : { tenantId: ctx.tenantId, slug: JOURNEY }, include: { levels: { orderBy: { idx: 'asc' }, select: { id: true, code: true, title: true, idx: true } } } });
+export async function areaStandings(ctx: Ctx, levelCode?: string, journeyId?: string | null) {
+  // v1.1 (docs/RANKS_UNIFIED_SPEC.md): one course in this institution; never another institution's journey.
+  const mine = journeyId ? null : await prisma.enrollment.findFirst({ where: { tenantId: ctx.tenantId, userId: ctx.userId, state: 'active' }, orderBy: { updatedAt: 'desc' }, select: { journeyId: true } });
+  const journey = await prisma.journey.findFirst({ where: journeyId ? { id: journeyId, tenantId: ctx.tenantId } : mine ? { id: mine.journeyId, tenantId: ctx.tenantId } : { tenantId: ctx.tenantId, slug: JOURNEY }, include: { levels: { orderBy: { idx: 'asc' }, select: { id: true, code: true, title: true, idx: true } } } });
   if (!journey) return null;
   const level = journey.levels.find(l => l.code === levelCode) ?? null;
 
-  const members = await prisma.membership.findMany({
+  const enrolled = await courseMembers(ctx.tenantId, journey.id);
+  const members = (await prisma.membership.findMany({
     where: { tenantId: ctx.tenantId, status: 'active', role: { code: { in: ['learner', 'team_lead'] } } },
     include: { user: { select: { id: true, name: true, area: true } } },
-  });
+  })).filter(m => enrolled.has(m.userId));
   const ids = members.map(m => m.userId);
   // The one points rule (docs/RANKS_UNIFIED_SPEC.md): level XP from any journey; a level filter narrows to that level.
   const [pts, finals, settings] = await Promise.all([
-    loadRankPoints(ctx.tenantId, ids, { levelIds: level ? [level.id] : null }),
+    loadRankPoints(ctx.tenantId, ids, { levelIds: level ? [level.id] : journey.levels.map(l => l.id) }),
     prisma.xpLedger.groupBy({ by: ['userId'], where: { tenantId: ctx.tenantId, userId: { in: ids }, levelId: journey.levels[journey.levels.length - 1]?.id ?? '-' }, _sum: { amount: true } }),
     prisma.userSetting.findMany({ where: { tenantId: ctx.tenantId, userId: { in: ids } } }),
   ]);
@@ -41,7 +43,7 @@ export async function areaStandings(ctx: Ctx, levelCode?: string) {
   const strip = <T extends { userId: string; me: boolean }>(e: T) => ({ ...e, userId: e.me ? e.userId : '' }); // never send others' ids
 
   return {
-    journey: { title: journey.title, levels: journey.levels.map(l => ({ code: l.code, title: l.title, idx: l.idx })) },
+    journey: { id: journey.id, title: journey.title, levels: journey.levels.map(l => ({ code: l.code, title: l.title, idx: l.idx })) },
     level: level ? { id: level.id, code: level.code, title: level.title, idx: level.idx } : null,
     areas: board.areas.map(a => ({ ...a, top: a.top.map(strip) })),
     global: board.global.slice(0, 20).map((g, i) => ({ ...strip(g), pos: i + 1 })),

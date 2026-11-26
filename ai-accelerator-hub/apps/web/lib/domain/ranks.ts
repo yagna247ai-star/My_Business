@@ -2,27 +2,31 @@
 import { prisma } from '@/lib/prisma';
 import type { Ctx } from '@/lib/server/context';
 import { pick, RANKS } from './insights';
-import { loadRankPoints } from './rankPointsDb';
+import { courseMembers, loadRankPoints } from './rankPointsDb';
 import { rankBoard, cityScope, stateOf, type RankRow, type Scope } from './ranksCore';
 
 export type Tab = 'city' | 'state' | 'all' | 'cohort';
 
 /** Every ranking uses the one points rule (docs/RANKS_UNIFIED_SPEC.md); levelIds narrows it to one level. */
-export async function ranks(ctx: Ctx, tab: Tab = 'city', levelIds?: string[] | null) {
+export async function ranks(ctx: Ctx, tab: Tab = 'city', levelIds?: string[] | null, journeyId?: string | null) {
   const since = new Date(Date.now() - 24 * 3600e3);
-
-  const members = await prisma.membership.findMany({
+  // v1.1: one course in one institution. Only learners enrolled in this course; only this course's level XP.
+  const course = journeyId ? await prisma.journey.findFirst({ where: { id: journeyId, tenantId: ctx.tenantId }, select: { id: true, levels: { select: { id: true } } } }) : null;
+  const enrolled = course ? await courseMembers(ctx.tenantId, course.id) : null;
+  if (course && !levelIds?.length) levelIds = course.levels.map(l => l.id);
+  const all = await prisma.membership.findMany({
     where: { tenantId: ctx.tenantId, status: 'active', role: { code: { in: ['learner', 'team_lead'] } } },
     include: { user: { select: { id: true, name: true, area: true, avatarUrl: true } } },
   });
+  const members = enrolled ? all.filter(m => enrolled.has(m.userId)) : all;
   const ids = members.map(m => m.userId);
   // Points: every XP the learner earned in this institution (all journeys), so every learner can be ranked.
   const [now, before, settings, approved, enrollments] = await Promise.all([
     loadRankPoints(ctx.tenantId, ids, { levelIds }),
     loadRankPoints(ctx.tenantId, ids, { levelIds, before: since }),
     prisma.userSetting.findMany({ where: { tenantId: ctx.tenantId, userId: { in: ids } } }),
-    prisma.progress.groupBy({ by: ['userId', 'enrollmentId'], where: { tenantId: ctx.tenantId, userId: { in: ids }, state: 'approved' }, _count: { _all: true } }),
-    prisma.enrollment.findMany({ where: { tenantId: ctx.tenantId, userId: { in: ids } }, select: { id: true, journey: { select: { _count: { select: { levels: true } } } } } }),
+    prisma.progress.groupBy({ by: ['userId', 'enrollmentId'], where: { tenantId: ctx.tenantId, userId: { in: ids }, state: 'approved', ...(course ? { enrollment: { journeyId: course.id } } : {}) }, _count: { _all: true } }),
+    prisma.enrollment.findMany({ where: { tenantId: ctx.tenantId, userId: { in: ids }, ...(course ? { journeyId: course.id } : {}) }, select: { id: true, journey: { select: { _count: { select: { levels: true } } } } } }),
   ]);
 
   const levelsIn = new Map(enrollments.map(e => [e.id, e.journey._count.levels]));

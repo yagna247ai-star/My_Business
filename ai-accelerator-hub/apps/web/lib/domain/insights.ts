@@ -1,6 +1,6 @@
 /** Dashboard summary, privacy-aware leaderboard, and programme analytics — all computed from real rows. */
 import { prisma } from '@/lib/prisma';
-import { loadRankPoints } from './rankPointsDb';
+import { courseFor, courseMembers, loadRankPoints } from './rankPointsDb';
 import { compareRanked } from './pointsRule';
 import type { Ctx } from '@/lib/server/context';
 import { hasPerm } from '@/lib/server/context';
@@ -29,17 +29,20 @@ export async function leaderboard(ctx: Ctx, scope: 'cohort' | 'tenant' | 'track'
   const tj = scope === 'track' ? await myTrackJourney(ctx) : null;
   const sameTrack = tj ? (await prisma.enrollment.findMany({ where: { tenantId: ctx.tenantId, journeyId: tj.journeyId, state: 'active' }, select: { userId: true } })).map(e => e.userId) : null;
   const learnerMembers = await prisma.membership.findMany({ where: { tenantId: ctx.tenantId, status: 'active', role: { code: { in: ['learner', 'team_lead'] } }, ...(scope === 'cohort' && ctx.cohortId ? { cohortId: ctx.cohortId } : {}), ...(sameTrack ? { userId: { in: sameTrack } } : {}) }, include: { user: { select: { id: true, name: true } } } });
-  const ids = learnerMembers.map(m => m.userId);
-  const pts = await loadRankPoints(ctx.tenantId, ids); // the one points rule (docs/RANKS_UNIFIED_SPEC.md)
+  // v1.1: the learner's current course only (docs/RANKS_UNIFIED_SPEC.md): its enrolled learners, its level XP.
+  const { course } = await courseFor(ctx);
+  const enrolled = course ? await courseMembers(ctx.tenantId, course.id) : null;
+  const ids = learnerMembers.map(m => m.userId).filter(u => !enrolled || enrolled.has(u));
+  const pts = await loadRankPoints(ctx.tenantId, ids, { levelIds: course ? course.levels.map(l => l.id) : null }); // journeyId: course.id
   const settings = await prisma.userSetting.findMany({ where: { tenantId: ctx.tenantId, userId: { in: ids } } });
   const streaks = await prisma.streak.findMany({ where: { tenantId: ctx.tenantId, userId: { in: ids } } });
   const priv = new Set(settings.filter(s => s.leaderboardVisibility === 'private' || s.ageBand === 'minor').map(s => s.userId));
   const stBy = new Map(streaks.map(s => [s.userId, s.currentStreak]));
-  const rows = learnerMembers.map(m => ({ userId: m.userId, xp: pts.get(m.userId)?.points || 0, reachedAt: pts.get(m.userId)?.reachedAt ?? null, realName: m.user.name || '', streak: stBy.get(m.userId) || 0, me: m.userId === ctx.userId, name: m.userId === ctx.userId ? (m.user.name || 'You') : priv.has(m.userId) ? 'Anonymous learner' : (m.user.name || 'Learner') }))
+  const rows = learnerMembers.filter(m => ids.includes(m.userId)).map(m => ({ userId: m.userId, xp: pts.get(m.userId)?.points || 0, reachedAt: pts.get(m.userId)?.reachedAt ?? null, realName: m.user.name || '', streak: stBy.get(m.userId) || 0, me: m.userId === ctx.userId, name: m.userId === ctx.userId ? (m.user.name || 'You') : priv.has(m.userId) ? 'Anonymous learner' : (m.user.name || 'Learner') }))
     .sort((a, b) => compareRanked({ ...a, name: a.realName, points: a.xp }, { ...b, name: b.realName, points: b.xp }))
     .map(({ realName: _n, reachedAt: _r, ...r }) => r)
     .map((r, i) => ({ ...r, pos: i + 1, rank: pick(RANKS, r.xp).name, userId: r.me ? r.userId : undefined }));
-  return { scope, rows: rows.slice(0, take), me: rows.find(r => r.me) || null, total: rows.length };
+  return { scope, course: course ? { id: course.id, title: course.title } : null, rows: rows.slice(0, take), me: rows.find(r => r.me) || null, total: rows.length };
 }
 
 export async function learnerSummary(ctx: Ctx) {
