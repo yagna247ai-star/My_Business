@@ -1,5 +1,7 @@
 // docs/LEVEL_RIBBON_SPEC.md
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { ribbonNodes } from '@/lib/domain/levelTitles';
 import { JOURNEY_SPECS } from '@/lib/domain/daDomains/tracks';
 import { buildDomainJourney } from '@/lib/domain/daDomains/curriculum';
@@ -37,5 +39,10 @@ describe('level ribbon', () => {
   });
   it('AC-6: accessible name names the level, title and state', () => {
     expect(ribbonNodes(da).nodes[0].aria).toBe('Level 1 · Data Explorer · Done');
+  });
+  it('AC-7: the level tabs on a level page show level, title and state like the ribbon', () => {
+    const page = readFileSync(join(__dirname, '..', 'app/(app)/levels/[code]/page.tsx'), 'utf8');
+    expect(page).toMatch(/const name = titleFor\(tb, tabs\.length\)\.title;/);
+    expect(page).toMatch(/t\('In progress'\)/);
   });
 });

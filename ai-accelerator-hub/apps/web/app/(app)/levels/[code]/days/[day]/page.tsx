@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Lock, ChevronLeft, ChevronRight, ListChecks } from 'lucide-react';
 import { STEP_POINTS } from '@/lib/domain/guidedSteps';
 import { prisma } from '@/lib/prisma';
-import { requirePerm } from '@/lib/server/context';
+import { hasPerm, requirePerm } from '@/lib/server/context';
 import { getEnrollment } from '@/lib/domain/journey';
 import { parseMarkdown } from '@/lib/domain/lessonMarkdown';
 import { guarded } from '@/lib/server/page';
@@ -12,6 +12,7 @@ import { GuidedDay } from '@/components/learn/GuidedDay';
 import { DayMaterials } from '@/components/learn/DayMaterials';
 import { learnerMaterials } from '@/lib/domain/dayMaterials';
 import { guidedStepsOf } from '@/lib/domain/journey';
+import { dayMinutes, withDayTime } from '@/lib/domain/dayTime';
 import { TranslateLesson } from '@/components/learn/TranslateLesson';
 import { getLocale, getT } from '@/lib/i18n/server';
 import { cachedLesson } from '@/lib/i18n/lessonTranslate';
@@ -21,6 +22,10 @@ import { Tv } from '@/components/i18n/Tv';
 export const dynamic = 'force-dynamic';
 
 import { Render } from '@/components/learn/Markdown';
+import { DaySide } from '@/components/learn/DaySide';
+import { coachStatus } from '@/lib/ai/coach';
+import { dayFeed } from '@/lib/domain/feed';
+import { reposFor } from '@/lib/domain/dayResources';
 
 async function DayPage({ params, searchParams }: { params: Promise<{ code: string; day: string }>; searchParams: Promise<{ orig?: string }> }) {
   const { code, day } = await params; const { orig } = await searchParams;
@@ -44,14 +49,23 @@ async function DayPage({ params, searchParams }: { params: Promise<{ code: strin
   const body = (JSON.parse(content.payload || '{}').body as string) || '';
   // The learner's language when a translation is cached ("Read in …" makes one); ?orig=1 shows the English page.
   const translated = orig ? null : await cachedLesson(content.id, body, locale);
-  const blocks = parseMarkdown(translated ?? body);
   // Steps to tick: the translated ones when the translation kept the same list, else the English ones.
   const englishSteps = dayStepsFrom(body); const translatedSteps = translated ? dayStepsFrom(translated) : [];
   const steps = translatedSteps.length === englishSteps.length ? translatedSteps : englishSteps;
   const mine = await prisma.dayProgress.findUnique({ where: { enrollmentId_levelId_day: { enrollmentId: enrollment.id, levelId: level.id, day: dayNo } }, select: { state: true, xpEarned: true, steps: true } });
   // Guided days: the task as step cards (concept, do, check, points) instead of a ticklist and one screenshot.
   const guided = guidedStepsOf(content.payload);
+  // docs/DAY_TIME_ESTIMATE_SPEC.md: the header's time is the lesson's reading time plus this day's steps, not a flat 4 h 30 min.
+  const blocks = parseMarkdown(withDayTime(translated ?? body, guided ? dayMinutes(body, guided.map(g => g.minutes)) : null));
   const materials = await learnerMaterials(ctx, content.id); // docs/DAY_MATERIALS_SPEC.md
+  // docs/DAY_SIDE_PANEL_SPEC.md: the side panel (AI mentor on today's lesson, materials, classmates on this day, repos).
+  const [coach, classmates] = await Promise.all([
+    hasPerm(ctx, 'ai:use') ? coachStatus(ctx).catch(() => null) : Promise.resolve(null),
+    dayFeed(ctx, code, dayNo).catch(() => null),
+  ]);
+  const order = ['concept-explainer', 'code-mentor', 'career-coach'];
+  const mentors = coach ? (coach.assistants.filter(a => order.includes(a.code)).sort((a, b) => order.indexOf(a.code) - order.indexOf(b.code))) : [];
+  const side = { coach: coach && coach.assistants.length ? { ...coach, assistants: mentors.length ? mentors : coach.assistants } : null, materials: materials.map(m => ({ id: m.id, title: m.title })), feed: classmates, repos: reposFor(level.code, level.title) };
   const stepStates = (() => { try { const v = JSON.parse(mine?.steps ?? '[]'); return Array.isArray(v) && v.every(x => x === null || typeof x === 'object') ? v : []; } catch { return []; } })();
   if (guided && mine?.state === 'skipped' && !stepStates.length) guided.forEach((_, i) => { stepStates[i] = { s: 'skipped', xp: 0, at: '' }; });
   // Finished before this day had steps: it stays done (its points were already given), shown as done steps.
@@ -66,6 +80,8 @@ async function DayPage({ params, searchParams }: { params: Promise<{ code: strin
         <span className="muted small">{t('{n}% of the 45 days', { n: Math.round((dayNo / 45) * 100) })}</span>
       </div>
     </section>
+    <div className="day-layout">
+    <div className="day-main">
     {translated ? <p className="muted small" style={{ maxWidth: 820, marginBottom: 10 }}>{t('Machine translation. Code, SQL and Excel formulas stay in English.')} <Link className="link" href={`/levels/${code}/days/${dayNo}?orig=1`}>{t('Show the English original')}</Link></p> : <TranslateLesson code={code} day={dayNo} />}
     {guided && (() => {
       // Steps first: say how many there are and jump to the open one, so nobody misses them under a long lesson.
@@ -86,6 +102,11 @@ async function DayPage({ params, searchParams }: { params: Promise<{ code: strin
       {prev ? <Link className="btn btn-outline" href={`/levels/${prev.level.code}/days/${prev.position}`}><ChevronLeft size={16} /> {t('Day {n}', { n: prev.position })}</Link> : <span />}
       {next ? <Link className="btn btn-primary" href={`/levels/${next.level.code}/days/${next.position}`}>{t('Day {n}', { n: next.position })} <ChevronRight size={16} /></Link> : <span />}
     </nav>
+    </div>
+    <aside className="day-aside" aria-label={t('Help for today')}>
+      <DaySide code={code} day={dayNo} dayTitle={content.title ?? `Day ${dayNo}`} {...side} />
+    </aside>
+    </div>
   </>);
 }
 

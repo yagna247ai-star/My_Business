@@ -19,6 +19,7 @@ The dashboard ribbon showed a number and the last word of each level's name ("Fu
 - [x] AC-4: The heading counts the course's own levels ("Your 9-level journey").
 - [x] AC-5: Every course in the platform (Data Analytics and the 23 domain journeys) gets a title for every level, never an empty one.
 - [x] AC-6: Each dot has an accessible name with the level, title and state; locked levels are not links.
+- [x] AC-7 (2026-11-27): The level tabs at the top of a level page (`/levels/{code}`) show the same tags: "Level 2 · Query Builder · In progress" (Done / Open / Locked), with the same title as the ribbon.
 
 ## 3. Release
 UI and a pure helper only. No migration, API, route or env change.

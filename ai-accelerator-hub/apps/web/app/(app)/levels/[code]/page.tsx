@@ -8,6 +8,7 @@ import { getT } from '@/lib/i18n/server';
 import { loadLevelPage } from '@/lib/server/levelPage';
 import { activityBrief, levelPrep, levelWords } from '@/lib/domain/levelView';
 import { moveOnText } from '@/lib/domain/levelFlowRules';
+import { titleFor } from '@/lib/domain/levelTitles';
 import { TranslateLesson } from '@/components/learn/TranslateLesson';
 import { LevelPrep } from '@/components/learn/LevelPrep';
 import { StuckHelper } from '@/components/learn/StuckHelper';
@@ -21,10 +22,13 @@ function LevelTabs({ tabs, t }: { tabs: Tab[]; t: (s: string, v?: Record<string,
   return (
     <nav aria-label={t('Levels')} className="card" style={{ display: 'flex', gap: 6, padding: 6, overflowX: 'auto', marginBottom: 16 }}>
       {tabs.map(tb => {
-        const inner = <><b style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>{t('Level {n}', { n: tb.idx })}{tb.state === 'locked' && <Lock size={12} aria-hidden="true" />}{tb.state === 'done' && <Check size={13} aria-hidden="true" />}</b><span className="xs" style={{ opacity: 0.8 }}>{tb.state === 'done' ? t('Done') : tb.state === 'locked' ? t('Locked') : t('Open')}</span></>;
-        const style = { flex: '1 0 110px', textAlign: 'center' as const, padding: '8px 10px', borderRadius: 12, fontSize: 13, display: 'flex', flexDirection: 'column' as const, gap: 2, background: tb.current ? 'linear-gradient(135deg, var(--gold, #E8B94F), #C9962E)' : undefined, color: tb.current ? '#1b1203' : undefined, opacity: tb.state === 'locked' ? 0.55 : 1 };
-        return tb.state === 'locked' ? <span key={tb.idx} style={style} aria-label={`${t('Level {n}', { n: tb.idx })}, ${t('Locked')}`}>{inner}</span>
-          : <Link key={tb.idx} href={`/levels/${tb.code}`} style={style} aria-current={tb.current ? 'page' : undefined} title={tb.title}>{inner}</Link>;
+        // docs/LEVEL_RIBBON_SPEC.md AC-7: the same tags as the journey ribbon: "Level 2 · Query Builder · Done".
+        const name = titleFor(tb, tabs.length).title;
+        const state = tb.state === 'done' ? t('Done') : tb.state === 'locked' ? t('Locked') : tb.current ? t('In progress') : t('Open');
+        const inner = <><b style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>{t('Level {n}', { n: tb.idx })}{tb.state === 'locked' && <Lock size={12} aria-hidden="true" />}{tb.state === 'done' && <Check size={13} aria-hidden="true" />}</b><span className="small" style={{ fontWeight: 600, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><Tv v={name} /></span><span className="xs" style={{ opacity: 0.8 }}>{state}</span></>;
+        const style = { flex: '1 0 130px', minWidth: 0, textAlign: 'center' as const, padding: '8px 10px', borderRadius: 12, fontSize: 13, display: 'flex', flexDirection: 'column' as const, gap: 2, background: tb.current ? 'linear-gradient(135deg, var(--gold, #E8B94F), #C9962E)' : undefined, color: tb.current ? '#1b1203' : undefined, opacity: tb.state === 'locked' ? 0.55 : 1 };
+        return tb.state === 'locked' ? <span key={tb.idx} style={style} aria-label={`${t('Level {n}', { n: tb.idx })} · ${name} · ${state}`}>{inner}</span>
+          : <Link key={tb.idx} href={`/levels/${tb.code}`} style={style} aria-current={tb.current ? 'page' : undefined} title={`${t('Level {n}', { n: tb.idx })} · ${name} · ${state}`}>{inner}</Link>;
       })}
     </nav>
   );

@@ -318,3 +318,22 @@ export async function setBlock(ctx: Ctx, userId: string, blocked: boolean) {
   await audit(prisma, { tenantId: ctx.tenantId, actorUserId: ctx.userId, action: blocked ? 'feed.blocked' : 'feed.unblocked', resourceType: 'User', resourceId: userId });
   return { ok: true as const, blocked };
 }
+
+/**
+ * docs/DAY_SIDE_PANEL_SPEC.md AC-4: classmates' posts about one course day (level code + day), newest first, for the
+ * day page's side panel. Same visibility as the feed: this tenant, the learner's course or institution-wide, visible
+ * posts, never from blocked people.
+ */
+export async function dayFeed(ctx: Ctx, levelCode: string, day: number, take = 3) {
+  if (!hasPerm(ctx, 'community:post') && !hasPerm(ctx, 'learn:self') && !canLead(ctx)) return { items: [], total: 0 };
+  const [hidden, journeyId] = await Promise.all([blockedIds(ctx.tenantId, ctx.userId), myJourney(ctx)]);
+  const where = { AND: [{ tenantId: ctx.tenantId, state: 'visible', levelCode, day, ...(hidden.size ? { authorId: { notIn: [...hidden] } } : {}) }, scopeWhere(journeyId)] };
+  const [rows, total] = await Promise.all([
+    prisma.post.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take, select: { id: true, kind: true, body: true, createdAt: true, acceptedCommentId: true, authorId: true, author: { select: { name: true } }, _count: { select: { comments: { where: { state: 'visible' } } } } } }),
+    prisma.post.count({ where }),
+  ]);
+  return {
+    total,
+    items: rows.map(p => ({ id: p.id, kind: p.kind, body: p.body.length > 160 ? `${p.body.slice(0, 157)}…` : p.body, author: p.author.name || 'Learner', mine: p.authorId === ctx.userId, answered: !!p.acceptedCommentId, replies: p._count.comments, at: p.createdAt.toISOString() })),
+  };
+}

@@ -7,7 +7,7 @@ import { useT } from '@/components/i18n/I18nProvider';
 import { Tv } from '@/components/i18n/Tv';
 
 type Msg = { role: string; text: string };
-export function CoachChat({ assistants, configured, creditsLeft, context, prompts, compact }: { assistants: { code: string; name: string }[]; configured: boolean; creditsLeft: number; context?: { levelCode?: string; activityIdx?: number }; /** One-tap starter questions. */ prompts?: string[]; /** Side panel: assistants as a select, shorter log. */ compact?: boolean }) {
+export function CoachChat({ assistants, configured, creditsLeft, context, prompts, compact }: { assistants: { code: string; name: string }[]; configured: boolean; creditsLeft: number; context?: { levelCode?: string; activityIdx?: number; day?: number }; /** One-tap starter questions. */ prompts?: string[]; /** Side panel: assistants as a select, shorter log. */ compact?: boolean }) {
   const t = useT();
   const [coach, setCoach] = useState((compact && assistants.find(a => a.code === 'concept-explainer')?.code) || assistants[0]?.code || 'concept-explainer');
   const [msgs, setMsgs] = useState<Msg[]>([]); const [draft, setDraft] = useState(''); const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [credits, setCredits] = useState(creditsLeft);

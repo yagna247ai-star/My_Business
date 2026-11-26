@@ -540,3 +540,12 @@ details.err-row[open] > summary{margin-bottom:6px}
 .feed-focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 22%,transparent)}
 .feed-accepted{border-left:3px solid var(--success);padding-left:10px}
 .feed-report{padding:10px;border-radius:12px;background:var(--surface-2,var(--surface));border:1px solid var(--border)}
+
+/* docs/DAY_SIDE_PANEL_SPEC.md: day page with a side panel on wide screens; below the lesson on narrow ones */
+.day-layout{display:grid;grid-template-columns:minmax(0,820px) minmax(300px,380px);gap:20px;align-items:start}
+.day-main{min-width:0}
+.day-aside{position:sticky;top:84px;max-height:calc(100vh - 100px);overflow-y:auto;overscroll-behavior:contain;padding-bottom:8px}
+.day-side .ds-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.day-side .ds-post{display:grid;gap:2px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:inherit}
+.day-side .ds-post:hover{border-color:var(--primary)}
+@media (max-width:1180px){.day-layout{grid-template-columns:minmax(0,1fr)}.day-aside{position:static;max-height:none;overflow:visible;max-width:820px}}
