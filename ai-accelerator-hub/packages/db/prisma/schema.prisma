@@ -1630,3 +1630,21 @@ model ShowcaseReport {
   @@index([tenantId, resolvedAt])
   @@map("showcase_reports")
 }
+
+/// docs/COHORT_WEEK_SPEC.md: attendance per learner, class date and block (Session, Lab). Learner check-in or mentor mark; the mentor's mark wins.
+model SessionAttendance {
+  id         String   @id @default(cuid())
+  tenantId   String
+  cohortId   String
+  userId     String
+  date       String // YYYY-MM-DD, IST
+  block      String // calendar block key: session | lab | …
+  status     String // present | absent | excused
+  source     String // learner | mentor
+  markedById String
+  markedAt   DateTime @default(now())
+
+  @@unique([cohortId, userId, date, block])
+  @@index([tenantId, cohortId, date])
+  @@map("session_attendance")
+}

@@ -34,3 +34,9 @@ export function areaBoard(entries: BoardEntry[]) {
   const global = scored.slice().sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
   return { areas, global };
 }
+
+/** The viewer's live area crown (1–3) from the Ranks board, or null when they are not in their area's top 3. */
+export function myAreaCrown(areas: { area: string; top: { me: boolean; crown: 1 | 2 | 3 }[] }[] | null | undefined): { tier: 1 | 2 | 3; area: string } | null {
+  for (const a of areas ?? []) { const t = a.top.find(x => x.me); if (t) return { tier: t.crown, area: a.area }; }
+  return null;
+}

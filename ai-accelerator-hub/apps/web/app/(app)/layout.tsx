@@ -5,8 +5,9 @@ import { prisma } from '@/lib/prisma';
 import { totalXp } from '@/lib/domain/xp';
 import { streakView } from '@/lib/domain/streak';
 import { journeyOverview } from '@/lib/domain/journey';
-import { topApprovedLevel, crownLabel } from '@/lib/domain/gamify';
-import { learnerTitle, starsText, profileBadge } from '@/lib/domain/levelTitles';
+import { profileBadge } from '@/lib/domain/levelTitles';
+import { areaStandings } from '@/lib/domain/standings';
+import { myAreaCrown } from '@/lib/domain/standingsCore';
 import { Shell, type NavItem } from '@/components/app/Shell';
 
 export const dynamic = 'force-dynamic';
@@ -67,10 +68,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     ctx.superAdmin ? Promise.resolve(2) : prisma.membership.count({ where: { userId: ctx.userId, status: 'active', tenant: { status: 'active' } } }),
   ]);
   const overview = learner ? await journeyOverview(ctx).catch(() => null) : null;
-  const topIdx = overview ? topApprovedLevel(overview.levels) : null;
-  const topTitle = topIdx !== null ? overview!.levels.find(l => l.idx === topIdx)?.title : undefined;
-  // Earned title for the crown (docs/LEVEL_TITLES_SPEC.md).
-  const earned = overview ? learnerTitle(overview.levels, overview.levels.filter(l => l.state === 'approved').map(l => l.idx)) : null;
+  // The crown on the photo is the live area crown from Ranks (top 3 of the learner's area in this course): it goes when they drop out.
+  const areaCrown = overview ? myAreaCrown((await areaStandings(ctx, undefined, overview.enrollment.journeyId).catch(() => null))?.areas) : null;
   // The finished level shown next to the profile photo (docs/PROFILE_LEVELS_SPEC.md AC-6).
   const badge = overview ? profileBadge(overview.enrollment.journey.title, overview.levels) : null;
   const [unread, xp, streak] = await Promise.all([
@@ -79,5 +78,5 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     learner ? prisma.streak.findUnique({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.userId } } }) : Promise.resolve(null),
   ]);
   const sv = learner ? streakView(streak) : null;
-  return <Shell user={{ name: ctx.name, roleLabel: ROLE_LABEL[ctx.role], tenant: ctx.tenantName, avatarUrl: me?.avatarUrl ?? null, badge, crown: earned && earned.levelIdx ? `${earned.current} ${starsText(earned.stars)} · Level ${earned.levelIdx}` : crownLabel(topIdx, topTitle) }} nav={nav} unread={unread} institution={{ name: tenantRow?.name ?? ctx.tenantName, logoUrl: tenantRow?.logoUrl ?? null, canSwitch: activeMemberships > 1 }} xp={xp} streak={sv ? { status: sv.status, current: sv.current } : null}>{children}</Shell>;
+  return <Shell user={{ name: ctx.name, roleLabel: ROLE_LABEL[ctx.role], tenant: ctx.tenantName, avatarUrl: me?.avatarUrl ?? null, badge, crown: areaCrown ? `Area crown #${areaCrown.tier} · ${areaCrown.area}` : null }} nav={nav} unread={unread} institution={{ name: tenantRow?.name ?? ctx.tenantName, logoUrl: tenantRow?.logoUrl ?? null, canSwitch: activeMemberships > 1 }} xp={xp} streak={sv ? { status: sv.status, current: sv.current } : null}>{children}</Shell>;
 }

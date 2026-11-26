@@ -7,6 +7,9 @@ import { journeyOverview, levelState } from '@/lib/domain/journey';
 import { learnerTitle, starsText } from '@/lib/domain/levelTitles';
 import { RECOVERY_QUIZ } from '@/lib/domain/streak';
 import { StreakRecovery } from '@/components/learn/StreakRecovery';
+import { ThisWeek } from '@/components/learn/ThisWeek';
+import { learnerWeek } from '@/lib/domain/cohortWeek';
+import { CohortWeek } from '@/components/learn/CohortWeek';
 import { LevelRibbon } from '@/components/learn/LevelRibbon';
 import { getProfile } from '@/lib/domain/profile';
 import { guarded } from '@/lib/server/page';
@@ -15,7 +18,6 @@ import { Tr } from '@/components/i18n/Tr';
 import { Tv } from '@/components/i18n/Tv';
 
 export const metadata = { title: 'Mission Control' };
-const WEEK = [['Mon', 'Prep mission'], ['Tue', 'Prep mission'], ['Wed', 'Prep mission'], ['Thu', 'Prep mission'], ['Fri', 'Prep mission'], ['Sat', 'Live workshop'], ['Sun', '4-hour hackathon']];
 
 function stars(n: number, seed: number) {
   let s = seed * 9301 + 49297; const r = () => (s = (s * 9301 + 49297) % 233280) / 233280;
@@ -29,7 +31,7 @@ async function Dashboard() {
   // The furthest level the learner has opened: with free progression, Level 1 can stay "submitted" while Level 2 is open.
   const opened = journey.levels.filter(l => l.state !== 'locked');
   const current = [...opened].reverse().find(l => l.state !== 'approved') ?? opened[opened.length - 1] ?? journey.levels[0];
-  const st = await levelState(ctx, current.code);
+  const [st, week] = await Promise.all([levelState(ctx, current.code), learnerWeek(ctx, { id: current.id, code: current.code }).catch(() => null)]);
   const acts = st.locked ? [] : st.activities;
   const done = acts.filter(a => a.state === 'completed').length;
   const next = acts.find(a => ['available', 'needs_changes'].includes(a.state)) || acts.find(a => a.state === 'in_review');
@@ -39,7 +41,6 @@ async function Dashboard() {
     : next ? { title: `${next.title}`, body: t('{title} · activity {n} of 6 · +{xp} XP', { title: current.title, n: next.idx, xp: next.xp }), href: `/levels/${current.code}?a=${next.idx}`, cta: t(next.state === 'needs_changes' ? 'See reviewer feedback' : 'Continue') }
     : { title: `${current.title} complete`, body: 'Great work. Your next level opens when it is published.', href: '/levels', cta: t('Open journey') };
   const sv = sum.streak; const SI = { active: Flame, frozen: Snowflake, grace: Clock, recovery: Pause, new: Flame }[sv.status] || Flame;
-  const dow = (new Date(Date.now() + 5.5 * 3600e3).getUTCDay() + 6) % 7;
   const first = ctx.name.split(' ')[0];
   return (
     <>
@@ -72,11 +73,7 @@ async function Dashboard() {
             <div className="small">{tt.isMax ? <Tr>Top title of this course. Brilliant work!</Tr> : <><Tr>Next:</Tr> <b><Tv v={tt.next ?? ''} /></b> · {t('{n} level(s) to go', { n: tt.levelsToNext })}</>}</div>
           </section>); })()}
 
-        <section className="card card-pad span-12" aria-labelledby="weekT">
-          <div className="row between wrap gap-8" style={{ marginBottom: 14 }}><h2 className="h3" id="weekT">{t('This week')}</h2><span className="muted small"><Tr>Mon–Fri prep · Saturday workshop · Sunday 4-hour hackathon · attendance alone never passes a level</Tr></span></div>
-          <div className="week" role="list">{WEEK.map(([d, e], i) => <div key={d} role="listitem" className={`day ${i === dow ? 'today' : ''} ${i >= 5 ? 'event' : ''}`}><span className="dn"><Tv v={d} />{i === dow ? <Tr>· today</Tr> : ''}</span><span className="de"><Tv v={e} /></span></div>)}</div>
-          {sum.upcoming.length > 0 && <ul className="checklist" style={{ marginTop: 14 }}>{sum.upcoming.map((s: { title: string; startsAt: string; durationMin: number; liveLink: string | null }, i: number) => <li key={i}><Clock size={16} aria-hidden="true" /><span><b><Tv v={s.title} /></b> · {new Date(s.startsAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} <Tr>IST ·</Tr> <Tv v={s.durationMin} /> <Tr>min ·</Tr> {s.liveLink ? <a className="link" href={s.liveLink} target="_blank" rel="noopener noreferrer"><Tr>Join link</Tr></a> : <span className="muted"><Tr>join link not posted yet</Tr></span>}</span></li>)}</ul>}
-        </section>
+        {week?.kind === 'cohort' ? <CohortWeek w={JSON.parse(JSON.stringify(week.w))} /> : week?.kind === 'plan' ? <ThisWeek w={week.w} /> : null}
 
         <section className="card card-pad span-6 stack gap-12" id="streak" aria-labelledby="stT">
           <h2 className="section-label" id="stT">{t('Streak')}</h2>

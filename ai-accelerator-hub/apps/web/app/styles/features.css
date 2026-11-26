@@ -511,3 +511,23 @@ details.err-row[open] > summary{margin-bottom:6px}
 .mat-row{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
 .mat-ic{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:var(--info-tint);color:var(--info-ink);flex-shrink:0}
 @media (max-width:640px){.mat-row{flex-wrap:wrap}}
+/* This week items (docs/THIS_WEEK_SPEC.md) */
+.day.past{opacity:.55}
+.wk-item{display:flex;flex-direction:column;gap:2px;padding-top:6px;margin-top:6px;border-top:1px dashed var(--border)}
+.wk-item .wk-h{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:800;color:var(--text-2)}
+.wk-item.live .wk-h{color:var(--primary)}
+/* Cohort week (docs/COHORT_WEEK_SPEC.md) */
+.wk-bar{display:inline-block;width:120px;height:8px;border-radius:99px;background:var(--border);overflow:hidden;vertical-align:middle}
+.wk-bar i{display:block;height:100%;background:var(--success);border-radius:99px}
+.wk-next{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 14px;border-radius:12px;background:var(--surface-2,var(--surface));border:1px solid var(--border);font-size:14px}
+.wk-next.catchup{border-color:#D4AC5E;background:color-mix(in srgb,#E8B94F 12%,var(--surface))}
+.wk-st{align-self:flex-start;font-size:11px;font-weight:800;padding:1px 8px;border-radius:99px;background:var(--border);color:var(--text-2)}
+.wk-st.ok{background:var(--success);color:var(--on-success)}
+.wk-st.warn{background:#E8B94F;color:#2D1914}
+.wk-st.now{background:var(--primary);color:var(--on-primary,#fff)}
+.wk-ok{color:var(--success)}
+.wk-warn{color:var(--danger,#9B2020)}
+.wk-check{height:28px;padding:0 10px;font-size:12px;align-self:flex-start}
+.wk-mats{list-style:none;margin:6px 0 0;padding:6px 0 0;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:3px;font-size:12px}
+.wk-mats a{color:var(--link,var(--primary));font-weight:600;word-break:break-word}
+@media (max-width:760px){.week .day{min-width:150px}}

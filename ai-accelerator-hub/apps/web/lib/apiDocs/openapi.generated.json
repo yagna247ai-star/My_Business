@@ -27,6 +27,9 @@
    "name": "applications"
   },
   {
+   "name": "attendance"
+  },
+  {
    "name": "auth"
   },
   {
@@ -571,6 +574,262 @@
      },
      "403": {
       "description": "Signed in without permission."
+     }
+    }
+   }
+  },
+  "/api/v1/admin/cohorts/{id}/attendance": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "operationId": "post_v1_admin_cohorts_id_attendance",
+    "summary": "POST admin/cohorts/{id}/attendance",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/admin/cohorts/[id]/attendance/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "attendance-mark",
+     "max": 240,
+     "windowMs": 60000
+    },
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+         },
+         "date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+         },
+         "block": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
+         },
+         "status": {
+          "type": "string",
+          "enum": [
+           "present",
+           "absent",
+           "excused",
+           "clear"
+          ]
+         }
+        },
+        "required": [
+         "userId",
+         "date",
+         "block",
+         "status"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/admin/cohorts/{id}/calendar": {
+   "put": {
+    "tags": [
+     "admin"
+    ],
+    "operationId": "put_v1_admin_cohorts_id_calendar",
+    "summary": "PUT admin/cohorts/{id}/calendar",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/admin/cohorts/[id]/calendar/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "cohort-calendar",
+     "max": 30,
+     "windowMs": 60000
+    },
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "startDate": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+         },
+         "classDays": {
+          "minItems": 1,
+          "maxItems": 7,
+          "type": "array",
+          "items": {
+           "type": "integer",
+           "minimum": 1,
+           "maximum": 7
+          }
+         },
+         "blocks": {
+          "minItems": 1,
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "key": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 20,
+             "pattern": "^[a-z0-9-]+$"
+            },
+            "label": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 40
+            },
+            "start": {
+             "type": "string",
+             "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+            },
+            "end": {
+             "type": "string",
+             "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+            },
+            "mode": {
+             "type": "string",
+             "enum": [
+              "offline",
+              "online"
+             ]
+            },
+            "venue": {
+             "default": "",
+             "type": "string",
+             "maxLength": 120
+            },
+            "link": {
+             "anyOf": [
+              {
+               "anyOf": [
+                {
+                 "type": "string",
+                 "maxLength": 500,
+                 "pattern": "^https:\\/\\/\\S+$"
+                },
+                {
+                 "type": "null"
+                }
+               ]
+              },
+              {
+               "type": "string",
+               "const": ""
+              }
+             ]
+            }
+           },
+           "required": [
+            "key",
+            "label",
+            "start",
+            "end",
+            "mode"
+           ]
+          }
+         },
+         "holidays": {
+          "default": [],
+          "maxItems": 120,
+          "type": "array",
+          "items": {
+           "type": "string",
+           "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+         },
+         "halfDay": {
+          "default": null,
+          "anyOf": [
+           {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 7
+           },
+           {
+            "type": "null"
+           }
+          ]
+         }
+        },
+        "required": [
+         "startDate",
+         "classDays",
+         "blocks"
+        ]
+       }
+      }
      }
     }
    }
@@ -2715,6 +2974,70 @@
      },
      "403": {
       "description": "Signed in without permission."
+     }
+    }
+   }
+  },
+  "/api/v1/attendance": {
+   "post": {
+    "tags": [
+     "attendance"
+    ],
+    "operationId": "post_v1_attendance",
+    "summary": "POST attendance",
+    "description": "**Who may call it:** Signed in, with the `learn:self` permission.\n\nSource: `apps/web/app/api/v1/attendance/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-permission": "learn:self",
+    "x-rate-limit": {
+     "name": "attendance-checkin",
+     "max": 30,
+     "windowMs": 60000
+    },
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+         },
+         "block": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
+         }
+        },
+        "required": [
+         "date",
+         "block"
+        ]
+       }
+      }
      }
     }
    }
