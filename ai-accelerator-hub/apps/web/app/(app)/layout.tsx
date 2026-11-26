@@ -78,5 +78,5 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     learner ? prisma.streak.findUnique({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.userId } } }) : Promise.resolve(null),
   ]);
   const sv = learner ? streakView(streak) : null;
-  return <Shell user={{ name: ctx.name, roleLabel: ROLE_LABEL[ctx.role], tenant: ctx.tenantName, avatarUrl: me?.avatarUrl ?? null, badge, crown: areaCrown ? `Area crown #${areaCrown.tier} · ${areaCrown.area}` : null }} nav={nav} unread={unread} institution={{ name: tenantRow?.name ?? ctx.tenantName, logoUrl: tenantRow?.logoUrl ?? null, canSwitch: activeMemberships > 1 }} xp={xp} streak={sv ? { status: sv.status, current: sv.current } : null}>{children}</Shell>;
+  return <Shell user={{ name: ctx.name, roleLabel: ROLE_LABEL[ctx.role], tenant: ctx.tenantName, avatarUrl: me?.avatarUrl ?? null, badge, crown: areaCrown ? `Area crown #${areaCrown.tier} · ${areaCrown.area}` : null }} nav={nav} unread={unread} institution={{ name: tenantRow?.name ?? ctx.tenantName, logoUrl: tenantRow?.logoUrl ?? null, canSwitch: ctx.superAdmin || activeMemberships > 1 }} xp={xp} streak={sv ? { status: sv.status, current: sv.current } : null}>{children}</Shell>;
 }

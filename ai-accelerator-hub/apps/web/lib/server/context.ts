@@ -20,7 +20,10 @@ export async function getCtx(): Promise<Ctx | null> {
   if (!userId) return null;
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, name: true, globalRole: true, mustChangePassword: true } });
   if (!user) return null;
-  const superAdmin = user.globalRole === 'super_admin';
+  // docs/SUPER_ADMIN_EVERYWHERE_SPEC.md: a Super Admin is one in every institution, whether the platform flag is set or
+  // the Super Admin role was given as a membership in one institution.
+  const superAdmin = user.globalRole === 'super_admin'
+    || !!(await prisma.membership.findFirst({ where: { userId: user.id, status: 'active', role: { code: 'super_admin' } }, select: { id: true } }));
   // The institution chosen in the switcher (signed cookie), else the one in the session, else the first active one.
   const switched = await switchedTenant();
   const sessionTenant = (session as unknown as { tenantId?: string })?.tenantId || undefined;
@@ -38,6 +41,8 @@ export async function getCtx(): Promise<Ctx | null> {
     return { userId: user.id, email: user.email, name: user.name || user.email, tenantId: t.id, tenantSlug: t.slug, tenantName: t.name, role: 'super_admin', cohortId: null, superAdmin: true, perms: effectivePerms('super_admin', '[]', '[]'), mustChangePassword: user.mustChangePassword };
   }
   membership = membership!;
+  // A Super Admin keeps every privilege even where they also hold an ordinary membership (e.g. a learner account in AIHUB).
+  if (superAdmin) return { userId: user.id, email: user.email, name: user.name || user.email, tenantId: membership.tenantId, tenantSlug: membership.tenant.slug, tenantName: membership.tenant.name, role: 'super_admin', cohortId: membership.cohortId, superAdmin: true, perms: effectivePerms('super_admin', '[]', '[]'), mustChangePassword: user.mustChangePassword };
   return { userId: user.id, email: user.email, name: user.name || user.email, tenantId: membership.tenantId, tenantSlug: membership.tenant.slug, tenantName: membership.tenant.name, role: membership.role.code as Role, cohortId: membership.cohortId, superAdmin, perms: effectivePerms(membership.role.code, membership.grants, membership.revokes), mustChangePassword: user.mustChangePassword };
 }
 
