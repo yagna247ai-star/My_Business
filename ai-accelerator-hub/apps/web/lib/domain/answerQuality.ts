@@ -36,14 +36,19 @@ export function checkAnswer(text: unknown, ctx: { topic: string; hint?: string; 
   const depth = ctx.depth ?? 'short';
   const topic = ctx.topic.replace(/[.?:]+$/, '').toLowerCase();
   if (!t) return { ok: false, reason: `Please answer: ${topic}.`, score: 1 };
-  if (words.length < 3) return { ok: false, reason: `Write a full sentence that answers: ${topic}.`, score: 1 };
+  // A count is a full answer to a short question: "24 rows", "38" (docs/LEARNER_ANSWER_CHECK_SPEC.md AC-2).
+  if (words.length < 3 && !(depth === 'short' && /\d/.test(t))) return { ok: false, reason: `Write a full sentence that answers: ${topic}.`, score: 1 };
 
   const distinct = new Set(words.map(w => w.toLowerCase()));
-  const longest = Math.max(...words.map(w => w.length));
-  if (MASH.test(t) || distinct.size / words.length < 0.35 || /(.)\1{4,}/.test(t) || longest > 40) {
+  // Links and e-mail-like paths are long but real; only a long run of letters is mash (AC-3).
+  const longest = Math.max(0, ...words.filter(w => !/^\W*(https?:\/\/|www\.)|[/@]/i.test(w)).map(w => w.length));
+  // Repeats are letters only: 100000 and "....." are fine, "aaaaa" is not (AC-3).
+  if (MASH.test(t) || (words.length >= 3 && distinct.size / words.length < 0.35) || /(\p{L})\1{4,}/u.test(t) || longest > 40) {
     return { ok: false, reason: 'This does not read like a real answer yet. Explain it in your own words.', score: 1 };
   }
-  if (ctx.hint && jaccard(t, ctx.hint) > 0.8) return { ok: false, reason: 'Use your own words instead of repeating the example.', score: 1 };
+  // When the example is a result (it holds numbers), a right answer looks like it, so it is not a copy (AC-1).
+  const exampleIsResult = (ctx.hint?.match(/\d/g) ?? []).length >= 2;
+  if (ctx.hint && !exampleIsResult && jaccard(t, ctx.hint) > 0.8) return { ok: false, reason: 'Use your own words instead of repeating the example.', score: 1 };
 
   // On-topic check only for content fields that come with an example (hint), and only for English answers:
   // generic questions ("what did you change?") are answered well without repeating their words.
@@ -54,7 +59,9 @@ export function checkAnswer(text: unknown, ctx: { topic: string; hint?: string; 
     const related = have.some(w => want.has(w) || [...want].some(k => k.length > 4 && (w.startsWith(k.slice(0, 5)) || k.startsWith(w.slice(0, 5)))));
     if (want.size > 0 && !related && words.length < 15) return { ok: false, reason: `Your answer does not talk about ${topic} yet. Say how it applies to your work.`, score: 2 };
   }
-  if (depth === 'detail' && words.length < 8) return { ok: false, reason: 'Add a little more: what you did, what happened, and what you learned.', score: 2 };
+  // Telugu, Hindi and other Indian scripts pack more into a word, so count letters there, not words (AC-4).
+  const thin = english ? words.length < 8 : t.replace(/[\s\p{P}]/gu, '').length < 24;
+  if (depth === 'detail' && thin) return { ok: false, reason: 'Add a little more: what you did, what happened, and what you learned.', score: 2 };
 
   const sentences = t.split(/[.!?।]+/).filter(s => s.trim().split(/\s+/).length >= 3).length;
   const score: Quality['score'] = depth === 'detail' ? (sentences >= 4 && distinct.size >= 45 ? 5 : sentences >= 2 ? 4 : 3) : (sentences >= 2 ? 5 : 4);

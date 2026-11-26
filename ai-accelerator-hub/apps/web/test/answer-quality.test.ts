@@ -38,3 +38,30 @@ describe('answer quality (no word counts)', () => {
     expect(Object.keys(e)).toEqual(['a']);
   });
 });
+
+// docs/LEARNER_ANSWER_CHECK_SPEC.md — correct answers are never refused.
+describe('right answers pass (LEARNER_ANSWER_CHECK_SPEC)', () => {
+  const reflection = { topic: 'what you did, what surprised you, and what you learned', depth: 'detail' as const };
+  it('AC-1: an answer that matches an example holding a result is accepted; a copy of a prose example is not', () => {
+    expect(checkAnswer('4,890 · 8 · 611.25', { topic: 'Revenue, Orders and Avg Order Value for September', hint: '4,890 · 8 · 611.25' }).ok).toBe(true);
+    expect(checkAnswer('0 with = NULL, 10 with IS NULL, because NULL is not equal to anything', { topic: 'The two counts and why = NULL gives 0', hint: '0 with = NULL, 10 with IS NULL, because NULL is not equal to anything' }).ok).toBe(true);
+    expect(checkAnswer('bills, stock counts, supplier invoices, staff attendance, UPI payments', { topic: 'Ten things a grocery shop records in one day', hint: 'bills, stock counts, supplier invoices, staff attendance, UPI payments' }).ok).toBe(false);
+  });
+  it('AC-2: a short count answers a short question; two words without a number still do not', () => {
+    for (const a of ['24 rows', '38', '12 rows left']) expect(checkAnswer(a, { topic: 'How many rows are left (bottom left of the editor)', hint: '24 rows' }).ok, a).toBe(true);
+    expect(checkAnswer('many rows', { topic: 'How many rows are left (bottom left of the editor)', hint: '24 rows' }).ok).toBe(false);
+  });
+  it('AC-3: numbers like 100000, links and "....." are not "not a real answer"; real junk still is', () => {
+    expect(checkAnswer('I cleaned the sales sheet and found total revenue was 100000 rupees, which surprised me. I learned to check totals.', reflection).ok).toBe(true);
+    expect(checkAnswer('I built the inventory sheet and shared it at https://docs.google.com/spreadsheets/d/1C_Ek6lCZwdzt2Ur7sX5-lHDmyV1ZMxU7jA0V0Y6Kyk4/edit so reviewers can see it.', reflection).ok).toBe(true);
+    expect(checkAnswer('I did the inventory..... it took time but I learned that validation matters for data.', reflection).ok).toBe(true);
+    for (const bad of ['aaaaa bbbbb ccccc ddddd', 'qwerty asdf zxcv hjkl', 'supercalifragilisticexpialidociousandmorewordsjoined together here']) expect(checkAnswer(bad, reflection).ok, bad).toBe(false);
+  });
+  it('AC-4: a detailed Telugu or Hindi answer is not asked to add more', () => {
+    expect(checkAnswer('నేను షీట్ తయారు చేశాను. డేటా క్లీనింగ్ నేర్చుకున్నాను.', reflection).ok).toBe(true);
+    expect(checkAnswer('मैंने शीट बनाई। डेटा साफ़ करना सीखा।', reflection).ok).toBe(true);
+  });
+  it('AC-5: no refusal mentions a number of words', () => {
+    for (const a of ['', 'ok', 'many rows', 'aaaaa bbbbb', 'I did it.']) expect(checkAnswer(a, reflection).reason ?? '').not.toMatch(/\d+\s*words?|at least/i);
+  });
+});
