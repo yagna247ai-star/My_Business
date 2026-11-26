@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.1, 2026-11-26 (course-wide materials, easier to find) |
+| Version | 1.2, 2026-11-27 (materials in the journey; mentors and program managers upload) |
 | Trigger | "Each day-wise session should have access to links of materials from Drive, which the learner can open, go through and practise." |
 | Decisions | Staff with Content rights (Content & journeys: Manage) add materials to any day from **Content review**. Every link must open for everyone; it is checked on save and daily. Learners see a **Materials** card on the day page, open each one, and tick "Studied" and "Practised". Content review shows how many learners opened each material. |
 | Builds on | `docs/SHOWCASE_LINK_HEALTH_SPEC.md` (normalise, probe), `apps/web/app/(app)/levels/[code]/days/[day]/page.tsx`, `apps/web/app/(app)/admin/content/[journeyId]/[idx]/page.tsx`, `DayProgress` |
@@ -21,6 +21,12 @@ Materials a Super Admin added did not show for learners. Each institution has **
 - **Course-wide:** a material belongs to the same day of the same course (journey slug + level code + day) in **every institution that runs that course**. It is linked by a `groupId`, so editing or removing it updates every copy. A Super Admin's change applies everywhere; an Institution Admin's change applies to their own institution only.
 - **Backfill:** migration `0018_course_wide_materials` copies every existing material into the matching day of the other institutions' copies.
 - **Easier to find:** the Materials card sits right below the day header (before the lesson), with a count chip in the header ("📎 3 materials"). Each day in the level's day list shows its material count, and enrolled learners get a notification "New material for Day N: *title*".
+
+## 1c. v1.2 changes
+Trigger: "As a learner I am unable to see the Day 5 materials uploaded by the mentor. Institute admin, program manager and course mentor all upload materials; the learner must see them in the day's path and in the journey itself."
+- **Who uploads:** a new permission `materials:manage`, given to Institution Admin, Program Manager, Instructor and Course Mentor (Super Admin has everything). It is a module, "Day materials", on the Access screen. Before this, mentors could not save materials at all (only `content:manage` could).
+- **Where staff upload:** a **Day materials** page in the staff menu (course → level → day → add links), and the same panel in Content review.
+- **Where learners see them:** a **Study materials** section on the journey page, grouped by level and day, with Open and Copy-to-practise for unlocked levels (locked levels show "N materials, opens with the level"). The level page lists each day's materials too, and the day page keeps its card.
 
 ## 2. Solution
 - A **material**: title, link, kind (`slides | doc | sheet | video | folder | notebook | other`, detected from the link and editable), an optional note ("practise questions 1–5"), and an order. It belongs to one day lesson (the day's Content row).
@@ -53,6 +59,10 @@ Routes:
 - **Content review:** on a day item, a Materials panel with an add form, a list, up/down, edit, remove and a link status badge.
 
 ## 6. Acceptance criteria
+- [x] AC-7 (v1.2): Given a mentor, program manager, instructor or Institution Admin, then they have `materials:manage`; a learner does not.
+- [x] AC-8 (v1.2): Given materials on days of unlocked and locked levels, when grouped for the journey page, then unlocked days list their links and locked levels show only a count.
+- [x] AC-9 (v1.2): The journey page renders the Study materials section; the staff menu has Day materials for `materials:manage`.
+
 - [x] AC-5 (v1.1): `matchingDays(source, all)` finds the same journey slug, level code and day in other institutions, and never the source itself.
 - [x] AC-6 (v1.1): the day page shows materials before the lesson, and the level page shows per-day counts.
 

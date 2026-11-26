@@ -11,7 +11,8 @@ import { normaliseShareUrl } from './linkHealthCore';
 import { probeLink, shareHelp } from './proofRelevance';
 import { copyUrl, detectKind, matchingDays, materialProblem, materialSchema, MAX_PER_DAY, type Kind } from './dayMaterialsCore';
 
-const needContent = (ctx: Ctx) => { if (!hasPerm(ctx, 'content:manage')) throw forbidden('You need Content & journeys access to change day materials.'); };
+export const canManageMaterials = (ctx: Ctx) => hasPerm(ctx, 'materials:manage') || hasPerm(ctx, 'content:manage');
+const needContent = (ctx: Ctx) => { if (!canManageMaterials(ctx)) throw forbidden('You need Day materials access to change day materials.'); };
 
 async function dayInTenant(ctx: Ctx, contentId: string) {
   const c = await prisma.content.findFirst({ where: { id: contentId, kind: 'md', level: { tenantId: ctx.tenantId } }, select: { id: true, title: true, position: true, levelId: true, level: { select: { journeyId: true, code: true, tenantId: true, journey: { select: { slug: true } } } } } });
@@ -39,7 +40,7 @@ async function tellLearners(tenantId: string, journeyId: string, day: number, le
 
 /** Staff can always open; a learner can when the day's level is open for them (same rule as the day page). */
 async function canOpen(ctx: Ctx, c: { levelId: string; level: { journeyId: string } }) {
-  if (hasPerm(ctx, 'content:manage')) return true;
+  if (canManageMaterials(ctx)) return true;
   const e = await prisma.enrollment.findFirst({ where: { tenantId: ctx.tenantId, userId: ctx.userId, journeyId: c.level.journeyId, state: { in: ['active', 'completed'] } }, select: { id: true } });
   if (!e) return false;
   const p = await prisma.progress.findUnique({ where: { enrollmentId_levelId: { enrollmentId: e.id, levelId: c.levelId } }, select: { state: true } });
@@ -174,4 +175,26 @@ export async function checkMaterialLinks(limit = 200) {
     if ((status === 'private' || status === 'broken') && m.linkStatus !== status) await notify(prisma, m.tenantId, m.createdById, 'material_link_broken', { title: 'A day material link stopped opening', body: `“${m.title}”: ${status === 'private' ? 'learners see “Request access”.' : 'the page was not found.'} ${shareHelp(m.url)}`, href: '/admin/content', tone: 'warn' });
   }
   return { checked: rows.length, ...counts };
+}
+
+/** The learner's journey page: every material of their current course, by level and day (docs/DAY_MATERIALS_SPEC.md v1.2). */
+export async function journeyMaterialsFor(ctx: Ctx, enrollmentId: string, journeyId: string) {
+  const { journeyMaterials } = await import('./dayMaterialsCore');
+  const [levels, progress] = await Promise.all([
+    prisma.level.findMany({ where: { tenantId: ctx.tenantId, journeyId }, select: { id: true, idx: true, code: true, title: true, contents: { where: { kind: 'md' }, select: { id: true, position: true } } }, orderBy: { idx: 'asc' } }),
+    prisma.progress.findMany({ where: { enrollmentId }, select: { levelId: true, state: true } }),
+  ]);
+  const dayOf = new Map(levels.flatMap(l => l.contents.map(c => [c.id, { levelId: l.id, day: c.position }] as const)));
+  const rows = await prisma.dayMaterial.findMany({ where: { tenantId: ctx.tenantId, contentId: { in: [...dayOf.keys()] } }, select: { id: true, contentId: true, title: true, url: true, kind: true, note: true, sortOrder: true } });
+  const open = new Map(progress.map(p => [p.levelId, p.state !== 'locked']));
+  return journeyMaterials(rows.map(r => ({ ...r, ...dayOf.get(r.contentId)! })), levels.map(l => ({ id: l.id, idx: l.idx, code: l.code, title: l.title, locked: !open.get(l.id) })));
+}
+
+/** Staff: the courses, levels and days of this institution, for the Day materials page. */
+export async function materialsPicker(ctx: Ctx) {
+  needContent(ctx);
+  const journeys = await prisma.journey.findMany({ where: { tenantId: ctx.tenantId }, orderBy: [{ isPublished: 'desc' }, { title: 'asc' }], select: { id: true, title: true, levels: { orderBy: { idx: 'asc' }, select: { id: true, idx: true, title: true, contents: { where: { kind: 'md' }, orderBy: { position: 'asc' }, select: { id: true, position: true, title: true } } } } } });
+  const counts = await prisma.dayMaterial.groupBy({ by: ['contentId'], where: { tenantId: ctx.tenantId }, _count: { _all: true } });
+  const n = new Map(counts.map(c => [c.contentId, c._count._all]));
+  return journeys.map(j => ({ id: j.id, title: j.title, levels: j.levels.map(l => ({ id: l.id, idx: l.idx, title: l.title, days: l.contents.map(c => ({ contentId: c.id, day: c.position, title: (c.title ?? '').replace(/^Day \d+\s+—\s+/, ''), materials: n.get(c.id) ?? 0 })) })) }));
 }

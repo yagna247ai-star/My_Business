@@ -101,4 +101,5 @@ export const PERMISSION_INFO: Record<Permission, string> = {
   'talent:discover': 'Search consented talent profiles.',
   'talent:post': 'Post opportunities on behalf of an organisation.',
   'institute:manage': 'Edit the institution’s own details and settings.',
+  'materials:manage': 'Add, edit and remove day study materials (Drive, Docs, Sheets, videos) for learners.',
 };

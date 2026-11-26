@@ -5,7 +5,7 @@
 import { MATRIX, isRole, type Permission } from '@/lib/server/rbac';
 
 export type Level = 'none' | 'view' | 'manage';
-export type ModuleKey = 'learning' | 'ai' | 'community' | 'reviews' | 'people' | 'cohorts' | 'content' | 'analytics' | 'audit' | 'billing' | 'talent' | 'institute';
+export type ModuleKey = 'materials' | 'learning' | 'ai' | 'community' | 'reviews' | 'people' | 'cohorts' | 'content' | 'analytics' | 'audit' | 'billing' | 'talent' | 'institute';
 export type Module = { key: ModuleKey; label: string; info: string; view: Permission[]; manage: Permission[] };
 
 export const MODULES: Module[] = [
@@ -15,6 +15,7 @@ export const MODULES: Module[] = [
   { key: 'reviews', label: 'Reviews', info: 'View: see submissions. Manage: also decide them and handle appeals.', view: ['review:read'], manage: ['review:read', 'review:decide'] },
   { key: 'people', label: 'People', info: 'View: see people and their progress. Manage: add, edit, suspend, import, bulk actions, roles.', view: ['members:read'], manage: ['members:read', 'members:manage'] },
   { key: 'cohorts', label: 'Cohorts & sessions', info: 'View: see cohorts. Manage: create cohorts, invite codes and session schedules.', view: ['cohort:read'], manage: ['cohort:read', 'cohort:manage'] },
+  { key: 'materials', label: 'Day materials', info: 'Add study links (Drive, Docs, Sheets, videos) to the days of a course for learners.', view: [], manage: ['materials:manage'] },
   { key: 'content', label: 'Content & journeys', info: 'Edit journeys, levels, day lessons and day materials.', view: [], manage: ['content:manage'] },
   { key: 'analytics', label: 'Analytics', info: 'See the analytics page for this institution.', view: [], manage: ['analytics:read'] },
   { key: 'audit', label: 'Audit & points ledger', info: 'View: read the audit log. Manage: also verify the points ledger.', view: ['audit:read'], manage: ['audit:read', 'ledger:verify'] },

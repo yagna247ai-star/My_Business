@@ -44,7 +44,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (ctx.superAdmin) nav.push({ href: '/settings/institute', label: 'Institutions', icon: 'layers', group: 'Overview' });
   if (ctx.superAdmin) nav.push({ href: '/settings/access', label: 'Access', icon: 'shield', group: 'People' });
   if (hasPerm(ctx, 'cohort:read')) nav.push({ href: '/admin/cohorts', label: 'Cohorts & Sessions', icon: 'layers', group: 'People' });
-  if (hasPerm(ctx, 'content:manage')) nav.push({ href: '/admin/content', label: 'Content & Day materials', icon: 'book', group: 'Content' });
+  if (hasPerm(ctx, 'materials:manage') || hasPerm(ctx, 'content:manage')) nav.push({ href: '/admin/materials', label: 'Day materials', icon: 'book', group: 'Content' });
+  if (hasPerm(ctx, 'content:manage')) nav.push({ href: '/admin/content', label: 'Content review', icon: 'book', group: 'Content' });
   if (hasPerm(ctx, 'content:manage')) nav.push({ href: '/admin/journeys', label: 'Journey Builder', icon: 'map', group: 'Content' });
   if (!learner) nav.push({ href: '/ranks', label: 'Ranks', icon: 'ranks', group: 'Community' });
   if (!learner && hasPerm(ctx, 'community:moderate')) nav.push({ href: '/admin/showcase', label: 'Showcase', icon: 'star', group: 'Community' });

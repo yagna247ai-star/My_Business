@@ -41,3 +41,16 @@ export function materialProblem(raw: string, existing: number): string | null {
 /** The same day of the same course in other institutions (docs/DAY_MATERIALS_SPEC.md v1.1). */
 export type DayRef = { contentId: string; tenantId: string; journeySlug: string; levelCode: string; day: number };
 export const matchingDays = (src: DayRef, all: DayRef[]) => all.filter(d => d.contentId !== src.contentId && d.tenantId !== src.tenantId && d.journeySlug === src.journeySlug && d.levelCode === src.levelCode && d.day === src.day);
+
+/** The journey page's Study materials (v1.2): by level and day; locked levels show only how many are waiting. */
+type MatRow = { id: string; levelId: string; day: number; title: string; url: string; kind: string; note: string; sortOrder: number };
+export function journeyMaterials(rows: MatRow[], levels: { id: string; idx: number; code: string; title: string; locked: boolean }[]) {
+  return [...levels].sort((a, b) => a.idx - b.idx).map(l => {
+    const mine = rows.filter(r => r.levelId === l.id);
+    if (!mine.length) return null;
+    if (l.locked) return { levelId: l.id, idx: l.idx, code: l.code, title: l.title, locked: true, count: mine.length, days: [] as { day: number; items: (MatRow & { copyUrl: string | null })[] }[] };
+    const days = [...new Set(mine.map(r => r.day))].sort((a, b) => a - b)
+      .map(day => ({ day, items: mine.filter(r => r.day === day).sort((a, b) => a.sortOrder - b.sortOrder).map(r => ({ ...r, copyUrl: copyUrl(r.url) })) }));
+    return { levelId: l.id, idx: l.idx, code: l.code, title: l.title, locked: false, count: mine.length, days };
+  }).filter((x): x is NonNullable<typeof x> => !!x);
+}

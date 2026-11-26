@@ -24,16 +24,17 @@ export type Permission =
   | 'ledger:verify'
   | 'talent:discover'       // search consent-gated talent profiles
   | 'talent:post'            // publish opportunities on behalf of an org
-  | 'institute:manage';     // edit the institution's own details (create/delete institutions is Super Admin only)
+  | 'institute:manage'      // edit the institution's own details (create/delete institutions is Super Admin only)
+  | 'materials:manage';     // add day materials (Drive, Docs, videos) learners study (docs/DAY_MATERIALS_SPEC.md v1.2)
 
-const ALL: Permission[] = ['learn:self', 'ai:use', 'community:post', 'community:moderate', 'review:read', 'review:decide', 'cohort:read', 'cohort:manage', 'members:read', 'members:manage', 'content:manage', 'analytics:read', 'audit:read', 'billing:self', 'billing:manage', 'ledger:verify', 'talent:discover', 'talent:post', 'institute:manage'];
+const ALL: Permission[] = ['learn:self', 'ai:use', 'community:post', 'community:moderate', 'review:read', 'review:decide', 'cohort:read', 'cohort:manage', 'members:read', 'members:manage', 'content:manage', 'analytics:read', 'audit:read', 'billing:self', 'billing:manage', 'ledger:verify', 'talent:discover', 'talent:post', 'institute:manage', 'materials:manage'];
 
 export const MATRIX: Record<Role, Permission[]> = {
   super_admin: ALL,
-  tenant_admin: ['ai:use', 'community:moderate', 'review:read', 'cohort:read', 'cohort:manage', 'members:read', 'members:manage', 'content:manage', 'analytics:read', 'audit:read', 'ledger:verify', 'talent:discover', 'talent:post', 'institute:manage'],
-  program_mgr: ['ai:use', 'community:moderate', 'review:read', 'cohort:read', 'cohort:manage', 'members:read', 'content:manage', 'analytics:read', 'audit:read', 'ledger:verify', 'talent:discover', 'talent:post'],
-  instructor: ['ai:use', 'review:read', 'review:decide', 'cohort:read', 'members:read', 'content:manage', 'analytics:read'],
-  mentor: ['ai:use', 'community:moderate', 'review:read', 'review:decide', 'cohort:read', 'members:read', 'talent:discover'],
+  tenant_admin: ['materials:manage', 'ai:use', 'community:moderate', 'review:read', 'cohort:read', 'cohort:manage', 'members:read', 'members:manage', 'content:manage', 'analytics:read', 'audit:read', 'ledger:verify', 'talent:discover', 'talent:post', 'institute:manage'],
+  program_mgr: ['materials:manage', 'ai:use', 'community:moderate', 'review:read', 'cohort:read', 'cohort:manage', 'members:read', 'content:manage', 'analytics:read', 'audit:read', 'ledger:verify', 'talent:discover', 'talent:post'],
+  instructor: ['materials:manage', 'ai:use', 'review:read', 'review:decide', 'cohort:read', 'members:read', 'content:manage', 'analytics:read'],
+  mentor: ['materials:manage', 'ai:use', 'community:moderate', 'review:read', 'review:decide', 'cohort:read', 'members:read', 'talent:discover'],
   reviewer: ['ai:use', 'review:read', 'review:decide'],
   learner: ['learn:self', 'ai:use', 'community:post', 'billing:self'],
   team_lead: ['learn:self', 'ai:use', 'community:post', 'billing:self', 'cohort:read'],
