@@ -19,7 +19,8 @@
     "lint:ci": "next lint --quiet",
     "seed:domains": "cd ../../packages/db && TENANT_SLUG=${DEFAULT_TENANT_SLUG:-demo} npx tsx prisma/seed-domain-journeys.ts",
     "i18n:extract": "node scripts/i18n-extract.mjs",
-    "i18n:fill": "npx tsx --tsconfig tsconfig.json scripts/i18n-fill.ts"
+    "i18n:fill": "npx tsx --tsconfig tsconfig.json scripts/i18n-fill.ts",
+    "openapi": "tsx scripts/openapi-gen.ts"
   },
   "dependencies": {
     "@aihub/db": "*",

@@ -34,3 +34,22 @@ export function learnerTitle(levels: LevelRef[], approvedIdx: number[]) {
 }
 
 export const starsText = (n: number) => (n > 0 ? '★'.repeat(n) : '');
+
+/* ---------- level ribbon (docs/LEVEL_RIBBON_SPEC.md) ---------- */
+export type RibbonStatus = 'done' | 'review' | 'changes' | 'current' | 'locked';
+const RIBBON_TEXT: Record<RibbonStatus, string> = { done: 'Done', review: 'In review', changes: 'Changes asked', current: 'In progress', locked: 'Locked' };
+const ribbonStatus = (state: string): RibbonStatus =>
+  state === 'approved' ? 'done' : state === 'submitted' ? 'review' : state === 'needs_changes' ? 'changes' : state === 'locked' ? 'locked' : 'current';
+
+/** Every level as "Level N · title · state", plus how far the line between the dots is filled. */
+export function ribbonNodes(levels: (LevelRef & { state: string })[]) {
+  const sorted = [...levels].sort((a, b) => a.idx - b.idx);
+  const total = sorted.length;
+  const nodes = sorted.map(l => {
+    const status = ribbonStatus(l.state);
+    const title = titleFor(l, total).title;
+    return { idx: l.idx, code: l.code, label: `Level ${l.idx}`, title, status, statusText: RIBBON_TEXT[status], aria: `Level ${l.idx} · ${title} · ${RIBBON_TEXT[status]}` };
+  });
+  const lastDone = nodes.reduce((n, x, i) => (x.status === 'done' ? i + 1 : n), 0);
+  return { total, nodes, doneUpTo: lastDone, fillPct: lastDone > 1 && total > 1 ? ((lastDone - 1) / (total - 1)) * 100 : 0 };
+}

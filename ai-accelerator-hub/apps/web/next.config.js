@@ -42,6 +42,11 @@ const csp = [
   ...(isProd ? ['upgrade-insecure-requests'] : []),
 ].join('; ');
 
+// The API docs page alone may load Swagger UI from jsDelivr (pinned file + integrity hash, docs/API_DOCS_SPEC.md AC-6).
+const apiDocsCsp = csp
+  .replace("script-src 'self'", "script-src 'self' https://cdn.jsdelivr.net")
+  .replace("style-src 'self'", "style-src 'self' https://cdn.jsdelivr.net");
+
 const securityHeaders = [
   { key: 'Content-Security-Policy', value: csp },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -67,6 +72,8 @@ const nextConfig = {
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },
+      // Later entries win for the same header key, so this replaces the CSP on /api-docs only.
+      { source: '/api-docs', headers: [{ key: 'Content-Security-Policy', value: apiDocsCsp }] },
       // Learner data must never sit in shared caches.
       { source: '/api/:path*', headers: [{ key: 'Cache-Control', value: 'no-store' }] },
     ];

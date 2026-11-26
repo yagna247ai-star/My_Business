@@ -7,6 +7,7 @@ import { journeyOverview, levelState } from '@/lib/domain/journey';
 import { learnerTitle, starsText } from '@/lib/domain/levelTitles';
 import { RECOVERY_QUIZ } from '@/lib/domain/streak';
 import { StreakRecovery } from '@/components/learn/StreakRecovery';
+import { LevelRibbon } from '@/components/learn/LevelRibbon';
 import { getProfile } from '@/lib/domain/profile';
 import { guarded } from '@/lib/server/page';
 import { getT } from '@/lib/i18n/server';
@@ -90,8 +91,8 @@ async function Dashboard() {
         </section>
 
         <section className="card card-pad span-12" aria-labelledby="jrT">
-          <div className="row between wrap gap-8"><h2 className="h3" id="jrT"><Tr>Your 15-level journey</Tr></h2><Link className="link small" href="/levels">{t('Open journey')} <ArrowRight size={13} /></Link></div>
-          <div className="rail-scroll" tabIndex={0} aria-label={t('Journey levels, scroll sideways')}><ol className="jrail" style={{ listStyle: 'none', margin: 0 }}>{journey.levels.map(l => <li key={l.idx} className={`jnode ${l.state === 'approved' ? 'done' : ['available', 'in_progress', 'submitted'].includes(l.state) ? 'current' : ''}`}><Link className="jdot" href={`/levels/${l.code}`} aria-label={`Level ${l.idx}: ${l.title}, ${l.state}`}>{String(l.idx).padStart(2, '0')}</Link><span className="jl">{l.title.split(' ').slice(-1)[0]}</span><span className="jx">{l.xp} XP</span></li>)}</ol></div>
+          <div className="row between wrap gap-8"><h2 className="h3" id="jrT">{t('Your {n}-level journey', { n: journey.levels.length })}</h2><Link className="link small" href="/levels">{t('Open journey')} <ArrowRight size={13} /></Link></div>
+          <LevelRibbon levels={journey.levels} />
         </section>
       </div>
     </>

@@ -10,6 +10,7 @@ import { TrackPanel } from '@/components/learn/TrackPanel';
 import { getLocale, getT } from '@/lib/i18n/server';
 import { Tv } from '@/components/i18n/Tv';
 import { learnerTitle, starsText, titleFor } from '@/lib/domain/levelTitles';
+import { LevelRibbon } from '@/components/learn/LevelRibbon';
 import { journeyMaterialsFor } from '@/lib/domain/dayMaterials';
 
 export const metadata = { title: 'Journey' };
@@ -32,6 +33,7 @@ async function Journey() {
         <div style={{ flex: 1, minWidth: 220 }}><div className="muted xs bold">{t('Your title')}</div><div className="h3" style={{ margin: 0 }}><Tv v={earned.current} /> {earned.stars > 0 && <span style={{ color: 'var(--gold, #E8B94F)' }}>{starsText(earned.stars)}</span>}</div></div>
         <div className="small">{earned.isMax ? t('Top title of this course. Brilliant work!') : nextLevel ? <>{t('Next')}: <b>{t('Level {n}', { n: nextLevel.idx })} · <Tv v={earned.next ?? ''} /></b> · {t('{n} level(s) to go', { n: earned.levelsToNext })} <Link className="link bold" href={`/levels/${nextLevel.code}`}>{t('Go')} →</Link></> : null}</div>
       </section>
+      <section className="card card-pad" aria-label={t('Your {n}-level journey', { n: levels.length })} style={{ marginBottom: 18 }}><LevelRibbon levels={levels} /></section>
       {track && <TrackPanel track={track} />}
       {stages.map(([idx, title]) => (
         <section key={idx} style={{ marginBottom: 24 }} aria-labelledby={`st-${idx}`}>
