@@ -25,6 +25,9 @@
       "@/*": [
         "./*"
       ],
+      "@aihub/ai-governance": [
+        "../../packages/ai-governance/src"
+      ],
       "@aihub/db": [
         "../../packages/db/prisma/client"
       ]
