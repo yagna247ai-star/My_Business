@@ -46,6 +46,7 @@ describe('identity dedup rules', () => {
     expect(r.groups[0].memberIds.sort()).toEqual(['a', 'b', 'c']);
     expect(r.groups[0].confidence).toBe('likely');
     expect(r.possiblePairs).toBe(1);
+    expect(r.possible).toEqual([expect.objectContaining({ aId: 'd', bId: 'e', reasons: ['same name'] })]); // AC-34: name-only pairs are listed for a person to judge
     const certainOnly = groupDuplicates(rows.slice(0, 2));
     expect(certainOnly.groups[0].confidence).toBe('certain');
   });

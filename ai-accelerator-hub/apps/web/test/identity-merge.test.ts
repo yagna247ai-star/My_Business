@@ -7,7 +7,7 @@ import type { Ctx } from '@/lib/server/context';
 import { register } from '@/lib/domain/account';
 import { awardXp, verifyChain } from '@/lib/domain/xp';
 import { verifyCredentials } from '@/lib/auth';
-import { findUserByAnyEmail, duplicateReport, mergeUsers, mergeDuplicates, createTicket, resolveTicket, autoMergeCertain } from '@/lib/domain/identity';
+import { findUserByAnyEmail, duplicateReport, lookupPair, mergeUsers, mergeDuplicates, createTicket, resolveTicket, autoMergeCertain } from '@/lib/domain/identity';
 import { NextRequest } from 'next/server';
 import { GET as cronGet } from '@/app/api/cron/identity-merge/route';
 
@@ -213,5 +213,25 @@ describe('institution admin, tickets and the automatic run', () => {
     process.env.IDENTITY_AUTOMERGE = '';
     const res = await cronGet(new NextRequest('http://localhost/api/cron/identity-merge'));
     expect((await res.json()).dryRun).toBe(true);
+  });
+
+  it('AC-34/35: a name-only pair is listed, can be looked up by email, and merges with the same rules', async () => {
+    const a = await mk('roopa.manidi@gmail.com', 'Roopa Manidi', [tenantId]); const b = await mk('rm2024@outlook.com', 'Roopa Manidi', [tenantId]);
+    const rep = await duplicateReport(adminCtx);
+    const pair = rep.possible.find(g => g.members.some(m => m.id === a.id) && g.members.some(m => m.id === b.id));
+    expect(pair?.confidence).toBe('possible');
+    expect(pair?.canMerge).toBe(true);
+    expect((await duplicateReport(sa())).groups.some(g => g.members.some(m => m.id === a.id))).toBe(false); // the system never groups it for automatic merging
+    const found = await lookupPair(adminCtx, 'rm2024@outlook.com', 'Roopa.Manidi@gmail.com');
+    expect(found.members.map(m => m.id).sort()).toEqual([a.id, b.id].sort());
+    await expect(lookupPair(adminCtx, 'rm2024@outlook.com', 'nobody@nowhere.in')).rejects.toThrow(/could not find two different accounts/);
+    await mergeUsers(adminCtx, found.primaryId, found.members.find(m => m.id !== found.primaryId)!.id);
+    expect(await prisma.user.count({ where: { id: { in: [a.id, b.id] }, mergedIntoId: null } })).toBe(1);
+  });
+
+  it('AC-36: an institution admin cannot look up or merge people outside their institution', async () => {
+    const o1 = await mk('outside.one@gmail.com', 'Outside One', [t2]); const o2 = await mk('outside.two@gmail.com', 'Outside Two', [t2]);
+    await expect(lookupPair(adminCtx, 'outside.one@gmail.com', 'outside.two@gmail.com')).rejects.toThrow(/could not find two different accounts/);
+    await expect(mergeUsers(adminCtx, o1.id, o2.id)).rejects.toMatchObject({ code: 'OUT_OF_SCOPE' });
   });
 });

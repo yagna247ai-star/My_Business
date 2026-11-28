@@ -122,22 +122,37 @@ export function PasswordButton({ userId, name, isSuper }: { userId: string; name
 }
 
 type DupMember = { id: string; name: string | null; email: string; emails: string[]; activity: number; hasPassword: boolean; minor: boolean };
-type DupGroup = { confidence: 'certain' | 'likely'; reasons: string[]; primaryId: string; canMerge: boolean; needsSuperAdmin: boolean; members: DupMember[] };
+type DupGroup = { confidence: 'certain' | 'likely' | 'possible'; reasons: string[]; primaryId: string; canMerge: boolean; needsSuperAdmin: boolean; members: DupMember[] };
 type DupTicket = { id: string; status: string; reason: string; note: string | null; primaryId: string | null; accounts: { id: string; name: string | null; email: string }[] };
 const REASON: Record<string, string> = { out_of_scope: 'Another institution is involved', requested: 'Sent by an institution admin', auto_failed: 'Automatic merge failed', too_many_accounts: 'Too many accounts for automatic merge', super_admin_account: 'Includes a Super Admin account', minor_account: 'Includes a learner under 18' };
+const LABEL = { certain: 'Certain', likely: 'Likely', possible: 'Same name only' } as const;
 
 /** docs/IDENTITY_DEDUP_SPEC.md §5: duplicates inside your institution merge here; anything bigger goes to a Super Admin as a ticket. Loads only when asked. */
 export function DuplicatesPanel({ isSuper }: { isSuper: boolean }) {
   const r = useRun();
-  const [rep, setRep] = useState<{ groups: DupGroup[]; tickets: DupTicket[]; possiblePairs: number } | null>(null);
+  const [rep, setRep] = useState<{ groups: DupGroup[]; possible: DupGroup[]; tickets: DupTicket[]; possiblePairs: number } | null>(null);
+  const [found, setFound] = useState<DupGroup | null>(null); const [ea, setEa] = useState(''); const [eb, setEb] = useState('');
   const reload = async () => setRep(await api('/api/v1/admin/people/duplicates'));
-  const act = (fn: () => Promise<unknown>, done: string) => r.run(async () => { await fn(); await reload(); }, done);
+  const act = (fn: () => Promise<unknown>, done: string) => r.run(async () => { await fn(); await reload(); setFound(null); setSure(''); }, done);
   const post = (path: string, body: object) => api(path, { method: 'POST', body });
   const [keep, setKeep] = useState<Record<string, string>>({}); // a person can override the suggested account to keep
-  const keepOf = (g: DupGroup) => keep[g.primaryId] ?? g.primaryId;
+  const [sure, setSure] = useState(''); // a name-only merge asks once more
+  const keyOf = (g: DupGroup) => g.members.map(m => m.id).sort().join('|');
+  const keepOf = (g: DupGroup) => keep[keyOf(g)] ?? g.primaryId;
   const ids = (g: DupGroup) => ({ primaryId: keepOf(g), secondaryIds: g.members.filter(m => m.id !== keepOf(g)).map(m => m.id) });
   const certain = rep?.groups.filter(g => g.confidence === 'certain').length ?? 0;
   const open = rep?.tickets.filter(t => t.status === 'open') ?? [];
+  const group = (g: DupGroup) => (
+    <div key={keyOf(g)} className="stack gap-8" style={{ borderTop: '1px solid var(--line, #e5e7eb)', paddingTop: 8 }}>
+      <div className="small"><b>{LABEL[g.confidence]}</b> · {g.reasons.join(', ')}</div>
+      <div className="small stack gap-8" role="radiogroup" aria-label="Account to keep">{g.members.map(m => <label key={m.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}><input type="radio" name={`keep-${keyOf(g)}`} checked={keepOf(g) === m.id} disabled={!g.canMerge} onChange={() => setKeep(k => ({ ...k, [keyOf(g)]: m.id }))} /><span>{m.name ?? '(no name)'} · {m.emails.join(', ')}{m.minor ? ' · under 18: their privacy settings stay strict' : ''}{m.id === g.primaryId ? ' · suggested' : ''}</span></label>)}</div>
+      <div className="row gap-8 wrap" style={{ alignItems: 'center' }}>{g.canMerge
+        ? (g.confidence === 'possible' && sure !== keyOf(g)
+          ? <button className="btn btn-sm" type="button" disabled={r.busy} onClick={() => setSure(keyOf(g))}>Merge into one account…</button>
+          : <>{g.confidence === 'possible' && <span className="small">Only the name matches. Are you sure these are the same person?</span>}<button className="btn btn-sm btn-primary" type="button" disabled={r.busy} onClick={() => act(() => post('/api/v1/admin/people/duplicates', ids(g)), 'Merged into one account.')}>{g.confidence === 'possible' ? 'Yes, same person: merge' : 'Merge into one account'}</button>{g.confidence === 'possible' && <button className="btn btn-text btn-sm" type="button" onClick={() => setSure('')}>Cancel</button>}</>)
+        : <><span className="small muted">Another institution is involved, so a Super Admin merges this. </span><button className="btn btn-sm" type="button" disabled={r.busy} onClick={() => act(() => post('/api/v1/admin/people/duplicates/tickets', ids(g)), 'Sent to a Super Admin.')}>Send to Super Admin</button></>}</div>
+    </div>
+  );
   return (
     <section className="card card-pad stack gap-8" aria-label="Duplicate accounts" style={{ marginTop: 18 }}>
       <div className="row gap-8 wrap" style={{ alignItems: 'center' }}>
@@ -145,17 +160,20 @@ export function DuplicatesPanel({ isSuper }: { isSuper: boolean }) {
         <button className="btn btn-sm" type="button" disabled={r.busy} onClick={() => act(async () => {}, 'Checked.')}>{rep ? 'Check again' : 'Check for duplicates'}</button>
         {isSuper && certain > 0 && <button className="btn btn-primary btn-sm" type="button" disabled={r.busy} onClick={() => act(() => post('/api/v1/admin/people/duplicates', { auto: true }), 'Merged the certain duplicates. Anything that failed is in the tickets below.')}>Merge all certain ({certain})</button>}
       </div>
+      <form className="row gap-8 wrap" style={{ alignItems: 'center' }} onSubmit={e => { e.preventDefault(); void r.run(async () => { setSure(''); setFound(await post('/api/v1/admin/people/duplicates/lookup', { emailA: ea, emailB: eb }) as DupGroup); }, 'Found both accounts.'); }}>
+        <span className="small">Merge two accounts by email:</span>
+        <input className="input" type="email" style={{ maxWidth: 230 }} aria-label="First account email" placeholder="First account email" value={ea} onChange={e => setEa(e.target.value)} />
+        <input className="input" type="email" style={{ maxWidth: 230 }} aria-label="Second account email" placeholder="Second account email" value={eb} onChange={e => setEb(e.target.value)} />
+        <button className="btn btn-sm" type="submit" disabled={r.busy || !ea.includes('@') || !eb.includes('@')}>Find</button>
+      </form>
       <r.Status />
-      {rep && !rep.groups.length && !open.length && <p className="small muted">No duplicate accounts found{rep.possiblePairs ? `. ${rep.possiblePairs} pair(s) share only a name, so they are left alone.` : '.'}</p>}
-      {rep?.groups.map(g => (
-        <div key={g.primaryId} className="stack gap-8" style={{ borderTop: '1px solid var(--line, #e5e7eb)', paddingTop: 8 }}>
-          <div className="small"><b>{g.confidence === 'certain' ? 'Certain' : 'Likely'}</b> · {g.reasons.join(', ')}</div>
-          <div className="small stack gap-8" role="radiogroup" aria-label="Account to keep">{g.members.map(m => <label key={m.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}><input type="radio" name={`keep-${g.primaryId}`} checked={keepOf(g) === m.id} disabled={!g.canMerge} onChange={() => setKeep(k => ({ ...k, [g.primaryId]: m.id }))} /><span>{m.name ?? '(no name)'} · {m.emails.join(', ')}{m.minor ? ' · under 18: their privacy settings stay strict' : ''}{m.id === g.primaryId ? ' · suggested' : ''}</span></label>)}</div>
-          <div>{g.canMerge
-            ? <button className="btn btn-sm" type="button" disabled={r.busy} onClick={() => act(() => post('/api/v1/admin/people/duplicates', ids(g)), 'Merged into one account.')}>Merge into one account</button>
-            : <><span className="small muted">Another institution is involved, so a Super Admin merges this. </span><button className="btn btn-sm" type="button" disabled={r.busy} onClick={() => act(() => post('/api/v1/admin/people/duplicates/tickets', ids(g)), 'Sent to a Super Admin.')}>Send to Super Admin</button></>}</div>
-        </div>
-      ))}
+      {found && <div className="stack gap-8"><b className="small">Your selection</b>{group({ ...found, confidence: found.confidence === 'certain' || found.confidence === 'likely' ? found.confidence : 'possible' })}</div>}
+      {rep && !rep.groups.length && !rep.possible.length && !open.length && <p className="small muted">No duplicate accounts found.</p>}
+      {rep?.groups.map(group)}
+      {rep && rep.possible.length > 0 && <div className="stack gap-8" style={{ borderTop: '1px solid var(--line, #e5e7eb)', paddingTop: 8 }}>
+        <b className="small">Same name, different emails ({rep.possible.length}). Check before merging; two people can share a name.</b>
+        {rep.possible.map(group)}
+      </div>}
       {open.length > 0 && <div className="stack gap-8" style={{ borderTop: '1px solid var(--line, #e5e7eb)', paddingTop: 8 }}>
         <b className="small">{isSuper ? 'Tickets waiting for you' : 'Waiting for a Super Admin'} ({open.length})</b>
         {open.map(t => (

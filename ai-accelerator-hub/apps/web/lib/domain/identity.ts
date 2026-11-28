@@ -10,7 +10,7 @@ import { AppError, badRequest, conflict, forbidden } from '@/lib/server/errors';
 import { audit, notify } from '@/lib/server/audit';
 import { can } from '@/lib/server/rbac';
 import { rechainLedger } from './xp';
-import { autoMergePlan, protectiveSettings, emailKey, groupDuplicates, maskEmail, mergeScope, nameTokens, pickDisplayName, scorePair, ticketKey, type DuplicateGroup, type IdentityRow } from './identityCore';
+import { pickPrimary, autoMergePlan, protectiveSettings, emailKey, groupDuplicates, maskEmail, mergeScope, nameTokens, pickDisplayName, scorePair, ticketKey, type DuplicateGroup, type IdentityRow } from './identityCore';
 
 type Tx = PrismaClient | Prisma.TransactionClient;
 
@@ -100,18 +100,36 @@ async function assertMergeScope(ctx: Ctx, ids: string[]) {
   if (!r.allowed) throw new AppError(403, r.reason === 'no_permission' ? 'FORBIDDEN' : 'OUT_OF_SCOPE', SCOPE_MESSAGE[r.reason]);
 }
 
+type Loaded = Awaited<ReturnType<typeof loadGroups>>;
+
+/** One group as the caller may see it: emails masked and merge disabled when it reaches beyond their institution. */
+function viewOf(ctx: Ctx, L: Loaded, memberIds: string[], primaryId: string, confidence: 'certain' | 'likely' | 'possible', reasons: string[]) {
+  const ok = mergeScope({ superAdmin: ctx.superAdmin, canManage: true, tenantId: ctx.tenantId }, memberIds.map(id => L.scope.get(id)!)).allowed;
+  return { confidence, reasons, primaryId, canMerge: ok, needsSuperAdmin: !ok,
+    members: memberIds.map(id => { const r = L.byId.get(id)!; return { id, name: r.name, email: ok ? r.email : maskEmail(r.email), emails: ok ? r.emails : r.emails.map(maskEmail), hasPassword: r.hasPassword, minor: L.minorIds.has(id), activity: r.activity, createdAt: r.createdAt }; }) };
+}
+const touchesMine = (ctx: Ctx, L: Loaded, ids: string[]) => ctx.superAdmin || ids.some(id => L.scope.get(id)?.tenantIds.includes(ctx.tenantId));
+
 export async function duplicateReport(ctx: Ctx) {
   needManage(ctx);
-  const { groups, byId, scope, minorIds, possiblePairs } = await loadGroups();
-  const view = groups.flatMap(g => {
-    const inMine = g.memberIds.some(id => scope.get(id)?.tenantIds.includes(ctx.tenantId));
-    if (!ctx.superAdmin && !inMine) return []; // an institution admin never sees groups that do not touch their institution
-    const ok = mergeScope({ superAdmin: ctx.superAdmin, canManage: true, tenantId: ctx.tenantId }, g.memberIds.map(id => scope.get(id)!)).allowed;
-    return [{ confidence: g.confidence, reasons: g.reasons, primaryId: g.primaryId, canMerge: ok, needsSuperAdmin: !ok,
-      members: g.memberIds.map(id => { const r = byId.get(id)!; const e = ok ? r.emails : r.emails.map(maskEmail); return { id, name: r.name, email: ok ? r.email : maskEmail(r.email), emails: e, hasPassword: r.hasPassword, minor: minorIds.has(id), activity: r.activity, createdAt: r.createdAt }; }) }];
-  });
+  const L = await loadGroups();
+  const groups = L.groups.filter(g => touchesMine(ctx, L, g.memberIds)).map(g => viewOf(ctx, L, g.memberIds, g.primaryId, g.confidence, g.reasons));
+  // Name-only pairs (docs/IDENTITY_DEDUP_SPEC.md §3.22): shown to a person, never merged by the system.
+  const possible = L.possible.filter(p => touchesMine(ctx, L, [p.aId, p.bId])).slice(0, 100).map(p => viewOf(ctx, L, [p.aId, p.bId], p.primaryId, 'possible', p.reasons));
   const tickets = await prisma.duplicateTicket.findMany({ where: ctx.superAdmin ? { status: 'open' } : { tenantId: ctx.tenantId }, orderBy: { createdAt: 'desc' }, take: 50 });
-  return { possiblePairs: ctx.superAdmin ? possiblePairs : 0, groups: view, tickets: tickets.map(t => ({ id: t.id, status: t.status, reason: t.reason, note: t.note, createdAt: t.createdAt, primaryId: t.primaryId, accountIds: JSON.parse(t.accountIds) as string[], accounts: (JSON.parse(t.accountIds) as string[]).map(id => { const r = byId.get(id); return r ? { id, name: r.name, email: ctx.superAdmin ? r.email : maskEmail(r.email) } : { id, name: null, email: '(merged)' }; }) })) };
+  return { possiblePairs: possible.length, groups, possible, tickets: tickets.map(t => ({ id: t.id, status: t.status, reason: t.reason, note: t.note, createdAt: t.createdAt, primaryId: t.primaryId, accountIds: JSON.parse(t.accountIds) as string[], accounts: (JSON.parse(t.accountIds) as string[]).map(id => { const r = L.byId.get(id); return r ? { id, name: r.name, email: ctx.superAdmin ? r.email : maskEmail(r.email) } : { id, name: null, email: '(merged)' }; }) })) };
+}
+
+/** Find two accounts by any of their emails, so any pair can be merged (same rules as every merge). */
+export async function lookupPair(ctx: Ctx, emailA: string, emailB: string) {
+  needManage(ctx);
+  const [a, b] = await Promise.all([findUserByAnyEmail(emailA), findUserByAnyEmail(emailB)]);
+  const L = await loadGroups();
+  const none = () => badRequest('We could not find two different accounts for those emails. Check the spelling, or search the Duplicate accounts list.');
+  if (!a || !b || a.id === b.id || !L.byId.has(a.id) || !L.byId.has(b.id)) throw none();
+  if (!touchesMine(ctx, L, [a.id, b.id])) throw none(); // an institution admin learns nothing about people outside their institution
+  const m = scorePair(L.byId.get(a.id)!, L.byId.get(b.id)!);
+  return viewOf(ctx, L, [a.id, b.id], pickPrimary([L.byId.get(a.id)!, L.byId.get(b.id)!]), m.level === 'none' ? 'possible' : m.level, m.reasons.length ? m.reasons : ['chosen by you']);
 }
 
 /* ───────────────────────── Tickets ───────────────────────── */

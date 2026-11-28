@@ -2265,6 +2265,72 @@
     }
    }
   },
+  "/api/v1/admin/people/duplicates/lookup": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "operationId": "post_v1_admin_people_duplicates_lookup",
+    "summary": "POST admin/people/duplicates/lookup",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/admin/people/duplicates/lookup/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "admin-merge-lookup",
+     "max": 30,
+     "windowMs": 60000
+    },
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "emailA": {
+          "type": "string",
+          "maxLength": 254,
+          "format": "email",
+          "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+         },
+         "emailB": {
+          "type": "string",
+          "maxLength": 254,
+          "format": "email",
+          "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+         }
+        },
+        "required": [
+         "emailA",
+         "emailB"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/admin/people/duplicates": {
    "get": {
     "tags": [

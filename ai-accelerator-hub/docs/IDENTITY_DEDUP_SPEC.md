@@ -50,6 +50,8 @@ Three layers.
 19. **Making an email main**: only a confirmed secondary. `users.email` changes, the old main stays as a secondary that still signs in, and a notice goes to the old address. Password reset goes to the address the person typed.
 20. **Minors** (`docs/CHILD_SAFETY_POLICY.md`): a merge never loosens protection. If either account was a minor anywhere, the merged person is a minor in every institution; consent stays only where an institution recorded it for a minor and every minor record had it, otherwise it is `pending` (or `revoked` if any was revoked); the leaderboard is private unless consent is granted; global opt-in needs both accounts' agreement and consent. A learner cannot add their guardian's email as their own. The automatic run never merges a group containing a minor (ticket reason `minor_account`); the panel marks minors.
 21. **Report-only first** (decision 8): the daily job only reports what it would merge, and merges only when the environment variable `IDENTITY_AUTOMERGE=on`. A Super Admin's "Merge all certain" button always merges.
+22. **Name-only pairs** (same name, nothing else links them) are listed under "Same name, different emails" for the people who may merge them; the system never groups or merges them by itself. A merge from this list asks a second time ("Only the name matches. Are you sure these are the same person?"), then runs the normal merge with every rule above (scope, minors, roles, audit).
+23. **Merge two accounts by email**: the panel's "Find" takes any two emails (primary or secondary), shows both with the suggested account to keep, and uses the same merge. An institution admin gets "could not find two different accounts" for people outside their institution, so nothing leaks.
 15. The panel shows each group with a "keep this account" choice, pre-set to the suggestion; the chosen account becomes the primary.
 13. No merge conflicts: both accounts are locked (`SELECT … FOR UPDATE`, in id order) inside the merge transaction, so two merges that touch the same account run one after the other; the second finds the account already merged and is refused with a clear message, and its ticket is closed as `already_merged`.
 
@@ -92,6 +94,9 @@ The People screen gets one compact "Duplicate accounts" panel (institution admin
 - [x] AC-31: Given a certain group with a minor, when the automatic plan is made, then it is escalated as `minor_account` and nothing merges.
 - [ ] AC-32: Given `IDENTITY_AUTOMERGE` is not `on`, when the cron runs, then it returns `dryRun: true` with counts and changes nothing.
 - [ ] AC-33: Given a minor with a guardian email, when they add that email as their own, then it is refused.
+- [x] AC-34: Given two accounts that share only a name, when the report is built, then the pair is listed as `possible` and is not in the automatic groups.
+- [ ] AC-35: Given two emails, when looked up and merged, then the same rules apply; two emails that are not two different accounts give one clear message.
+- [ ] AC-36: Given an institution admin and people in another institution, when looking up or merging, then they are told nothing and the merge is refused.
 - [ ] AC-21: Given both accounts in one institution with different roles, when merged, then the primary's role stays and `roleClashes` lists the other.
 - [ ] AC-22: Given a certain group with a Super Admin account, when the automatic run happens, then nothing merges and an open `super_admin_account` ticket exists.
 - [ ] AC-13: Given a likely duplicate and `confirmNewAccount`, when registering, then the account is created; given the same mailbox, then it is still refused.

@@ -116,9 +116,11 @@ export function maskEmail(email: string): string {
 }
 
 export type DuplicateGroup = { memberIds: string[]; primaryId: string; confidence: 'certain' | 'likely'; reasons: string[] };
+/** Two accounts that share only a name (no email or GitHub link): never merged by the system, listed for a person to judge. */
+export type PossiblePair = { aId: string; bId: string; primaryId: string; score: number; reasons: string[] };
 
 /** Groups certain and likely duplicates (transitively). 'possible' pairs are only counted. */
-export function groupDuplicates(rows: IdentityRow[]): { groups: DuplicateGroup[]; possiblePairs: number } {
+export function groupDuplicates(rows: IdentityRow[]): { groups: DuplicateGroup[]; possiblePairs: number; possible: PossiblePair[] } {
   const byId = new Map(rows.map(r => [r.id, r]));
   const buckets = new Map<string, string[]>();
   const add = (k: string, id: string) => { const l = buckets.get(k); if (l) l.push(id); else buckets.set(k, [id]); };
@@ -154,8 +156,10 @@ export function groupDuplicates(rows: IdentityRow[]): { groups: DuplicateGroup[]
     const memberIds = [...set];
     return { memberIds, primaryId: pickPrimary(memberIds.map(id => byId.get(id)!)), confidence: weakest.get(root)!, reasons: [...why.get(root)!] };
   }).sort((x, y) => (x.confidence === y.confidence ? 0 : x.confidence === 'certain' ? -1 : 1));
-  const possiblePairs = edges.filter(e => e.m.level === 'possible' && find(e.a) !== find(e.b)).length;
-  return { groups, possiblePairs };
+  const possible: PossiblePair[] = edges.filter(e => e.m.level === 'possible' && find(e.a) !== find(e.b))
+    .sort((x, y) => y.m.score - x.m.score).slice(0, 200)
+    .map(e => ({ aId: e.a, bId: e.b, primaryId: pickPrimary([byId.get(e.a)!, byId.get(e.b)!]), score: e.m.score, reasons: e.m.reasons }));
+  return { groups, possiblePairs: possible.length, possible };
 }
 
 /* ───────── Who may merge, tickets, automatic run (docs/IDENTITY_DEDUP_SPEC.md §3.10–3.13) ───────── */
