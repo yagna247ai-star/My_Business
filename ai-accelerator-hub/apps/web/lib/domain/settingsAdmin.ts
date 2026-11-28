@@ -14,6 +14,7 @@
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { findUserByAnyEmail, findLikelyDuplicate, recordPrimaryEmail } from './identity';
 import { shareCohortTx } from './sharing';
 import type { Ctx } from '@/lib/server/context';
 import { hasPerm } from '@/lib/server/context';
@@ -168,7 +169,8 @@ export async function createPerson(ctx: Ctx, input: { name: string; email: strin
   if (!isAssignable(input.role)) throw badRequest('That role cannot be assigned here.', { role: 'Choose a role from the list.' });
   const cohortId = await cohortInTenant(ctx, input.cohortId);
   const role = await prisma.role.findUniqueOrThrow({ where: { code: input.role } });
-  const existing = await prisma.user.findUnique({ where: { email } });
+  const existing = await findUserByAnyEmail(email);
+  if (!existing) { const dup = await findLikelyDuplicate({ name, email }); if (dup) throw conflict(`This looks like the same person as ${dup.email}. Use that email to add them, or ask a Super Admin to merge the accounts.`); }
   if (existing && await prisma.membership.findUnique({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: existing.id } } })) throw conflict('This person is already a member of this institution.');
   let hash: string | null = null;
   if (!existing) {
@@ -179,6 +181,7 @@ export async function createPerson(ctx: Ctx, input: { name: string; email: strin
   const journey = input.role === 'learner' ? await defaultJourney(prisma, ctx.tenantId) : null;
   return prisma.$transaction(async tx => {
     const user = existing ?? await tx.user.create({ data: { email, name, passwordHash: hash, emailVerified: false } });
+    if (!existing) await recordPrimaryEmail(tx, user.id, email);
     await tx.membership.create({ data: { tenantId: ctx.tenantId, userId: user.id, roleId: role.id, cohortId, status: 'active' } });
     await tx.userSetting.upsert({ where: { tenantId_userId: { tenantId: ctx.tenantId, userId: user.id } }, update: {}, create: { tenantId: ctx.tenantId, userId: user.id } });
     if (input.role === 'learner') {

@@ -16,9 +16,12 @@ export type Ctx = { userId: string; email: string; name: string; tenantId: strin
 
 export async function getCtx(): Promise<Ctx | null> {
   const session = await auth();
-  const userId = (session?.user as { id?: string } | undefined)?.id;
+  let userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId) return null;
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, name: true, globalRole: true, mustChangePassword: true } });
+  const pick = { id: true, email: true, name: true, globalRole: true, mustChangePassword: true, mergedIntoId: true } as const;
+  let user = await prisma.user.findUnique({ where: { id: userId }, select: pick });
+  // docs/IDENTITY_DEDUP_SPEC.md §3.9: a session opened before a merge continues on the surviving account.
+  for (let i = 0; user?.mergedIntoId && i < 5; i++) { userId = user.mergedIntoId; user = await prisma.user.findUnique({ where: { id: userId }, select: pick }); }
   if (!user) return null;
   // docs/SUPER_ADMIN_EVERYWHERE_SPEC.md: a Super Admin is one in every institution, whether the platform flag is set or
   // the Super Admin role was given as a membership in one institution.

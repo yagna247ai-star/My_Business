@@ -6,6 +6,7 @@ import { learnersAtRisk } from '@/lib/domain/insights';
 import { journeyAccessOverview } from '@/lib/domain/journeyAccess';
 import { ASSIGNABLE, ROLE_LABEL } from '@/lib/server/rbac';
 import { PeopleSettings } from '@/components/settings/PeopleSettings';
+import { DuplicatesPanel } from '@/components/settings/PeopleAdminTools';
 
 export const metadata = { title: 'People' };
 
@@ -39,6 +40,7 @@ async function People({ searchParams }: { searchParams: Promise<{ filter?: strin
         journeys={journeys ? journeys.filter(j => j.published).map(j => ({ id: j.id, title: j.title })) : null}
         initialFilter={filter === 'attention' ? 'attention' : 'all'}
       />
+      {canManage && <DuplicatesPanel isSuper={ctx.superAdmin} />}
     </div>
   </>);
 }

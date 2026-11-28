@@ -120,3 +120,51 @@ export function PasswordButton({ userId, name, isSuper }: { userId: string; name
     </Modal>}
   </>);
 }
+
+type DupMember = { id: string; name: string | null; email: string; emails: string[]; activity: number; hasPassword: boolean; minor: boolean };
+type DupGroup = { confidence: 'certain' | 'likely'; reasons: string[]; primaryId: string; canMerge: boolean; needsSuperAdmin: boolean; members: DupMember[] };
+type DupTicket = { id: string; status: string; reason: string; note: string | null; primaryId: string | null; accounts: { id: string; name: string | null; email: string }[] };
+const REASON: Record<string, string> = { out_of_scope: 'Another institution is involved', requested: 'Sent by an institution admin', auto_failed: 'Automatic merge failed', too_many_accounts: 'Too many accounts for automatic merge', super_admin_account: 'Includes a Super Admin account', minor_account: 'Includes a learner under 18' };
+
+/** docs/IDENTITY_DEDUP_SPEC.md §5: duplicates inside your institution merge here; anything bigger goes to a Super Admin as a ticket. Loads only when asked. */
+export function DuplicatesPanel({ isSuper }: { isSuper: boolean }) {
+  const r = useRun();
+  const [rep, setRep] = useState<{ groups: DupGroup[]; tickets: DupTicket[]; possiblePairs: number } | null>(null);
+  const reload = async () => setRep(await api('/api/v1/admin/people/duplicates'));
+  const act = (fn: () => Promise<unknown>, done: string) => r.run(async () => { await fn(); await reload(); }, done);
+  const post = (path: string, body: object) => api(path, { method: 'POST', body });
+  const [keep, setKeep] = useState<Record<string, string>>({}); // a person can override the suggested account to keep
+  const keepOf = (g: DupGroup) => keep[g.primaryId] ?? g.primaryId;
+  const ids = (g: DupGroup) => ({ primaryId: keepOf(g), secondaryIds: g.members.filter(m => m.id !== keepOf(g)).map(m => m.id) });
+  const certain = rep?.groups.filter(g => g.confidence === 'certain').length ?? 0;
+  const open = rep?.tickets.filter(t => t.status === 'open') ?? [];
+  return (
+    <section className="card card-pad stack gap-8" aria-label="Duplicate accounts" style={{ marginTop: 18 }}>
+      <div className="row gap-8 wrap" style={{ alignItems: 'center' }}>
+        <b>Duplicate accounts</b>
+        <button className="btn btn-sm" type="button" disabled={r.busy} onClick={() => act(async () => {}, 'Checked.')}>{rep ? 'Check again' : 'Check for duplicates'}</button>
+        {isSuper && certain > 0 && <button className="btn btn-primary btn-sm" type="button" disabled={r.busy} onClick={() => act(() => post('/api/v1/admin/people/duplicates', { auto: true }), 'Merged the certain duplicates. Anything that failed is in the tickets below.')}>Merge all certain ({certain})</button>}
+      </div>
+      <r.Status />
+      {rep && !rep.groups.length && !open.length && <p className="small muted">No duplicate accounts found{rep.possiblePairs ? `. ${rep.possiblePairs} pair(s) share only a name, so they are left alone.` : '.'}</p>}
+      {rep?.groups.map(g => (
+        <div key={g.primaryId} className="stack gap-8" style={{ borderTop: '1px solid var(--line, #e5e7eb)', paddingTop: 8 }}>
+          <div className="small"><b>{g.confidence === 'certain' ? 'Certain' : 'Likely'}</b> · {g.reasons.join(', ')}</div>
+          <div className="small stack gap-8" role="radiogroup" aria-label="Account to keep">{g.members.map(m => <label key={m.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}><input type="radio" name={`keep-${g.primaryId}`} checked={keepOf(g) === m.id} disabled={!g.canMerge} onChange={() => setKeep(k => ({ ...k, [g.primaryId]: m.id }))} /><span>{m.name ?? '(no name)'} · {m.emails.join(', ')}{m.minor ? ' · under 18: their privacy settings stay strict' : ''}{m.id === g.primaryId ? ' · suggested' : ''}</span></label>)}</div>
+          <div>{g.canMerge
+            ? <button className="btn btn-sm" type="button" disabled={r.busy} onClick={() => act(() => post('/api/v1/admin/people/duplicates', ids(g)), 'Merged into one account.')}>Merge into one account</button>
+            : <><span className="small muted">Another institution is involved, so a Super Admin merges this. </span><button className="btn btn-sm" type="button" disabled={r.busy} onClick={() => act(() => post('/api/v1/admin/people/duplicates/tickets', ids(g)), 'Sent to a Super Admin.')}>Send to Super Admin</button></>}</div>
+        </div>
+      ))}
+      {open.length > 0 && <div className="stack gap-8" style={{ borderTop: '1px solid var(--line, #e5e7eb)', paddingTop: 8 }}>
+        <b className="small">{isSuper ? 'Tickets waiting for you' : 'Waiting for a Super Admin'} ({open.length})</b>
+        {open.map(t => (
+          <div key={t.id} className="small stack gap-8">
+            <div>{REASON[t.reason] ?? t.reason}: {t.accounts.map(a => `${a.name ?? '(no name)'} <${a.email}>`).join(' + ')}</div>
+            {isSuper && <div className="row gap-8"><button className="btn btn-sm btn-primary" type="button" disabled={r.busy} onClick={() => act(() => post(`/api/v1/admin/people/duplicates/tickets/${t.id}`, { action: 'merge' }), 'Merged and closed the ticket.')}>Merge</button><button className="btn btn-text btn-sm" type="button" disabled={r.busy} onClick={() => act(() => post(`/api/v1/admin/people/duplicates/tickets/${t.id}`, { action: 'reject' }), 'Ticket rejected.')}>Reject</button></div>}
+          </div>
+        ))}
+      </div>}
+    </section>
+  );
+}

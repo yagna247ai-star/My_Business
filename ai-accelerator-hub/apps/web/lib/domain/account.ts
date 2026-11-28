@@ -10,6 +10,7 @@ import { badRequest, conflict } from '@/lib/server/errors';
 import { audit, notify } from '@/lib/server/audit';
 import { defaultJourney, enrollInJourney, registrationJourneys } from './journeyAccess';
 import { areaSchema, DEFAULT_AREA } from './areas';
+import { assertNoDuplicate, recordPrimaryEmail } from './identity';
 
 export const registerSchema = z.object({
   name: z.string({ error: 'Enter your name.' }).trim().min(2, 'Enter your full name.').max(100, 'Keep your name under 100 characters.'),
@@ -23,6 +24,8 @@ export const registerSchema = z.object({
   acceptTerms: z.literal(true, { error: 'Accept the terms and privacy notice to continue.' }),
   // Critical tracks only: the learner confirms the Critical track rules (safety, privacy and ethics) before the track opens.
   trackAck: z.boolean().optional(),
+  // Set after the person sees "You may already have an account" and says it is someone else (docs/IDENTITY_DEDUP_RESEARCH.md).
+  confirmNewAccount: z.boolean().optional(),
 }).refine(v => !v.guardianEmail || v.guardianEmail !== v.email, { path: ['guardianEmail'], error: 'Use your parent or guardian’s email, not your own.' });
 
 /** Which institution a sign-up joins: an institution code, a cohort invite code, or AIHUB (docs/INSTITUTIONS_SPEC.md). */
@@ -45,7 +48,7 @@ export async function register(input: z.infer<typeof registerSchema>) {
   if (age < 13) throw badRequest('Learners under 13 must be enrolled by their school or guardian.');
   const minor = age < 18;
   if (minor && !input.guardianEmail) throw badRequest('Learners under 18 need a parent or guardian email for consent.', { guardianEmail: 'Required for learners under 18.' });
-  if (await prisma.user.findUnique({ where: { email: input.email } })) throw conflict('An account with this email already exists. Try signing in.');
+  await assertNoDuplicate({ name: input.name, email: input.email }, { confirmedNew: input.confirmNewAccount }); // docs/IDENTITY_DEDUP_SPEC.md: same mailbox or same person, no second account
 
   const { tenantId, cohortId } = await registrationTenant(input.inviteCode);
   // The learner's chosen journey, if it is published in this institution; otherwise the default chosen by a Super Admin.
@@ -62,6 +65,7 @@ export async function register(input: z.infer<typeof registerSchema>) {
 
   return prisma.$transaction(async tx => {
     const user = await tx.user.create({ data: { email: input.email, name: input.name, passwordHash: hash, emailVerified: false, area: DEFAULT_AREA } });
+    await recordPrimaryEmail(tx, user.id, input.email);
     await tx.membership.create({ data: { tenantId, userId: user.id, roleId: learner.id, cohortId, status: 'active' } });
     await tx.userSetting.create({ data: { tenantId, userId: user.id, ageBand: minor ? 'minor' : 'adult', guardianEmail: minor ? input.guardianEmail || null : null, guardianConsent: minor ? 'pending' : 'not_required', leaderboardVisibility: minor ? 'private' : 'cohort', globalOptIn: false } });
     await tx.streak.create({ data: { tenantId, userId: user.id } });

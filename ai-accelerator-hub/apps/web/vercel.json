@@ -16,6 +16,10 @@
     {
       "path": "/api/cron/link-health",
       "schedule": "15 21 * * *"
+    },
+    {
+      "path": "/api/cron/identity-merge",
+      "schedule": "30 21 * * *"
     }
   ]
 }

@@ -26,6 +26,21 @@ export async function awardXp(tx: Tx, a: Award): Promise<{ awarded: boolean; amo
   return { awarded: true, amount: a.amount };
 }
 
+/**
+ * After two accounts are merged (docs/IDENTITY_DEDUP_SPEC.md §3.7) the survivor's rows come from two chains.
+ * Re-links them in time order so verifyChain passes again. Amounts, keys and times are untouched, so totals are the same.
+ */
+export async function rechainLedger(tx: Tx, tenantId: string, userId: string) {
+  const rows = await tx.xpLedger.findMany({ where: { tenantId, userId }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] });
+  let prev: string | null = null, changed = 0;
+  for (const r of rows) {
+    const rowHash = rowHashOf({ ...r, prevHash: prev });
+    if ((r.prevHash || null) !== prev || r.rowHash !== rowHash) { await tx.xpLedger.update({ where: { id: r.id }, data: { prevHash: prev, rowHash } }); changed++; }
+    prev = rowHash;
+  }
+  return changed;
+}
+
 export async function totalXp(tenantId: string, userId: string, tx: Tx = prisma) {
   const agg = await tx.xpLedger.aggregate({ where: { tenantId, userId }, _sum: { amount: true } });
   return agg._sum.amount || 0;

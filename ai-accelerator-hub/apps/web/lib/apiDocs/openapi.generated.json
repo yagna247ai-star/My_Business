@@ -258,6 +258,36 @@
     }
    }
   },
+  "/api/cron/identity-merge": {
+   "get": {
+    "tags": [
+     "cron"
+    ],
+    "operationId": "get_cron_identity_merge",
+    "summary": "GET cron/identity-merge",
+    "description": "**Who may call it:** Vercel Cron only (Authorization: Bearer CRON_SECRET).\n\nSource: `apps/web/app/api/cron/identity-merge/route.ts`",
+    "security": [
+     {
+      "cron": []
+     }
+    ],
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     }
+    }
+   }
+  },
   "/api/cron/link-health": {
    "get": {
     "tags": [
@@ -2228,6 +2258,251 @@
         "required": [
          "userIds",
          "action"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/admin/people/duplicates": {
+   "get": {
+    "tags": [
+     "admin"
+    ],
+    "operationId": "get_v1_admin_people_duplicates",
+    "summary": "GET admin/people/duplicates",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/admin/people/duplicates/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "admin-merge",
+     "max": 10,
+     "windowMs": 60000
+    },
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "operationId": "post_v1_admin_people_duplicates",
+    "summary": "POST admin/people/duplicates",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/admin/people/duplicates/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "admin-merge",
+     "max": 10,
+     "windowMs": 60000
+    },
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "primaryId": {
+          "type": "string",
+          "maxLength": 40
+         },
+         "secondaryIds": {
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+           "type": "string",
+           "maxLength": 40
+          }
+         },
+         "auto": {
+          "type": "boolean"
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/admin/people/duplicates/tickets/{id}": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "operationId": "post_v1_admin_people_duplicates_tickets_id",
+    "summary": "POST admin/people/duplicates/tickets/{id}",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/admin/people/duplicates/tickets/[id]/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "admin-merge-resolve",
+     "max": 20,
+     "windowMs": 60000
+    },
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "action": {
+          "type": "string",
+          "enum": [
+           "merge",
+           "reject"
+          ]
+         },
+         "note": {
+          "type": "string",
+          "maxLength": 500
+         }
+        },
+        "required": [
+         "action"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/admin/people/duplicates/tickets": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "operationId": "post_v1_admin_people_duplicates_tickets",
+    "summary": "POST admin/people/duplicates/tickets",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/admin/people/duplicates/tickets/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "admin-merge-ticket",
+     "max": 20,
+     "windowMs": 60000
+    },
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "primaryId": {
+          "type": "string",
+          "maxLength": 40
+         },
+         "secondaryIds": {
+          "minItems": 1,
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+           "type": "string",
+           "maxLength": 40
+          }
+         },
+         "note": {
+          "type": "string",
+          "maxLength": 500
+         }
+        },
+        "required": [
+         "primaryId",
+         "secondaryIds"
         ]
        }
       }
@@ -7935,6 +8210,9 @@
          },
          "trackAck": {
           "type": "boolean"
+         },
+         "confirmNewAccount": {
+          "type": "boolean"
          }
         },
         "required": [
@@ -8366,6 +8644,253 @@
      },
      "403": {
       "description": "Signed in without permission."
+     }
+    }
+   }
+  },
+  "/api/v1/settings/emails/{id}/primary": {
+   "post": {
+    "tags": [
+     "settings"
+    ],
+    "operationId": "post_v1_settings_emails_id_primary",
+    "summary": "POST settings/emails/{id}/primary",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/settings/emails/[id]/primary/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "email-primary",
+     "max": 10,
+     "windowMs": 3600000
+    },
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    }
+   }
+  },
+  "/api/v1/settings/emails/{id}": {
+   "delete": {
+    "tags": [
+     "settings"
+    ],
+    "operationId": "delete_v1_settings_emails_id",
+    "summary": "DELETE settings/emails/{id}",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/settings/emails/[id]/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "email-remove",
+     "max": 20,
+     "windowMs": 3600000
+    },
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    }
+   }
+  },
+  "/api/v1/settings/emails": {
+   "get": {
+    "tags": [
+     "settings"
+    ],
+    "operationId": "get_v1_settings_emails",
+    "summary": "GET settings/emails",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/settings/emails/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "email-add",
+     "max": 5,
+     "windowMs": 3600000
+    },
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "settings"
+    ],
+    "operationId": "post_v1_settings_emails",
+    "summary": "POST settings/emails",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/settings/emails/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "email-add",
+     "max": 5,
+     "windowMs": 3600000
+    },
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "email": {
+          "type": "string",
+          "maxLength": 254,
+          "format": "email",
+          "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+         }
+        },
+        "required": [
+         "email"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/settings/emails/verify": {
+   "post": {
+    "tags": [
+     "settings"
+    ],
+    "operationId": "post_v1_settings_emails_verify",
+    "summary": "POST settings/emails/verify",
+    "description": "**Who may call it:** Signed in (any role). The service may check more (own record, same institution).\n\nSource: `apps/web/app/api/v1/settings/emails/verify/route.ts`",
+    "security": [
+     {
+      "session": []
+     }
+    ],
+    "x-rate-limit": {
+     "name": "email-verify",
+     "max": 20,
+     "windowMs": 3600000
+    },
+    "parameters": [],
+    "responses": {
+     "200": {
+      "description": "Success (JSON)."
+     },
+     "400": {
+      "description": "Invalid input: `{ error, fields }` with a message per field."
+     },
+     "401": {
+      "description": "Not signed in."
+     },
+     "403": {
+      "description": "Signed in without permission."
+     },
+     "429": {
+      "description": "Too many requests."
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "token": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 200
+         }
+        },
+        "required": [
+         "token"
+        ]
+       }
+      }
      }
     }
    }

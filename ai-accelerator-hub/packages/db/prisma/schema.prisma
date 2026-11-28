@@ -79,9 +79,12 @@ model User {
   globalRole        String? // super_admin (platform-wide)
   preferredLanguage String   @default("en") // en | hi | te | ta | kn | ml
   mustChangePassword Boolean @default(false) // docs/SUPER_ADMIN_CONTROL_SPEC.md
+  mergedIntoId      String? // docs/IDENTITY_DEDUP_SPEC.md: set on the tombstone left by a merge
+  mergedAt          DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  emails            UserEmail[]
   memberships       Membership[]
   passwordResets    PasswordResetToken[]
   githubAccount     GithubAccount?
@@ -112,6 +115,46 @@ model User {
 
   @@index([email])
   @@map("users")
+}
+
+/// Every email a person signs in with (docs/IDENTITY_DEDUP_SPEC.md). `users.email` is the primary and is mirrored here.
+/// `emailKey` is the canonical mailbox (gmail dots and +tags removed) and is unique, so one mailbox is one person.
+model UserEmail {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String   @unique
+  emailKey  String   @unique
+  isPrimary Boolean  @default(false)
+  verified  Boolean  @default(false)
+  /// Set while the owner has not yet clicked the emailed link; such a row proves nothing and is ignored for sign-in and duplicate checks.
+  pendingUntil    DateTime?
+  verifyTokenHash String?   @unique
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_emails")
+}
+
+/// docs/IDENTITY_DEDUP_SPEC.md §3.12: a duplicate group an institution admin or the automatic run could not merge, waiting for a Super Admin.
+model DuplicateTicket {
+  id           String    @id @default(cuid())
+  tenantId     String? // requester's institution; null for the automatic run
+  requestedById String?
+  accountIds   String // JSON array, sorted
+  accountKey   String // sorted ids joined; one open ticket per key
+  primaryId    String?
+  reason       String // out_of_scope | requested | auto_failed | too_many_accounts
+  note         String?
+  status       String    @default("open") // open | merged | rejected | already_merged
+  resolvedById String?
+  resolvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([status, createdAt])
+  @@index([accountKey])
+  @@map("duplicate_tickets")
 }
 
 model Role {

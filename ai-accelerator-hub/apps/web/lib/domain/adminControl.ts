@@ -4,6 +4,7 @@
  */
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { findUserByAnyEmail, findLikelyDuplicate, recordPrimaryEmail } from './identity';
 import type { Ctx } from '@/lib/server/context';
 import { hasPerm } from '@/lib/server/context';
 import { audit, notify } from '@/lib/server/audit';
@@ -155,9 +156,10 @@ export async function importPeople(ctx: Ctx, csv: string, dryRun: boolean) {
   let created = 0, updated = 0, emailed = 0; const failed: { line: number; message: string }[] = [];
   for (const r of good) {
     try {
-      const existing = await prisma.user.findUnique({ where: { email: r.email }, select: { id: true, email: true, name: true, globalRole: true } });
+      const existing = await findUserByAnyEmail(r.email);
+      if (!existing) { const dup = await findLikelyDuplicate({ name: r.name, email: r.email }); if (dup) { failed.push({ line: r.line, message: `Looks like the same person as ${dup.email}. Use that email, or ask a Super Admin to merge.` }); continue; } }
       if (existing?.globalRole === 'super_admin' && !ctx.superAdmin) { failed.push({ line: r.line, message: 'That is a Super Admin account.' }); continue; }
-      const user = existing ?? await prisma.user.create({ data: { email: r.email, name: r.name, area: r.area, emailVerified: false } });
+      const user = existing ?? await prisma.$transaction(async tx => { const u = await tx.user.create({ data: { email: r.email, name: r.name, area: r.area, emailVerified: false } }); await recordPrimaryEmail(tx, u.id, r.email); return u; });
       const cohortId = cohortOf(r.cohort) ?? null;
       const tid = r.institution ? instByCode.get(r.institution)!.id : ctx.tenantId;
       const had = await prisma.membership.findUnique({ where: { tenantId_userId: { tenantId: tid, userId: user.id } } });

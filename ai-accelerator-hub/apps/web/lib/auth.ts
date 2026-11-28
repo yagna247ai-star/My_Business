@@ -4,6 +4,7 @@ import Github from 'next-auth/providers/github';
 import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
+import { findUserByAnyEmail } from './domain/identity';
 
 /* Secrets: never fall back to a hard-coded value in production. */
 const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
@@ -25,7 +26,7 @@ function fail(email: string) { const f = failures.get(email); const now = Date.n
 export async function verifyCredentials(emailRaw: string, password: string) {
   const email = emailRaw.trim().toLowerCase();
   if (locked(email)) return { ok: false as const, reason: 'locked' as const };
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await findUserByAnyEmail(email); // docs/IDENTITY_DEDUP_SPEC.md: any email of the account signs in
   // Constant-ish time: always run a bcrypt compare, even for unknown emails
   const hash = user?.passwordHash || DUMMY_HASH;
   const ok = await bcrypt.compare(password, hash);

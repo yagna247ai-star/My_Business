@@ -28,6 +28,7 @@
   - (d) whether COPPA, GDPR Art. 8 and the UK Age Appropriate Design Code are in scope
   - (e) whether streaks and XP for minors count as "nudge techniques"
   - (f) a process for moving a learner to adult at 18
+  - (g) whether merging a minor's duplicate accounts counts as new processing needing fresh guardian consent (`docs/IDENTITY_DEDUP_SPEC.md` §3.20: merges keep the strictest settings and never infer consent)
 
 - Agent Lab recommends third-party AI coding tools (Claude Code, Codex CLI, OpenCode, Kilo Code), some of them paid. Confirm this is acceptable under institution policy and consumer law, and that the minor-safety rule (paid agents blocked without guardian approval) is sufficient. Kilo "Auto Free" may route prompts to providers that log data; review the learner warning wording.
 - Engage qualified legal counsel (India DPDP + child protection + payments + AI safety) before public marketing.

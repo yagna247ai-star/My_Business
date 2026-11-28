@@ -4,6 +4,7 @@
  */
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { findUserByAnyEmail } from './identity';
 import { audit } from '@/lib/server/audit';
 import { badRequest } from '@/lib/server/errors';
 import { appUrl, sendMail } from '@/lib/server/mail';
@@ -19,7 +20,8 @@ async function auditTenant(userId?: string) {
 
 export async function requestPasswordReset(emailRaw: string, ip?: string | null) {
   const email = emailRaw.trim().toLowerCase();
-  const user = await prisma.user.findUnique({ where: { email }, select: { id: true, name: true, email: true, memberships: { where: { status: 'active' }, select: { tenantId: true }, take: 1 } } });
+  const found = await findUserByAnyEmail(email); // docs/IDENTITY_DEDUP_SPEC.md: any email of the account works
+  const user = found ? await prisma.user.findUnique({ where: { id: found.id }, select: { id: true, name: true, email: true, memberships: { where: { status: 'active' }, select: { tenantId: true }, take: 1 } } }) : null;
   const tenantId = await auditTenant(user?.id);
   const log = (outcome: string) => tenantId ? prisma.auditLog.create({ data: { tenantId, actorUserId: user?.id ?? null, action: 'auth.password_reset_requested', resourceType: 'User', resourceId: user?.id ?? null, after: JSON.stringify({ email, outcome }), ip: ip ?? null } }).catch(() => {}) : null;
 
@@ -28,7 +30,7 @@ export async function requestPasswordReset(emailRaw: string, ip?: string | null)
   if (overEmailLimit(sent)) { await log('email_limit'); return generic; }
 
   try {
-    await issueResetLink(user, { ttlMs: RESET_TTL_MS, kind: 'reset' });
+    await issueResetLink({ ...user, email }, { ttlMs: RESET_TTL_MS, kind: 'reset' }); // to the address typed: it is a confirmed mailbox of this account (docs/IDENTITY_DEDUP_SPEC.md §3.4)
     await log('sent');
   } catch (e) {
     console.error('[password-reset] email failed', (e as Error).message);

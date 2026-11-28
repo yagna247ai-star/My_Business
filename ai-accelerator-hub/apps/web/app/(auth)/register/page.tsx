@@ -80,6 +80,7 @@ export default function RegisterPage() {
     if (k) requestAnimationFrame(() => formRef.current?.querySelector<HTMLInputElement>(`#${k}`)?.focus());
   };
 
+  const [dupAsk, setDupAsk] = useState(false); const [dupOk, setDupOk] = useState(false); // "You may already have an account" (docs/IDENTITY_DEDUP_RESEARCH.md)
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy) return;
@@ -92,13 +93,14 @@ export default function RegisterPage() {
       await api('/api/v1/register', {
         body: {
           name: f.name.trim(), email: f.email.trim(), password: f.password, birthYear: Number(f.birthYear),
-          inviteCode: f.inviteCode.trim(), guardianEmail: minor ? f.guardianEmail.trim() : '', journeySlug: f.journeySlug, acceptTerms: f.acceptTerms, trackAck: f.trackAck,
+          inviteCode: f.inviteCode.trim(), guardianEmail: minor ? f.guardianEmail.trim() : '', journeySlug: f.journeySlug, acceptTerms: f.acceptTerms, trackAck: f.trackAck, confirmNewAccount: dupOk || undefined,
         },
       });
       router.push(`/login?registered=1&email=${encodeURIComponent(f.email.trim())}`);
     } catch (err) {
       const a = err instanceof ApiError ? err : new ApiError(0, 'UNKNOWN', 'Something went wrong. Please try again.');
       const fe = (a.details || {}) as Partial<Record<Key, string>>;
+      setDupAsk(a.code === 'POSSIBLE_DUPLICATE');
       setErrors(fe); focusFirst(fe);
       setMsg(a.status === 409 ? a.message : a.requestId ? `${a.message} (Reference: ${a.requestId.slice(0, 8)})` : a.message);
       setBusy(false);
@@ -196,6 +198,7 @@ export default function RegisterPage() {
           {errors.acceptTerms && <div className="field-err" id="acceptTerms-h" role="alert"><Tv v={errors.acceptTerms} /></div>}
         </div>
         {msg && <p className="field-err" role="alert" aria-live="assertive" style={{ marginTop: 0 }}><Tv v={msg} /></p>}
+        {dupAsk && !dupOk && <p className="small"><Link href="/login"><Tr>Sign in</Tr></Link> · <Link href="/forgot-password"><Tr>Reset password</Tr></Link> · <button type="button" className="btn btn-text btn-sm" onClick={() => { setDupOk(true); setDupAsk(false); setMsg('Thanks. Submit the form again to continue.'); }}><Tr>This is not me</Tr></button></p>}
         <button className="btn btn-gold btn-block" type="submit" disabled={busy}>{busy ? <Tr>Creating account…</Tr> : <Tr>Create account</Tr>}</button>
         <p className="small text-2"><Tr>Already have an account?</Tr> <Link className="link" href="/login"><Tr>Sign in</Tr></Link></p>
       </form>
